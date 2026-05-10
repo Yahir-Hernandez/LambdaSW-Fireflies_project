@@ -1,9 +1,9 @@
 from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
+from .form import CustomUserCreationForm
 
 # Create your views here.
-def index(request):
-    return render(request, 'index.html')
-  
-  
-def prueba(request):
-    return render(request, 'prueba.html')
+def home(request):
+    return render(request, 'home.html')
+
