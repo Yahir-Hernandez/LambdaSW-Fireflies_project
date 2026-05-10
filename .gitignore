@@ -1,0 +1,35 @@
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+*/*/*/*/__pycache__/
+*.py[cod]
+.env
+.vscode/
+.idea/
+*.log
+
+db.sqlite3
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Conda
+conda_env/
+
+# Static y media
+staticfiles/
+media/
+
+# pytest
+.pytest_cache/
+*/.pytest_cache/
+*/*/.pytest_cache/
+*/*/*.pytest_cache/
+*/*/*/*.pytest_cache/
+
+
+# mypy
+.mypy_cache/
+

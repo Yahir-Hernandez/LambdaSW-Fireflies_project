@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Festival Internacional de las Luciérnagas 2026</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav__logo">
+     <!--  <span class="nav__logo-icon">✦</span>
+      <span>Festival <strong>Luciérnagas</strong></span>-->
+      <div class="logo-wrapper">
+          <img src="{% static 'img/luciernaga.png' %}" alt="Logo Luciérnaga" class="nav__logo-icon">
+      </div>
+
+      <div class="text-wrapper">
+          <span class="text-festival">Festival de las</span>
+          <h1 class="text-main">LUCIÉRNAGAS</h1>
+      </div>
+    </div>
+    <ul class="nav__links">
+      <li><a href="#">Inicio</a></li>
+      <li><a href="#parques">Mapa de parques</a></li>
+      <li><a href="#festival">El Festival</a></li>
+    </ul>
+    <div class="nav__auth">
+      <a href="#login" class="btn">Inicio de sesión</a>
+      <a href="#register" class="btn btn--primary btn--sm">Registrarse</a>
+    </div>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <!-- ═══════════════ TRUST BAR ═══════════════ -->
+  <div class="trust-bar">
+    <div class="trust-item">
+      <span class="trust-item__icon">📍</span>
+      <div>
+        <strong>Parques Certificados</strong>
+        <small>Solo sitios oficiales</small>
+      </div>
+    </div>
+    <div class="trust-item">
+      <span class="trust-item__icon">👥</span>
+      <div>
+        <strong>Guías Especializados</strong>
+        <small>En cada parque</small>
+      </div>
+    </div>
+    <div class="trust-item">
+      <span class="trust-item__icon">📅</span>
+      <div>
+        <strong>Jun – Ago 2026</strong>
+        <small>Temporada del festival</small>
+      </div>
+    </div>
+    <div class="trust-item">
+      <span class="trust-item__icon">🚫</span>
+      <div>
+        <strong>Sin martes</strong>
+        <small>Día de mantenimiento</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="footer">
+    <div class="footer__main">
+      <div class="footer__brand">
+        <p class="footer__brand-name">Festival Internacional de las<br><strong class="accent">LUCIÉRNAGAS 2026</strong></p>
+        <p class="footer__brand-desc">Una experiencia única donde la naturaleza se convierte en espectáculo. Descubre los parques oficiales y vive la magia del fenómeno de las luciérnagas en México, de junio a agosto 2026.</p>
+        <div class="footer__socials">
+          <a href="#" class="social-btn" aria-label="Instagram">ig</a>
+          <a href="#" class="social-btn" aria-label="Facebook">f</a>
+          <a href="#" class="social-btn" aria-label="Twitter">✕</a>
+        </div>
+      </div>
+      <div class="footer__nav">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="#">Inicio</a></li>
+          <li><a href="#parques">Mapa de parques</a></li>
+          <li><a href="#festival">El Festival</a></li>
+        </ul>
+      </div>
+      <div class="footer__contact">
+        <h4>Contacto</h4>
+        <ul>
+          <li>✉ info@luciernagasfest.mx</li>
+          <li>📞 +52 (246) 123-4567</li>
+          <li>📍 Tlaxcala, México</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 Festival Internacional de las Luciérnagas. Todos los derechos reservados.</span>
+      <div class="footer__bottom-links">
+        <a href="#">Aviso de privacidad</a>
+        <a href="#">Términos y condiciones</a>
+      </div>
+    </div>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

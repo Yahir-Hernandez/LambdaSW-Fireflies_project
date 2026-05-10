@@ -1,0 +1,24 @@
+# Define AQUI el nombre del entorno virtual de Conda que se creará
+name: CondaProjectoF
+
+#Especificamos el canal (repositorios) de donde Conda descargará los paquetes
+channels:
+  - defaults
+# Lista de todas las dependencias a descargar
+dependencies:
+  - python=3.12.8
+  - pip:
+    - django==5.1.7
+    - django-crispy-forms==2.3
+    - django-environ==0.11.2
+    - crispy-bootstrap5==2024.10
+    - pillow==11.2.1
+    - django-leaflet==0.31.0
+    - django-allauth==65.7.0
+    - whitenoise==6.9.0
+    - gunicorn==23.0.0
+    - psycopg2-binary==2.9.10
+
+# Define la ruta base donde Conda está instalado en TU SISTEMA
+# prefix: /Users/TuUsuario/miniconda3
+prefix:
