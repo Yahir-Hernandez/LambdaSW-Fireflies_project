@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from .forms import CustomUserCreationForm
 # Importamos el modelo User de Django (vine por defecto no tienes que hacer algo)
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
 # Create your views here.
@@ -42,4 +42,9 @@ def login(request):
                 return redirect(to="sistema_app:home")
         data["form"] = formulario
     return render(request,'registro/logIn.html',data)
+
+
+def logout_view(request):
+    logout(request)
+    return redirect(to="sistema_app:home")
 

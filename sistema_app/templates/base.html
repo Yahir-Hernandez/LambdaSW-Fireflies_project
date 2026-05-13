@@ -28,8 +28,13 @@
       <li class="party_link"><i class="fa-solid fa-circle-info"></i>  <a href="#festival" >El Festival</a></li>
     </ul>
     <div class="nav__auth">
-      <a href="{% url 'sistema_app:login' %}" class="btn">Inicio de sesion</a>
-      <a href="{% url 'sistema_app:register' %}" class="btn btn--primary btn--sm">Registrarse</a>
+      {% if not user.is_authenticated %}
+        <a href="{% url 'sistema_app:login' %}" class="btn">Inicio de sesion</a>
+        <a href="{% url 'sistema_app:register' %}" class="btn btn--primary btn--sm">Registrarse</a>
+      {% else %}
+        <span class="user-welcome">Bienvenido, {{ user.username }}!</span>
+        <a href="{% url 'sistema_app:logout' %}" class="btn btn--sm">Cerrar sesión</a>
+      {% endif %}
     </div>
   </nav>
 
