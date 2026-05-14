@@ -32,8 +32,8 @@
         <a href="{% url 'sistema_app:login' %}" class="btn">Inicio de sesion</a>
         <a href="{% url 'sistema_app:register' %}" class="btn btn--primary btn--sm">Registrarse</a>
       {% else %}
-        <span class="user-welcome">Bienvenido, {{ user.username }}!</span>
-        <a href="{% url 'sistema_app:logout' %}" class="btn btn--sm">Cerrar sesión</a>
+        <a href="#profile" class="btn btn--outline"> <i class="fa-solid fa-circle-user"></i>  {{ user.username }}</a>
+        <a href="{% url 'sistema_app:logout' %}" class="btn  btn--primary btn--sm">Cerrar sesión</a>
       {% endif %}
     </div>
   </nav>

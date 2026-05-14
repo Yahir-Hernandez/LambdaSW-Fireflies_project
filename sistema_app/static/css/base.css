@@ -105,6 +105,16 @@ ul { list-style: none; }
 }
 .nav__auth { display: flex; gap: 10px; }
 
+.user-welcome {
+  font-size: .85rem;
+  color: var(--text-dim);
+  transition: color .2s;
+  font-weight: 500;
+}
+
+.user-welcome:hover  {
+    color: var(--accent)
+}
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -184,6 +194,8 @@ ul { list-style: none; }
 }
 .icon-placeholder--sm { width: 28px; height: 28px; border-radius: 8px; }
 .icon-placeholder--xs { width: 18px; height: 18px; border-radius: 6px; }
+
+
 
 /* Trust bar */
 .trust-bar {
