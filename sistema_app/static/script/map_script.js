@@ -196,12 +196,20 @@ function showParkInfo(parque) {
 // Si el usuario no ha iniciado sesión, lo mandamos al login con ?next= para
 // que regrese al formulario tras autenticarse.
 function reservarParque(parkId) {
+<<<<<<< HEAD
     const target = `${reservationUrl}?park=${parkId}`;
     if (typeof isAuthenticated !== "undefined" && !isAuthenticated) {
         window.location.href = `${loginUrl}?next=${encodeURIComponent(target)}`;
         return;
     }
     window.location.href = target;
+=======
+    if (typeof window.openReservaModal === 'function') {
+        window.openReservaModal(parkId);
+        return;
+    }
+    alert(`Función de reserva para el parque ID: ${parkId}\nEsta funcionalidad se implementará más adelante.`);
+>>>>>>> 5b9749ad137352f5f792e57a0ab09ce4985cc7ca
 }
 
 // Función para centrar en el mapa (placeholder)
@@ -214,4 +222,5 @@ function verEnMapa(parkId) {
 
 // Inicializar el mapa cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', initMap);
+
 

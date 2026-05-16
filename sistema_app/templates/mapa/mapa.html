@@ -95,4 +95,81 @@
   ];
 </script>
 <script src="{% static 'script/map_script.js' %}"></script>
+
+<!-- Modal de Reserva -->
+<div id="reservaModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalParkName">Reservar Parque</h2>
+      <button class="modal-close" onclick="closeReservaModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <form id="reservaForm" method="post" action="{% url 'sistema_app:crear_reserva' %}">
+        {% csrf_token %}
+        <div class="reserva-layout">
+          <div class="reserva-info-sidebar">
+            <div class="reserva-park-summary" id="reservaParkSummary">
+              <div class="reserva-park-title">Parque seleccionado</div>
+              <div class="reserva-park-name" id="reservaParkName">Sin seleccionar</div>
+              <div class="reserva-park-availability" id="reservaParkAvailability">Disponibilidad: --/--</div>
+            </div>
+
+            <div class="reserva-rules" id="reservaRules">
+              <p class="reserva-rules-title">Reglas para reservar</p>
+              <ul>
+                <li>La fecha de inicio debe estar entre junio y agosto de 2026.</li>
+                <li>No se permiten reservas con inicio en martes.</li>
+                <li>La fecha de término no puede ser anterior a la fecha de inicio.</li>
+                <li>La cantidad de personas no puede superar la disponibilidad actual.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="reserva-form-fields">
+            <div class="reserva-message" id="reservaMessage" role="alert" aria-live="polite"></div>
+            <input type="hidden" id="parkId" name="parkId">
+            
+            <div class="form-group">
+              <label for="fechaInicio">Fecha de inicio de la estancia</label>
+              <input type="date" id="fechaInicio" name="fecha_inicio" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="fechaTermino">Fecha de término de la estancia</label>
+              <input type="date" id="fechaTermino" name="fecha_termino" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="numPersonas">Número de personas</label>
+              <input type="number" id="numPersonas" name="num_personas" min="1" max="10" value="1" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Tipo de visita</label>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="tipo_visita" value="cabaña" checked>
+                  <span>Cabaña</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="tipo_visita" value="camping">
+                  <span>Camping</span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn--outline" onclick="closeReservaModal()">Cancelar</button>
+              <button type="submit" class="btn btn--primary">Confirmar Reserva</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="{% static 'script/reservas.js' %}"></script>
+<script src="{% static 'script/luciernagas.js' %}"></script>
+
 {% endblock %}

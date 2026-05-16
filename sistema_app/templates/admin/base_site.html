@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | Luciernagas Admin{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/luciernagas_admin_global.css' %}">
+{% endblock %}
+
+{% block branding %}
+  <div id="branding">
+    <img src="{% static 'img/luciernaga.png' %}" alt="Luciernagas" class="admin-logo" />
+  </div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

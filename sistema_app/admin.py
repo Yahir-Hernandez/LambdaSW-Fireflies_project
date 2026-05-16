@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
 
+<<<<<<< HEAD
 from .models import Cabin, Park, Reservation, Service
 from .services import ReservationService
 
@@ -120,3 +121,8 @@ class ReservationAdmin(admin.ModelAdmin):
                 f"{errors} reservación(es) no pudieron cancelarse.",
                 level=messages.WARNING,
             )
+=======
+admin.site.site_header = "Festival Internacional de las Luciernagas"
+admin.site.site_title = "Luciernagas Admin"
+admin.site.index_title = "Panel de administracion"
+>>>>>>> 5b9749ad137352f5f792e57a0ab09ce4985cc7ca
