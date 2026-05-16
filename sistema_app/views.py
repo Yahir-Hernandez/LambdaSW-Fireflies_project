@@ -6,6 +6,7 @@ from .forms import CustomUserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from .models import Parque
 
 # Create your views here.
 def home(request):
@@ -48,3 +49,85 @@ def logout_view(request):
     logout(request)
     return redirect(to="sistema_app:home")
 
+def mapa(request):
+    # Obtener todos los parques de la base de datos
+    parques = Parque.objects.all()
+    
+    # Pasar los parques al template
+    '''context = {
+        'parques': parques
+    }'''
+    parques_prueba = [
+        {
+            'id': 1,
+            'nombre': 'Reserva de Nanacamilpa',
+            'direccion': 'Nanacamilpa de Mariano Arista, Tlaxcala',
+            'descripcion': 'Una de las reservas más importantes de luciérnagas en México. Cuenta con senderos iluminados y áreas de observación.',
+            'latitud': 19.4833,
+            'longitud': -98.5333,
+            'maximo_visitantes': 200,
+            'disponibilidad_actual': 45,
+            'telefono_contacto': '+52 246 123 4567',
+            'email_contacto': 'info@nanacamilpa.com',
+            'servicios': ['Cabañas', 'Camping', 'Guías']
+        },
+        {
+            'id': 2,
+            'nombre': 'Bosque de San Felipe Hidalgo',
+            'direccion': 'San Felipe Hidalgo, Tlaxcala',
+            'descripcion': 'Bosque protegido con espectáculo natural de luciérnagas. Ideal para familias.',
+            'latitud': 19.4500,
+            'longitud': -98.5000,
+            'maximo_visitantes': 150,
+            'disponibilidad_actual': 28,
+            'telefono_contacto': '+52 246 987 6543',
+            'email_contacto': 'contacto@sanfelipehidalgo.mx',
+            'servicios': ['Camping', 'Restaurante', 'Guías']
+        },
+        {
+            'id': 3,
+            'nombre': 'Parque Ecoturístico La Malinche',
+            'direccion': 'Huamantla, Tlaxcala',
+            'descripcion': 'Parque ubicado en las faldas del volcán La Malinche. Ofrece experiencias únicas de ecoturismo.',
+            'latitud': 19.3167,
+            'longitud': -97.9167,
+            'maximo_visitantes': 250,
+            'disponibilidad_actual': 62,
+            'telefono_contacto': '+52 246 555 1234',
+            'email_contacto': 'reservaciones@lamalinche.mx',
+            'servicios': ['Cabañas', 'Camping', 'Restaurante', 'Guías']
+        },
+        {
+            'id': 4,
+            'nombre': 'Santuario de las Luciérnagas Amecameca',
+            'direccion': 'Amecameca, Estado de México',
+            'descripcion': 'Santuario natural ubicado cerca del Popocatépetl. Experiencia mágica con vistas espectaculares.',
+            'latitud': 19.1239,
+            'longitud': -98.7664,
+            'maximo_visitantes': 180,
+            'disponibilidad_actual': 15,
+            'telefono_contacto': '+52 55 1234 5678',
+            'email_contacto': 'info@amecamecaluciernagas.mx',
+            'servicios': ['Camping', 'Restaurante', 'Guías']
+        },
+        {
+            'id': 5,
+            'nombre': 'Bosque Mágico de Tlaxco',
+            'direccion': 'Tlaxco, Tlaxcala',
+            'direccion': 'Tlaxco, Tlaxcala',
+            'descripcion': 'Bosque encantado con alta densidad de luciérnagas. Tour nocturno con guías especializados.',
+            'latitud': 19.6167,
+            'longitud': -98.1167,
+            'maximo_visitantes': 120,
+            'disponibilidad_actual': 8,
+            'telefono_contacto': '+52 246 777 8888',
+            'email_contacto': 'reservas@tlaxcomagico.com',
+            'servicios': ['Cabañas', 'Guías']
+        }
+    ]
+    
+    # Pasar los datos al template
+    context = {
+        'parques': parques_prueba
+    }
+    return render(request, 'mapa/mapa.html' , context)

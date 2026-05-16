@@ -1,0 +1,94 @@
+{% extends "base.html" %} {% load static %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}" />
+<link rel="stylesheet" href="{% static 'css/mapa.css' %}" />
+<script
+  src="https://kit.fontawesome.com/db1b884b1e.js"
+  crossorigin="anonymous"
+></script>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin="anonymous"
+/>
+{% endblock %} {% block content %}
+<section class="hero map-page">
+  <div class="hero__stars" aria-hidden="true"></div>
+  <div class="hero__fireflies" aria-hidden="true">
+    <span
+      class="ff"
+      style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: 12px; --dy: -14px; --dur: 3.4s; left: 55%; top: 78%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%"
+    ></span>
+  </div>
+
+    <!-- Mapa de parques -->
+    <div class="map-container">
+      <div class="park-list" id="park-list">
+        <!-- Lista de parques se llenará con JavaScript -->
+      </div>
+      <div id="map"></div>
+      <div class="park-info" id="park-info">
+        <!-- Información del parque seleccionado -->
+        <div class="park-info-default">
+          <h3>Selecciona un parque</h3>
+          <p>Haz clic en un marcador del mapa o en un parque de la lista para ver sus detalles.</p>
+        </div>
+      </div>
+    </div>
+</section>
+{% endblock %} {% block extra_js %}
+<script src="{% static 'script/luciernagas.js' %}"></script>
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin="anonymous"
+></script>
+
+<script>
+    const parkIconUrl = "{% static 'img/luciernaga.png' %}";
+    <!-- Modelamos los datos de los parques recibidos desde Backend -->
+    <!-- Estos datos serán usados en script/map_script.js  -->
+    const data_parks = [
+      {% for parque in parques %}
+      {
+        id: {{ parque.id }},
+        nombre: "{{ parque.nombre|escapejs }}",
+        direccion: "{{ parque.direccion|escapejs }}",
+        descripcion: "{{ parque.descripcion|escapejs }}",
+        latitud: {{ parque.latitud }},
+        longitud: {{ parque.longitud }},
+        maximo_visitantes: {{ parque.maximo_visitantes }},
+        disponibilidad_actual: {{ parque.disponibilidad_actual }},
+        telefono_contacto: "{{ parque.telefono_contacto|escapejs }}",
+        email_contacto: "{{ parque.email_contacto|escapejs }}",
+        servicios: [
+          {% for servicio in parque.servicios.all %}
+          "{{ servicio.nombre|escapejs }}"{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+  ];
+</script>
+<script src="{% static 'script/map_script.js' %}"></script>
+{% endblock %}
