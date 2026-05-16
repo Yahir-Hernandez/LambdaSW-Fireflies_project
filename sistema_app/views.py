@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
@@ -7,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render, resolve_url
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .forms import CustomUserCreationForm, ReservationForm
+from .forms import CustomUserCreationForm
 from .models import Park, Reservation
 from .services import ReservationService
 
@@ -38,7 +40,7 @@ def register(request):
             auth_login(request, user)
             return redirect(_safe_next(request))
         data["form"] = formulario
-    return render(request, "registro/signIn.html", data)
+    return render(request, "registration/sign_up.html", data)
 
 
 def login(request):
@@ -53,7 +55,7 @@ def login(request):
                 auth_login(request, user)
                 return redirect(_safe_next(request))
         data["form"] = formulario
-    return render(request, "registro/logIn.html", data)
+    return render(request, "registration/login.html", data)
 
 
 def logout_view(request):
@@ -67,44 +69,70 @@ def mapa(request):
 
 
 @login_required
-def reservation_create(request):
-    if request.method == "POST":
-        form = ReservationForm(request.POST)
-        if form.is_valid():
-            try:
-                reservation = ReservationService.create_reservation(
-                    user=request.user,
-                    park=form.cleaned_data["park"],
-                    visit_type=form.cleaned_data["visit_type"],
-                    start_date=form.cleaned_data["start_date"],
-                    end_date=form.cleaned_data["end_date"],
-                    n_people=form.cleaned_data["people"],
-                )
-            except ValidationError as exc:
-                form.add_error(None, exc)
-            else:
-                messages.success(
-                    request,
-                    f"Reservación #{reservation.pk} confirmada.",
-                )
-                return redirect("sistema_app:reservation_list")
-    else:
-        initial = {}
-        park_id = request.GET.get("park")
-        if park_id and park_id.isdigit():
-            initial["park"] = int(park_id)
-        form = ReservationForm(initial=initial)
-    return render(request, "reservaciones/reservacion_form.html", {"form": form})
+def perfil(request):
+    reservas = ReservationService.get_user_reservations(request.user)
+    return render(request, "user/perfil.html", {"reservas": reservas})
 
 
 @login_required
 def reservation_list(request):
-    reservas = ReservationService.get_user_reservations(request.user)
-    return render(
-        request,
-        "reservaciones/reservacion_list.html",
-        {"reservaciones": reservas},
-    )
+    return redirect("sistema_app:perfil")
+
+
+@login_required
+def reservation_create(request):
+    park_id = request.GET.get("park")
+    target = resolve_url("sistema_app:mapa")
+    if park_id and park_id.isdigit():
+        target = f"{target}?park={park_id}"
+    return redirect(target)
+
+
+_VISIT_TYPE_BY_FORM_VALUE = {
+    "cabaña": Reservation.VisitType.CABIN,
+    "cabana": Reservation.VisitType.CABIN,
+    "camping": Reservation.VisitType.CAMPING,
+}
+
+
+@login_required
+@require_POST
+def crear_reserva(request):
+    park_id = request.POST.get("parkId")
+    fecha_inicio = request.POST.get("fecha_inicio")
+    fecha_termino = request.POST.get("fecha_termino")
+    num_personas = request.POST.get("num_personas")
+    tipo_visita = (request.POST.get("tipo_visita") or "").strip().lower()
+
+    try:
+        park = Park.objects.active().get(pk=int(park_id))
+        start_date = date.fromisoformat(fecha_inicio)
+        end_date = date.fromisoformat(fecha_termino)
+        people = int(num_personas)
+    except (TypeError, ValueError, Park.DoesNotExist):
+        messages.error(request, "Datos de la reserva inválidos.")
+        return redirect("sistema_app:mapa")
+
+    visit_type = _VISIT_TYPE_BY_FORM_VALUE.get(tipo_visita)
+    if visit_type is None:
+        messages.error(request, "Tipo de visita inválido.")
+        return redirect("sistema_app:mapa")
+
+    try:
+        reservation = ReservationService.create_reservation(
+            user=request.user,
+            park=park,
+            visit_type=visit_type,
+            start_date=start_date,
+            end_date=end_date,
+            n_people=people,
+        )
+    except ValidationError as exc:
+        messages.error(request, "; ".join(exc.messages))
+        return redirect("sistema_app:mapa")
+
+    messages.success(request, f"Reservación #{reservation.pk} confirmada.")
+    return redirect("sistema_app:perfil")
 
 
 @login_required
@@ -116,4 +144,4 @@ def reservation_cancel(request, pk):
         messages.success(request, f"Reservación #{reservation.pk} cancelada.")
     except ValidationError as exc:
         messages.error(request, "; ".join(exc.messages))
-    return redirect("sistema_app:reservation_list")
+    return redirect("sistema_app:perfil")

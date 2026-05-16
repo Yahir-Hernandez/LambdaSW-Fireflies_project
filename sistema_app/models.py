@@ -3,18 +3,6 @@ from django.db import models
 from django.utils import timezone
 
 
-class Service(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-
-    class Meta:
-        verbose_name = "Servicio"
-        verbose_name_plural = "Servicios"
-
-    def __str__(self):
-        return self.name
-
-
 class ParkQuerySet(models.QuerySet):
     def active(self):
         return self.filter(is_deleted=False)
@@ -32,7 +20,6 @@ class Park(models.Model):
     has_cabins = models.BooleanField(default=False)
 
     working_hours = models.CharField(max_length=120, blank=True)
-    services = models.ManyToManyField(Service, blank=True, related_name="parks")
 
     contact_phone = models.CharField(max_length=20, blank=True)
     contact_email = models.EmailField(blank=True)
@@ -68,6 +55,20 @@ class Cabin(models.Model):
     class Meta:
         verbose_name = "Cabaña"
         verbose_name_plural = "Cabañas"
+        unique_together = ("park", "name")
+
+    def __str__(self):
+        return f"{self.park.name} · {self.name}"
+
+
+class Service(models.Model):
+    park = models.ForeignKey(Park, on_delete=models.CASCADE, related_name="services")
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Servicio"
+        verbose_name_plural = "Servicios"
         unique_together = ("park", "name")
 
     def __str__(self):

@@ -86,11 +86,11 @@
 			parkIdInput.value = currentPark.id;
 		}
 
-		modal.style.display = 'block';
+		modal.classList.add('is-open');
 	};
 
 	const closeReservaModal = () => {
-		modal.style.display = 'none';
+		modal.classList.remove('is-open');
 	};
 
 	const isTuesday = (date) => date.getDay() === 2;

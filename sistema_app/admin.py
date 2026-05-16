@@ -1,15 +1,13 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
 
-<<<<<<< HEAD
 from .models import Cabin, Park, Reservation, Service
 from .services import ReservationService
 
 
-@admin.register(Service)
-class ServiceAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
+class ServiceInline(admin.TabularInline):
+    model = Service
+    extra = 0
 
 
 class CabinInline(admin.TabularInline):
@@ -29,7 +27,7 @@ class ParkAdmin(admin.ModelAdmin):
     )
     list_filter = ("has_cabins", "is_deleted")
     search_fields = ("name", "address")
-    inlines = [CabinInline]
+    inlines = [ServiceInline, CabinInline]
     actions = ["soft_delete_selected", "restore_selected"]
 
     def get_queryset(self, request):
@@ -62,6 +60,13 @@ class ParkAdmin(admin.ModelAdmin):
             f"{queryset.count()} parque(s) restaurados.",
             level=messages.SUCCESS,
         )
+
+
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = ("name", "park")
+    list_filter = ("park",)
+    search_fields = ("name", "park__name")
 
 
 @admin.register(Cabin)
@@ -121,8 +126,3 @@ class ReservationAdmin(admin.ModelAdmin):
                 f"{errors} reservación(es) no pudieron cancelarse.",
                 level=messages.WARNING,
             )
-=======
-admin.site.site_header = "Festival Internacional de las Luciernagas"
-admin.site.site_title = "Luciernagas Admin"
-admin.site.index_title = "Panel de administracion"
->>>>>>> 5b9749ad137352f5f792e57a0ab09ce4985cc7ca

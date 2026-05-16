@@ -198,65 +198,81 @@
     background: var(--accentHover);
 }
 
-/* Estilos para el modal de reserva */
+/* Modal de reserva ----------------------------------------------- */
 .modal {
   display: none;
   position: fixed;
+  inset: 0;
   z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
-  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: var(--font-body);
+  animation: fadeIn 0.25s ease;
+}
+
+.modal.is-open {
+  display: flex;
 }
 
 .modal-content {
   background-color: var(--bg-card);
-  margin: 5% auto;
-  padding: 0;
-  width: 90%;
-  max-width: 800px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  animation: slideIn 0.3s ease;
+  width: 100%;
+  max-width: 720px;
+  max-height: calc(100vh - 48px);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(200, 255, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.25s ease;
 }
 
 .modal-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .modal-header h2 {
   margin: 0;
   color: var(--text);
-  font-size: 1.5rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 28px;
+  font-size: 1.6rem;
+  line-height: 1;
   color: var(--text-dim);
   cursor: pointer;
   padding: 0;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease;
+  border-radius: 50%;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text);
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 24px;
+  overflow-y: auto;
 }
 
 .reserva-layout {
@@ -272,17 +288,17 @@
 }
 
 .reserva-park-summary {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
   background: var(--bg-section);
   margin-bottom: 16px;
 }
 
 .reserva-park-title {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text-dim);
   margin-bottom: 6px;
 }
@@ -300,16 +316,15 @@
 }
 
 .reserva-rules {
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 16px;
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .reserva-rules-title {
   margin: 0 0 8px 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text);
   font-weight: 600;
 }
@@ -318,46 +333,44 @@
   margin: 0;
   padding-left: 18px;
   color: var(--text-dim);
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: 0.82rem;
+  line-height: 1.55;
 }
 
 .reserva-message {
   min-height: 18px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   font-size: 0.85rem;
   color: var(--text-dim);
 }
 
-.reserva-message.is-error {
-  color: #f44336;
-}
-
-.reserva-message.is-success {
-  color: #4caf50;
-}
+.reserva-message.is-error { color: #f44336; }
+.reserva-message.is-success { color: #4caf50; }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: var(--text);
+  font-size: 0.88rem;
   font-weight: 500;
 }
 
 .form-group input[type="date"],
 .form-group input[type="number"] {
   width: 100%;
-  padding: 12px;
-  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   background-color: var(--bg-section);
   color: var(--text);
-  font-size: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
 }
 
 .form-group input[type="date"]:focus,
@@ -368,8 +381,8 @@
 
 .radio-group {
   display: flex;
-  gap: 20px;
-  margin-top: 8px;
+  gap: 18px;
+  margin-top: 6px;
 }
 
 .radio-option {
@@ -377,6 +390,7 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  font-size: 0.9rem;
 }
 
 .radio-option input[type="radio"] {
@@ -384,17 +398,15 @@
   accent-color: var(--accent);
 }
 
-.radio-option span {
-  color: var(--text);
-}
+.radio-option span { color: var(--text); }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 @keyframes fadeIn {
@@ -403,22 +415,14 @@
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Responsive para modal */
 @media (max-width: 768px) {
-  .modal-content {
-    margin: 10% auto;
-    width: 95%;
-  }
+  .modal { padding: 12px; }
+  .modal-header { padding: 16px 18px; }
+  .modal-body   { padding: 18px; }
 }
 
 /* Popup personalizado */

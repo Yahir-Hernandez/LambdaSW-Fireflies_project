@@ -286,17 +286,6 @@ class NotificationService:
             reservation=reservation,
         )
 
-    @classmethod
-    def send_reminder_email(cls, reservation: Reservation) -> bool:
-        return cls._send(
-            subject=f"Recordatorio de reserva #{reservation.pk}",
-            body=(
-                "Te recordamos tu próxima estancia:\n\n"
-                + cls._format(reservation)
-            ),
-            reservation=reservation,
-        )
-
 
 class ReservationService:
     """Orquesta validación, disponibilidad y notificaciones."""
@@ -366,11 +355,4 @@ class ReservationService:
         qs = Reservation.objects.filter(user=user).select_related("park", "cabin")
         if only_active:
             qs = qs.filter(status=Reservation.Status.ACTIVE)
-        return qs
-
-    @classmethod
-    def list_all(cls, park: Optional[Park] = None):
-        qs = Reservation.objects.select_related("user", "park", "cabin")
-        if park is not None:
-            qs = qs.filter(park=park)
         return qs
