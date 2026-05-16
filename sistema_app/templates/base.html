@@ -18,7 +18,8 @@
     <div class="nav__logo">
       <img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" class="logo--mini"/>
       <div class="text-wrapper">
-        <span class="text-festival">Festival de las</span>
+        <span class="text-festival">Festival Internacional</span>
+        <span class="text-festival">de las</span>
         <span class="text-main">LUCIERNAGAS</span>
       </div>
     </div>
@@ -32,7 +33,7 @@
         <a href="{% url 'sistema_app:login' %}" class="btn">Inicio de sesion</a>
         <a href="{% url 'sistema_app:register' %}" class="btn btn--primary btn--sm">Registrarse</a>
       {% else %}
-        <a href="#profile" class="btn btn--outline"> <i class="fa-solid fa-circle-user"></i>  {{ user.username }}</a>
+        <a href="{% url 'sistema_app:perfil' %}" class="btn btn--outline {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}"> <i class="fa-solid fa-circle-user"></i>  {{ user.username }}</a>
         <a href="{% url 'sistema_app:logout' %}" class="btn  btn--primary btn--sm">Cerrar sesión</a>
       {% endif %}
     </div>
@@ -86,9 +87,9 @@
       <div class="footer__nav">
         <h4>Navegacion</h4>
         <ul>
-          <li><a href="#">Inicio</a></li>
-          <li><a href="#parques">Mapa de parques</a></li>
-          <li><a href="#festival">El Festival</a></li>
+          <li><a href="{% url 'sistema_app:home' %}">Inicio</a></li>
+          <li><a href="{% url 'sistema_app:mapa' %}">Mapa de parques</a></li>
+          <li><a href="#fest">El Festival</a></li>
         </ul>
       </div>
       <div class="footer__contact">
@@ -114,19 +115,6 @@
   </footer>
 
   {% block extra_js %}{% endblock %}
-  <script >
-    var home = document.querySelector('.home_link');
-    var homeb = true;
-    var park = document.querySelector('.park_link');
-    var parkb = false;
-    var party = document.querySelector('.party_link');
-    var partyb = false;
 
-    home.addEventListener('click', function(){
-      homeb = true;
-      parkb = false;
-      partyb = false;
-    })
-  </script>
 </body>
 </html>

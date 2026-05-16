@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+body.app-sistema_app.model-parque,
+body.app-sistema_app.model-servicio,
+body.app-sistema_app.model-parque #container,
+body.app-sistema_app.model-servicio #container {
+  background: #080e10;
+  color: #d4e8e0;
+  font-family: 'Inter', sans-serif;
+}
+
+body.app-sistema_app.model-parque #header,
+body.app-sistema_app.model-servicio #header {
+  background: #0d1a1e;
+  border-bottom: 1px solid rgba(13, 27, 42, 1);
+}
+
+body.app-sistema_app.model-parque #branding h1,
+body.app-sistema_app.model-servicio #branding h1 {
+  color: #ffba0a;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+body.app-sistema_app.model-parque #branding h1::before,
+body.app-sistema_app.model-servicio #branding h1::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  background-image: url('../img/luciernaga.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+body.app-sistema_app.model-parque .module,
+body.app-sistema_app.model-servicio .module,
+body.app-sistema_app.model-parque fieldset.module,
+body.app-sistema_app.model-servicio fieldset.module,
+body.app-sistema_app.model-parque .inline-group,
+body.app-sistema_app.model-servicio .inline-group {
+  background: #0f2028;
+  border: 1px solid rgba(13, 27, 42, 1);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+body.app-sistema_app.model-parque .breadcrumbs,
+body.app-sistema_app.model-servicio .breadcrumbs {
+  background: #0d1a1e;
+  border-bottom: 1px solid rgba(13, 27, 42, 1);
+  color: #7a9e94;
+}
+
+body.app-sistema_app.model-parque a,
+body.app-sistema_app.model-servicio a {
+  color: #ffba0a;
+}
+
+body.app-sistema_app.model-parque a:hover,
+body.app-sistema_app.model-servicio a:hover {
+  color: #d19b07;
+}
+
+body.app-sistema_app.model-parque .button,
+body.app-sistema_app.model-servicio .button,
+body.app-sistema_app.model-parque input[type='submit'],
+body.app-sistema_app.model-servicio input[type='submit'],
+body.app-sistema_app.model-parque .submit-row input,
+body.app-sistema_app.model-servicio .submit-row input {
+  background: #ffba0a;
+  color: #0a1208;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+body.app-sistema_app.model-parque .button:hover,
+body.app-sistema_app.model-servicio .button:hover,
+body.app-sistema_app.model-parque input[type='submit']:hover,
+body.app-sistema_app.model-servicio input[type='submit']:hover,
+body.app-sistema_app.model-parque .submit-row input:hover,
+body.app-sistema_app.model-servicio .submit-row input:hover {
+  background: #d19b07;
+  box-shadow: 0 0 16px rgba(8, 16, 28, 1);
+}
+
+body.app-sistema_app.model-parque table thead th,
+body.app-sistema_app.model-servicio table thead th {
+  background: #111d22;
+  color: #d4e8e0;
+  border-bottom: 1px solid rgba(13, 27, 42, 1);
+}
+
+body.app-sistema_app.model-parque table tbody tr,
+body.app-sistema_app.model-servicio table tbody tr {
+  background: #0f2028;
+}
+
+body.app-sistema_app.model-parque table tbody tr:nth-child(even),
+body.app-sistema_app.model-servicio table tbody tr:nth-child(even) {
+  background: #111d22;
+}
+
+body.app-sistema_app.model-parque .selector-chosen h2,
+body.app-sistema_app.model-servicio .selector-chosen h2,
+body.app-sistema_app.model-parque .inline-group h2,
+body.app-sistema_app.model-servicio .inline-group h2 {
+  background: #0d1a1e;
+  color: #d4e8e0;
+}
+
+body.app-sistema_app.model-parque .object-tools a,
+body.app-sistema_app.model-servicio .object-tools a {
+  background: #c93103;
+  border-radius: 10px;
+}
+
+body.app-sistema_app.model-parque .object-tools a:hover,
+body.app-sistema_app.model-servicio .object-tools a:hover {
+  background: #e8603a;
+}

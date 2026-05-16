@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect
+from django.http import HttpResponseNotAllowed
+from django.contrib.auth.decorators import login_required
 
 # Importamos el formulario
 from .forms import CustomUserCreationForm
@@ -25,29 +27,23 @@ def register(request):
             auth_login(request,user)
             return redirect(to="sistema_app:home")
         data["form"] = formulario
-    return render(request,'registro/signIn.html',data)
+    return render(request,'registration/sign_up.html',data)
 
-
-def login(request):
-    data = {
-        'form': AuthenticationForm()
-    }
-    if request.method == "POST":
-        formulario = AuthenticationForm(data=request.POST)
-        if formulario.is_valid():
-            username = formulario.cleaned_data["username"]
-            password = formulario.cleaned_data["password"]
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                auth_login(request, user)
-                return redirect(to="sistema_app:home")
-        data["form"] = formulario
-    return render(request,'registro/logIn.html',data)
 
 
 def logout_view(request):
     logout(request)
     return redirect(to="sistema_app:home")
+
+@login_required
+def perfil(request):
+    # El usuario ya está autenticado gracias al decorador @login_required
+    # Pasamos una lista vacía de reservas para que el template funcione correctamente
+    # Cuando se implemente el modelo Reserva, se pueden obtener las reservas del usuario aquí
+    context = {
+        'reservas': []  
+    }
+    return render(request, 'user/perfil.html', context)
 
 def mapa(request):
     # Obtener todos los parques de la base de datos
@@ -131,3 +127,22 @@ def mapa(request):
         'parques': parques_prueba
     }
     return render(request, 'mapa/mapa.html' , context)
+
+
+@login_required
+def crear_reserva(request):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    #Implementar la lógica para crear una reserva aquí
+
+    usuario = request.user
+    park_id = request.POST.get("parkId")
+    fecha_inicio = request.POST.get("fecha_inicio")
+    fecha_termino = request.POST.get("fecha_termino")
+    num_personas = request.POST.get("num_personas")
+    tipo_visita = request.POST.get("tipo_visita")
+
+    dato = (usuario, park_id, fecha_inicio, fecha_termino, num_personas, tipo_visita)
+    print("Datos de la reserva:", dato)
+
+    return redirect("sistema_app:mapa")

@@ -1,0 +1,305 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-deep: #080e10;
+  --bg-dark: #0d1a1e;
+  --bg-card: #0f2028;
+  --bg-section: #111d22;
+  --accent: #ffba0a;
+  --accentHover: #d19b07;
+  --accent2: #c93103;
+  --orange: #e8603a;
+  --text: #d4e8e0;
+  --text-dim: #7a9e94;
+  --border: rgba(13, 27, 42, 1);
+  --glow: rgba(8, 16, 28, 1);
+  --glow-sm: rgba(8, 16, 28, 1);
+  --font-display: 'Cinzel', serif;
+  --font-title: 'Bebas Neue', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+body {
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+#container {
+  background: var(--bg-deep);
+}
+
+#header {
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border);
+}
+
+#branding  {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  flex-direction: row;
+}
+
+#branding h1,
+#branding h1 a:link,
+#branding h1 a:visited {
+  color: var(--accent);
+  font-family: var(--font-title);
+  letter-spacing: 0.06em;
+}
+
+.admin-logo {
+  
+  width: 90px;
+  height: 90%;
+  margin-right: 10px;
+}
+
+.admin-brand {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.5;
+}
+
+.admin-brand__festival {
+  font-family: var(--font-body);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.admin-brand__name {
+  color: var(--accent);
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+}
+
+#user-tools,
+#user-tools a {
+  color: var(--text-dim);
+}
+
+#user-tools a:hover {
+  color: var(--accent);
+}
+
+.breadcrumbs {
+  background: var(--bg-section);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.toggle-nav-sidebar {
+  background: var(--bg-section);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 10px;
+}
+
+#nav-filter {
+  background: var(--bg-dark);
+  border: 1px solid var(--text-dim);
+  color: var(--text-dim);
+  border-radius: 10px;
+} 
+
+#changelist-filter details {
+  background: var(--bg-dark);
+  color: var(--text-dim);
+}
+
+
+#changelist-filter details li.selected a {
+  background: var(--accent);
+  color: #0a1208;
+  border-radius: 4px;
+  font-weight: bolder;
+  border-left: none
+}
+
+#changelist-filter details li:hover {
+  color: var(--text);
+  font-weight: bolder;
+  border-left: none
+}
+
+#changelist-filter details li.selected  {
+
+  border-left: 5px solid var(--accent);
+}
+#changelist-filter,
+#changelist-filter-extra-actions {
+  background: var(--bg-dark) !important;
+  color: var(--text-dim);
+  border-bottom: none;
+}
+
+
+
+#changelist-filter h3, #changelist-filter details summary {
+    /* font-weight: 400; */
+    padding: 0 15px;
+    margin-bottom: none;
+}
+.filtered {
+  background: var(--bg-dark);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+
+#nav-sidebar {
+  background: var(--bg-section);
+  border-right: 1px solid var(--border);
+}
+
+#nav-sidebar a {
+  color: var(--text-dim);
+}
+
+#nav-sidebar a:hover,
+#nav-sidebar .current-model > a {
+  color: var(--accent);
+}
+
+.module,
+fieldset.module,
+.inline-group,
+.dashboard .module,
+.app-sistema_app .module {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.module h2,
+.module caption,
+.inline-group h2 {
+  background: var(--bg-section);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+table thead th {
+  background: var(--bg-section);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+table tbody tr:nth-child(odd) {
+  background: var(--bg-card);
+}
+
+table tbody tr:nth-child(even) {
+  background: var(--bg-section);
+}
+
+a {
+  color: var(--accent);
+}
+
+a:hover,
+a:focus {
+  color: var(--accentHover);
+}
+
+.button,
+input[type='submit'],
+input[type='button'],
+.submit-row input {
+  background: var(--accent);
+  color: #0a1208;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.button:hover,
+input[type='submit']:hover,
+input[type='button']:hover,
+.submit-row input:hover {
+  background: var(--accentHover);
+  box-shadow: 0 0 16px var(--glow);
+}
+
+input,
+select,
+textarea {
+  background: #0c1a20;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 186, 10, 0.2);
+}
+
+.object-tools a {
+  background: var(--accent2);
+  border-radius: 10px;
+}
+
+.object-tools a:hover {
+  background: var(--orange);
+}
+
+.admin-login {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+#content-related {
+  background: var(--bg-card);
+}
+
+.breadcrumbs {
+  background: var(--bg-section);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.admin-login__panel {
+  width: min(420px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.admin-login__title {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  color: var(--accent);
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+}
+
+.admin-login__subtitle {
+  color: var(--text-dim);
+  margin-bottom: 18px;
+}
+
+.admin-login .form-row label {
+  color: var(--text-dim);
+}
+
+.admin-login .form-row input {
+  width: 100%;
+}
+
+.errornote {
+  background: rgba(201, 49, 3, 0.2);
+  border: 1px solid rgba(201, 49, 3, 0.5);
+  color: #ffdacd;
+}

@@ -194,6 +194,10 @@ function showParkInfo(parque) {
 
 // Función para reservar (placeholder)
 function reservarParque(parkId) {
+    if (typeof window.openReservaModal === 'function') {
+        window.openReservaModal(parkId);
+        return;
+    }
     alert(`Función de reserva para el parque ID: ${parkId}\nEsta funcionalidad se implementará más adelante.`);
 }
 
@@ -207,4 +211,5 @@ function verEnMapa(parkId) {
 
 // Inicializar el mapa cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', initMap);
+
 

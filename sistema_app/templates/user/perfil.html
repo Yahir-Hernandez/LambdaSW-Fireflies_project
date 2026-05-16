@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/perfil.css' %}" />
+{% endblock %}
+
+{% block content %}
+<section class="hero profile-page">
+  <div class="hero__stars" aria-hidden="true"></div>
+  <div class="hero__fireflies" aria-hidden="true">
+    <span class="ff" style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%;"></span>
+    <span class="ff" style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%;"></span>
+    <span class="ff" style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%;"></span>
+    <span class="ff" style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%;"></span>
+    <span class="ff" style="--dx: 12px; --dy: -14px; --dur: 3.4s; left: 55%; top: 78%;"></span>
+    <span class="ff" style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%;"></span>
+  </div>
+
+  <div class="profile-container">
+    <!--  <div class="profile-header">
+       futura implementación ¿?
+      <div class="profile-avatar">
+        
+        <div class="avatar-placeholder">
+          <i class="fa-solid fa-circle-user"></i>
+        </div>
+        
+        <div class="profile-avatar-actions">
+          <button class="btn btn--outline btn--sm">
+            <i class="fa-solid fa-camera"></i> Cambiar foto
+          </button>
+        </div>
+      </div>
+      
+      
+      <div class="profile-info">
+        <h1 class="profile-name">{{ user.get_full_name|default:user.username }}</h1>
+        <p class="profile-username">@{{ user.username }}</p>
+        
+        <div class="profile-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ user.date_joined|date:"d/m/Y" }}</span>
+            <span class="stat-label">Miembro desde</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ user.last_login|date:"d/m/Y"|default:"Nunca" }}</span>
+            <span class="stat-label">Último acceso</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    -->
+
+    <div class="profile-content">
+      <div class="profile-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-circle-info"></i> Información Personal
+        </h2>
+        
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Nombre completo</span>
+            <span class="info-value">{{ user.get_full_name|default:"No especificado" }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="info-label">Correo electrónico</span>
+            <span class="info-value">{{ user.email|default:"No especificado" }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="info-label">Nombre de usuario</span>
+            <span class="info-value">{{ user.username }}</span>
+          </div>
+          
+          <div class="info-item">
+            <span class="info-label">Estado de la cuenta</span>
+            <span class="info-value status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
+              {% if user.is_active %}Activa{% else %}Inactiva{% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-calendar-check"></i> Reservas Recientes
+        </h2>
+        
+        <div class="reservations-list">
+          {% if reservas %}
+            {% for reserva in reservas %}
+            <div class="reservation-card">
+              <div class="reservation-header">
+                <h3 class="reservation-park">{{ reserva.parque.nombre }}</h3>
+                <span class="reservation-status {{ reserva.estado|lower }}">
+                  {{ reserva.estado }}
+                </span>
+              </div>
+              
+              <div class="reservation-details">
+                <div class="detail-item">
+                  <i class="fa-solid fa-calendar-days"></i>
+                  <span>{{ reserva.fecha_reserva|date:"d/m/Y" }}</span>
+                </div>
+                <div class="detail-item">
+                  <i class="fa-solid fa-users"></i>
+                  <span>{{ reserva.num_personas }} personas</span>
+                </div>
+                <div class="detail-item">
+                  <i class="fa-solid fa-clock"></i>
+                  <span>{{ reserva.hora_entrada|time:"H:i" }}</span>
+                </div>
+              </div>
+              
+              <div class="reservation-actions">
+                <button class="btn btn--outline btn--sm">
+                  <i class="fa-solid fa-eye"></i> Ver detalles
+                </button>
+                {% if reserva.estado == 'Confirmada' %}
+                <button class="btn btn--primary btn--sm">
+                  <i class="fa-solid fa-ticket"></i> Ver entrada
+                </button>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="no-reservations">
+              <i class="fa-solid fa-calendar-xmark"></i>
+              <h3>No tienes reservas aún</h3>
+              <p>Explora nuestros parques y reserva tu experiencia con luciérnagas.</p>
+              <a href="{% url 'sistema_app:mapa' %}" class="btn btn--primary">
+                <i class="fa-solid fa-location-dot"></i> Ver parques disponibles
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <!-- Configuración de la Cuenta -->
+      <!-- Futura implementación ¿?
+      <div class="profile-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-gear"></i> Configuración de la Cuenta
+        </h2>
+        
+        <div class="settings-grid">
+          <div class="setting-item">
+            <i class="fa-solid fa-lock"></i>
+            <div class="setting-info">
+              <h3>Seguridad</h3>
+              <p>Cambia tu contraseña y configura la autenticación</p>
+            </div>
+            <a href="#" class="btn btn--outline btn--sm">Gestionar</a>
+          </div>
+          
+          <div class="setting-item">
+            <i class="fa-solid fa-bell"></i>
+            <div class="setting-info">
+              <h3>Notificaciones</h3>
+              <p>Configura cómo recibir notificaciones</p>
+            </div>
+            <a href="#" class="btn btn--outline btn--sm">Configurar</a>
+          </div>
+          
+          <div class="setting-item">
+            <i class="fa-solid fa-language"></i>
+            <div class="setting-info">
+              <h3>Preferencias</h3>
+              <p>Idioma y otras preferencias</p>
+            </div>
+            <a href="#" class="btn btn--outline btn--sm">Editar</a>
+          </div>
+        </div>
+      </div> -->
+    </div>
+
+    <div class="profile-actions">
+      <a href="{% url 'sistema_app:home' %}" class="btn btn--outline">
+        <i class="fa-solid fa-arrow-left"></i> Volver al inicio
+      </a>
+      <!-- Futura implementación ¿?
+      <a href="#" class="btn btn--primary">
+        <i class="fa-solid fa-pen-to-square"></i> Editar perfil
+      </a>
+      -->
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+  
+  <script>
+    var usuarioName = {{ user.username }};
+  </script>
+  <script src="{% static 'script/perfil.js' %}"></script>
+  <script src="{% static 'script/luciernagas.js' %}"></script>
+{% endblock %}
