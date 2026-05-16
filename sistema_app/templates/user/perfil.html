@@ -93,35 +93,36 @@
             {% for reserva in reservas %}
             <div class="reservation-card">
               <div class="reservation-header">
-                <h3 class="reservation-park">{{ reserva.parque.nombre }}</h3>
-                <span class="reservation-status {{ reserva.estado|lower }}">
-                  {{ reserva.estado }}
+                <h3 class="reservation-park">{{ reserva.park.name }}</h3>
+                <span class="reservation-status {{ reserva.get_status_display|lower }}">
+                  {{ reserva.get_status_display }}
                 </span>
               </div>
-              
+
               <div class="reservation-details">
                 <div class="detail-item">
                   <i class="fa-solid fa-calendar-days"></i>
-                  <span>{{ reserva.fecha_reserva|date:"d/m/Y" }}</span>
+                  <span>{{ reserva.start_date|date:"d/m/Y" }} — {{ reserva.end_date|date:"d/m/Y" }}</span>
                 </div>
                 <div class="detail-item">
                   <i class="fa-solid fa-users"></i>
-                  <span>{{ reserva.num_personas }} personas</span>
+                  <span>{{ reserva.people }} {{ reserva.people|pluralize:"persona,personas" }}</span>
                 </div>
                 <div class="detail-item">
-                  <i class="fa-solid fa-clock"></i>
-                  <span>{{ reserva.hora_entrada|time:"H:i" }}</span>
+                  <i class="fa-solid {% if reserva.visit_type == 'CABIN' %}fa-house-chimney{% else %}fa-campground{% endif %}"></i>
+                  <span>{{ reserva.get_visit_type_display }}{% if reserva.cabin %} · {{ reserva.cabin.name }}{% endif %}</span>
                 </div>
               </div>
-              
+
               <div class="reservation-actions">
-                <button class="btn btn--outline btn--sm">
-                  <i class="fa-solid fa-eye"></i> Ver detalles
-                </button>
-                {% if reserva.estado == 'Confirmada' %}
-                <button class="btn btn--primary btn--sm">
-                  <i class="fa-solid fa-ticket"></i> Ver entrada
-                </button>
+                {% if reserva.is_cancellable %}
+                  <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
+                        onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--outline btn--sm">
+                      <i class="fa-solid fa-xmark"></i> Cancelar reserva
+                    </button>
+                  </form>
                 {% endif %}
               </div>
             </div>
@@ -193,7 +194,7 @@
 {% block extra_js %}
   
   <script>
-    var usuarioName = {{ user.username }};
+    var usuarioName = "{{ user.username|escapejs }}";
   </script>
   <script src="{% static 'script/perfil.js' %}"></script>
   <script src="{% static 'script/luciernagas.js' %}"></script>

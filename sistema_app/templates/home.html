@@ -40,10 +40,28 @@
         <a href="{% url 'sistema_app:mapa' %}" class="btn btn--accent">
           <span><i class="fa-solid fa-location-dot"></i> Explorar Parques</span>
         </a>
-        <a href="#reservar" class="btn btn--outline">
-          Reservar ahora <i class="fa-solid fa-right-long"></i>
-        </a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'sistema_app:reservation_create' %}" class="btn btn--outline">
+            Reservar ahora <i class="fa-solid fa-right-long"></i>
+          </a>
+        {% else %}
+          <button type="button" class="btn btn--outline" id="reservar-ahora-btn">
+            Reservar ahora <i class="fa-solid fa-right-long"></i>
+          </button>
+        {% endif %}
       </div>
+
+      {% if not user.is_authenticated %}
+        <script>
+          (function () {
+            const btn = document.getElementById('reservar-ahora-btn');
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+              if (typeof window.openAuthDialog === 'function') window.openAuthDialog();
+            });
+          })();
+        </script>
+      {% endif %}
 
       <!--<div class="hero__stats">
         <div class="stat">

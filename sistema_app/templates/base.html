@@ -26,6 +26,9 @@
     <ul class="nav__links">
       <li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" ><i class="fa-solid fa-house"></i> <a href="{% url 'sistema_app:home' %}"  >Inicio</a></li>
       <li class="park_link {% if request.resolver_match.url_name == 'mapa' %}active{% endif %}"><i class="fa-solid fa-location-dot"></i> <a href="{% url 'sistema_app:mapa' %}" >Mapa de parques</a></li>
+      {% if user.is_authenticated %}
+        <li class="reservation_link {% if 'reservation' in request.resolver_match.url_name %}active{% endif %}"><i class="fa-solid fa-ticket"></i> <a href="{% url 'sistema_app:reservation_list' %}">Mis reservaciones</a></li>
+      {% endif %}
       <li class="party_link {% if request.resolver_match.url_name == 'festival' %}active{% endif %}"><i class="fa-solid fa-circle-info"></i>  <a href="#festival" >El Festival</a></li>
     </ul>
     <div class="nav__auth">
@@ -39,7 +42,70 @@
     </div>
   </nav>
 
+  {% if messages %}
+    <ul class="flash-messages">
+      {% for message in messages %}
+        <li class="flash-messages__item flash-messages__item--{{ message.tags|default:'info' }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
   {% block content %}{% endblock %}
+
+  {% if not user.is_authenticated %}
+    <dialog id="auth-required-dialog" class="auth-dialog">
+      <div class="auth-dialog__body">
+        <div class="auth-dialog__icon" aria-hidden="true">
+          <i class="fa-solid fa-circle-exclamation"></i>
+        </div>
+        <h3 class="auth-dialog__title">Inicia sesión para reservar</h3>
+        <p class="auth-dialog__desc">
+          Para realizar una reservación necesitas tener una cuenta.
+          Inicia sesión si ya tienes una, o regístrate gratis en menos de un minuto.
+        </p>
+        <div class="auth-dialog__actions">
+          <a href="{% url 'sistema_app:login' %}"
+             data-auth-action="login"
+             data-base-url="{% url 'sistema_app:login' %}"
+             class="btn btn--accent">
+            <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+          </a>
+          <a href="{% url 'sistema_app:register' %}"
+             data-auth-action="register"
+             data-base-url="{% url 'sistema_app:register' %}"
+             class="btn btn--outline">
+            <i class="fa-solid fa-user-plus"></i> Registrarse
+          </a>
+        </div>
+        <button type="button" class="auth-dialog__close" id="auth-required-close" aria-label="Cerrar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </dialog>
+    <script>
+      (function () {
+        const dlg = document.getElementById('auth-required-dialog');
+        if (!dlg) return;
+        const close = document.getElementById('auth-required-close');
+        const defaultNext = "{% url 'sistema_app:reservation_create' %}";
+
+        window.openAuthDialog = function (nextUrl) {
+          const target = nextUrl || defaultNext;
+          dlg.querySelectorAll('[data-auth-action]').forEach((link) => {
+            const base = link.dataset.baseUrl;
+            link.href = `${base}?next=${encodeURIComponent(target)}`;
+          });
+          if (typeof dlg.showModal === 'function') dlg.showModal();
+          else dlg.setAttribute('open', '');
+        };
+
+        close.addEventListener('click', () => dlg.close());
+        dlg.addEventListener('click', (e) => {
+          if (e.target === dlg) dlg.close();
+        });
+      })();
+    </script>
+  {% endif %}
   <!--- 
   <div class="trust-bar">
     <div class="trust-item">

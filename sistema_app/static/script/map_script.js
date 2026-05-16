@@ -192,8 +192,19 @@ function showParkInfo(parque) {
     `;
 }
 
-// Función para reservar (placeholder)
+// Navegar al formulario de nueva reservación con el parque preseleccionado.
+// Si el usuario no ha iniciado sesión, lo mandamos al login con ?next= para
+// que regrese al formulario tras autenticarse.
 function reservarParque(parkId) {
+    if (typeof isAuthenticated !== "undefined" && !isAuthenticated) {
+        if (typeof window.openAuthDialog === 'function') {
+            const target = `${reservationUrl}?park=${parkId}`;
+            window.openAuthDialog(target);
+            return;
+        }
+        window.location.href = loginUrl;
+        return;
+    }
     if (typeof window.openReservaModal === 'function') {
         window.openReservaModal(parkId);
         return;
