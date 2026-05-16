@@ -36,6 +36,7 @@ ALLOWED_HOSTS = []
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+LOGIN_URL = "sistema_app:login"
 LOGIN_REDIRECT_URL = "sistema_app:home"
 
 LANGUAGE_CODE = 'es-mx'
@@ -130,6 +131,18 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Email — en desarrollo imprimimos los correos en consola. En producción se
+# debe configurar un backend SMTP real. Los fallos de envío no invalidan la
+# reservación (ver NotificationService).
+EMAIL_BACKEND = env(
+    'EMAIL_BACKEND',
+    default='django.core.mail.backends.console.EmailBackend',
+)
+DEFAULT_FROM_EMAIL = env(
+    'DEFAULT_FROM_EMAIL',
+    default='noreply@luciernagas2026.mx',
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

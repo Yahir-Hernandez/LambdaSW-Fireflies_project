@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero__stars" aria-hidden="true"></div>
+  <div class="container" style="position: relative; z-index: 10;">
+    <br><br>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="text-white">Mis reservaciones</h2>
+      <a href="{% url 'sistema_app:reservation_create' %}" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Nueva reservación
+      </a>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if reservaciones %}
+      <div class="table-responsive bg-white rounded p-2">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Parque</th>
+              <th>Tipo</th>
+              <th>Cabaña</th>
+              <th>Inicio</th>
+              <th>Término</th>
+              <th>Personas</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in reservaciones %}
+              <tr>
+                <td>{{ r.pk }}</td>
+                <td>{{ r.park.name }}</td>
+                <td>{{ r.get_visit_type_display }}</td>
+                <td>{{ r.cabin.name|default:"—" }}</td>
+                <td>{{ r.start_date|date:"Y-m-d" }}</td>
+                <td>{{ r.end_date|date:"Y-m-d" }}</td>
+                <td>{{ r.people }}</td>
+                <td>
+                  <span class="badge bg-{% if r.status == 'ACTIVE' %}success{% elif r.status == 'CANCELLED' %}secondary{% else %}dark{% endif %}">
+                    {{ r.get_status_display }}
+                  </span>
+                </td>
+                <td>
+                  {% if r.is_cancellable %}
+                    <form method="post" action="{% url 'sistema_app:reservation_cancel' r.pk %}" onsubmit="return confirm('¿Cancelar esta reservación?');" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                    </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info">
+        Aún no tienes reservaciones.
+        <a href="{% url 'sistema_app:reservation_create' %}">Crea una desde aquí</a>.
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

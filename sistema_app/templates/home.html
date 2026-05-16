@@ -37,13 +37,63 @@
       </p>
 
       <div class="hero__actions">
-        <a href="#parques" class="btn btn--accent">
+        <a href="{% url 'sistema_app:mapa' %}" class="btn btn--accent">
           <span><i class="fa-solid fa-location-dot"></i> Explorar Parques</span>
         </a>
-        <a href="#reservar" class="btn btn--outline">
-          Reservar ahora <i class="fa-solid fa-right-long"></i>
-        </a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'sistema_app:reservation_create' %}" class="btn btn--outline">
+            Reservar ahora <i class="fa-solid fa-right-long"></i>
+          </a>
+        {% else %}
+          <button type="button" class="btn btn--outline" id="reservar-ahora-btn">
+            Reservar ahora <i class="fa-solid fa-right-long"></i>
+          </button>
+        {% endif %}
       </div>
+
+      {% if not user.is_authenticated %}
+        <dialog id="auth-required-dialog" class="auth-dialog">
+          <div class="auth-dialog__body">
+            <div class="auth-dialog__icon" aria-hidden="true">
+              <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <h3 class="auth-dialog__title">Inicia sesión para reservar</h3>
+            <p class="auth-dialog__desc">
+              Para realizar una reservación necesitas tener una cuenta.
+              Inicia sesión si ya tienes una, o regístrate gratis en menos de un minuto.
+            </p>
+            <div class="auth-dialog__actions">
+              <a href="{% url 'sistema_app:login' %}?next={% url 'sistema_app:reservation_create' %}"
+                 class="btn btn--accent">
+                <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+              </a>
+              <a href="{% url 'sistema_app:register' %}?next={% url 'sistema_app:reservation_create' %}"
+                 class="btn btn--outline">
+                <i class="fa-solid fa-user-plus"></i> Registrarse
+              </a>
+            </div>
+            <button type="button" class="auth-dialog__close" id="auth-required-close" aria-label="Cerrar">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </dialog>
+        <script>
+          (function () {
+            const btn = document.getElementById('reservar-ahora-btn');
+            const dlg = document.getElementById('auth-required-dialog');
+            const close = document.getElementById('auth-required-close');
+            if (!btn || !dlg) return;
+            btn.addEventListener('click', () => {
+              if (typeof dlg.showModal === 'function') dlg.showModal();
+              else dlg.setAttribute('open', '');
+            });
+            close.addEventListener('click', () => dlg.close());
+            dlg.addEventListener('click', (e) => {
+              if (e.target === dlg) dlg.close();
+            });
+          })();
+        </script>
+      {% endif %}
 
       <!--<div class="hero__stats">
         <div class="stat">

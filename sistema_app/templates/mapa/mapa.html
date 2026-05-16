@@ -66,24 +66,28 @@
 
 <script>
     const parkIconUrl = "{% static 'img/luciernaga.png' %}";
+    const reservationUrl = "{% url 'sistema_app:reservation_create' %}";
+    const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    const loginUrl = "{% url 'sistema_app:login' %}";
     <!-- Modelamos los datos de los parques recibidos desde Backend -->
     <!-- Estos datos serán usados en script/map_script.js  -->
     const data_parks = [
       {% for parque in parques %}
       {
         id: {{ parque.id }},
-        nombre: "{{ parque.nombre|escapejs }}",
-        direccion: "{{ parque.direccion|escapejs }}",
-        descripcion: "{{ parque.descripcion|escapejs }}",
-        latitud: {{ parque.latitud }},
-        longitud: {{ parque.longitud }},
-        maximo_visitantes: {{ parque.maximo_visitantes }},
-        disponibilidad_actual: {{ parque.disponibilidad_actual }},
-        telefono_contacto: "{{ parque.telefono_contacto|escapejs }}",
-        email_contacto: "{{ parque.email_contacto|escapejs }}",
+        nombre: "{{ parque.name|escapejs }}",
+        direccion: "{{ parque.address|escapejs }}",
+        descripcion: "{{ parque.description|escapejs }}",
+        latitud: {{ parque.latitude }},
+        longitud: {{ parque.longitude }},
+        maximo_visitantes: {{ parque.camping_capacity }},
+        disponibilidad_actual: {{ parque.camping_capacity }},
+        has_cabins: {{ parque.has_cabins|yesno:"true,false" }},
+        telefono_contacto: "{{ parque.contact_phone|escapejs }}",
+        email_contacto: "{{ parque.contact_email|escapejs }}",
         servicios: [
-          {% for servicio in parque.servicios.all %}
-          "{{ servicio.nombre|escapejs }}"{% if not forloop.last %},{% endif %}
+          {% for servicio in parque.services.all %}
+          "{{ servicio.name|escapejs }}"{% if not forloop.last %},{% endif %}
           {% endfor %}
         ]
       }{% if not forloop.last %},{% endif %}

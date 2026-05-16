@@ -14,6 +14,7 @@
 .hero__stars {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background-image:
     radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,.5) 0%, transparent 0%),
     radial-gradient(1px 1px at 72% 8%, rgba(255,255,255,.4) 0%, transparent 0%),
@@ -447,4 +448,74 @@
   .hero__actions { flex-direction: column; align-items: center; }
   .hero__stats { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 20px; }
   .cta-reserva__inner { padding: 36px 24px; }
+}
+
+/* Diálogo "Inicia sesión para reservar" --------------------------- */
+.auth-dialog {
+  border: none;
+  padding: 0;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #101a26 0%, #0b1218 100%);
+  color: #fff;
+  width: min(440px, 92vw);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(200,255,0,.15);
+  overflow: visible;
+}
+.auth-dialog::backdrop {
+  background: rgba(5, 10, 15, .7);
+  backdrop-filter: blur(4px);
+}
+.auth-dialog__body {
+  position: relative;
+  padding: 36px 30px 30px;
+  text-align: center;
+}
+.auth-dialog__icon {
+  width: 60px; height: 60px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: rgba(200,255,0,.1);
+  border: 1px solid rgba(200,255,0,.35);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  color: var(--accent, #c8ff00);
+}
+.auth-dialog__title {
+  font-family: var(--font-display, "Cinzel", serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: #fff;
+}
+.auth-dialog__desc {
+  font-size: .95rem;
+  line-height: 1.55;
+  color: var(--text-dim, rgba(255,255,255,.75));
+  margin: 0 0 22px;
+}
+.auth-dialog__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.auth-dialog__actions .btn {
+  min-width: 150px;
+  justify-content: center;
+}
+.auth-dialog__close {
+  position: absolute;
+  top: 10px; right: 12px;
+  width: 32px; height: 32px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,.55);
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background .15s ease, color .15s ease;
+}
+.auth-dialog__close:hover {
+  background: rgba(255,255,255,.08);
+  color: #fff;
 }

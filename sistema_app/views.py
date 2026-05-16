@@ -1,37 +1,48 @@
-from django.shortcuts import render, redirect
-
-# Importamos el formulario
-from .forms import CustomUserCreationForm
-# Importamos el modelo User de Django (vine por defecto no tienes que hacer algo)
-from django.contrib.auth.models import User
+from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Parque
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404, redirect, render, resolve_url
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
-# Create your views here.
+from .forms import CustomUserCreationForm, ReservationForm
+from .models import Park, Reservation
+from .services import ReservationService
+
+
 def home(request):
-    return render(request, 'home.html')
+    return render(request, "home.html")
+
+
+def _safe_next(request, fallback="sistema_app:home"):
+    next_url = request.POST.get("next") or request.GET.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return next_url
+    return resolve_url(fallback)
+
 
 def register(request):
-    data = {
-    'form': CustomUserCreationForm()
-    }
+    data = {"form": CustomUserCreationForm(), "next": request.GET.get("next", "")}
     if request.method == "POST":
         formulario = CustomUserCreationForm(data=request.POST)
         if formulario.is_valid():
-            usuario = formulario.save()
-            user = authenticate(username=formulario.cleaned_data["username"],
-            password=formulario.cleaned_data["password1"])
-            auth_login(request,user)
-            return redirect(to="sistema_app:home")
+            formulario.save()
+            user = authenticate(
+                username=formulario.cleaned_data["username"],
+                password=formulario.cleaned_data["password1"],
+            )
+            auth_login(request, user)
+            return redirect(_safe_next(request))
         data["form"] = formulario
-    return render(request,'registro/signIn.html',data)
+    return render(request, "registro/signIn.html", data)
 
 
 def login(request):
-    data = {
-        'form': AuthenticationForm()
-    }
+    data = {"form": AuthenticationForm(), "next": request.GET.get("next", "")}
     if request.method == "POST":
         formulario = AuthenticationForm(data=request.POST)
         if formulario.is_valid():
@@ -40,94 +51,69 @@ def login(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 auth_login(request, user)
-                return redirect(to="sistema_app:home")
+                return redirect(_safe_next(request))
         data["form"] = formulario
-    return render(request,'registro/logIn.html',data)
+    return render(request, "registro/logIn.html", data)
 
 
 def logout_view(request):
     logout(request)
     return redirect(to="sistema_app:home")
 
+
 def mapa(request):
-    # Obtener todos los parques de la base de datos
-    parques = Parque.objects.all()
-    
-    # Pasar los parques al template
-    '''context = {
-        'parques': parques
-    }'''
-    parques_prueba = [
-        {
-            'id': 1,
-            'nombre': 'Reserva de Nanacamilpa',
-            'direccion': 'Nanacamilpa de Mariano Arista, Tlaxcala',
-            'descripcion': 'Una de las reservas más importantes de luciérnagas en México. Cuenta con senderos iluminados y áreas de observación.',
-            'latitud': 19.4833,
-            'longitud': -98.5333,
-            'maximo_visitantes': 200,
-            'disponibilidad_actual': 45,
-            'telefono_contacto': '+52 246 123 4567',
-            'email_contacto': 'info@nanacamilpa.com',
-            'servicios': ['Cabañas', 'Camping', 'Guías']
-        },
-        {
-            'id': 2,
-            'nombre': 'Bosque de San Felipe Hidalgo',
-            'direccion': 'San Felipe Hidalgo, Tlaxcala',
-            'descripcion': 'Bosque protegido con espectáculo natural de luciérnagas. Ideal para familias.',
-            'latitud': 19.4500,
-            'longitud': -98.5000,
-            'maximo_visitantes': 150,
-            'disponibilidad_actual': 28,
-            'telefono_contacto': '+52 246 987 6543',
-            'email_contacto': 'contacto@sanfelipehidalgo.mx',
-            'servicios': ['Camping', 'Restaurante', 'Guías']
-        },
-        {
-            'id': 3,
-            'nombre': 'Parque Ecoturístico La Malinche',
-            'direccion': 'Huamantla, Tlaxcala',
-            'descripcion': 'Parque ubicado en las faldas del volcán La Malinche. Ofrece experiencias únicas de ecoturismo.',
-            'latitud': 19.3167,
-            'longitud': -97.9167,
-            'maximo_visitantes': 250,
-            'disponibilidad_actual': 62,
-            'telefono_contacto': '+52 246 555 1234',
-            'email_contacto': 'reservaciones@lamalinche.mx',
-            'servicios': ['Cabañas', 'Camping', 'Restaurante', 'Guías']
-        },
-        {
-            'id': 4,
-            'nombre': 'Santuario de las Luciérnagas Amecameca',
-            'direccion': 'Amecameca, Estado de México',
-            'descripcion': 'Santuario natural ubicado cerca del Popocatépetl. Experiencia mágica con vistas espectaculares.',
-            'latitud': 19.1239,
-            'longitud': -98.7664,
-            'maximo_visitantes': 180,
-            'disponibilidad_actual': 15,
-            'telefono_contacto': '+52 55 1234 5678',
-            'email_contacto': 'info@amecamecaluciernagas.mx',
-            'servicios': ['Camping', 'Restaurante', 'Guías']
-        },
-        {
-            'id': 5,
-            'nombre': 'Bosque Mágico de Tlaxco',
-            'direccion': 'Tlaxco, Tlaxcala',
-            'direccion': 'Tlaxco, Tlaxcala',
-            'descripcion': 'Bosque encantado con alta densidad de luciérnagas. Tour nocturno con guías especializados.',
-            'latitud': 19.6167,
-            'longitud': -98.1167,
-            'maximo_visitantes': 120,
-            'disponibilidad_actual': 8,
-            'telefono_contacto': '+52 246 777 8888',
-            'email_contacto': 'reservas@tlaxcomagico.com',
-            'servicios': ['Cabañas', 'Guías']
-        }
-    ]
-    
-    # Pasar los datos al template
-    context = {
-        'parques': parques_prueba
-    }
-    return render(request, 'mapa/mapa.html' , context)
+    parques = Park.objects.active().prefetch_related("services")
+    return render(request, "mapa/mapa.html", {"parques": parques})
+
+
+@login_required
+def reservation_create(request):
+    if request.method == "POST":
+        form = ReservationForm(request.POST)
+        if form.is_valid():
+            try:
+                reservation = ReservationService.create_reservation(
+                    user=request.user,
+                    park=form.cleaned_data["park"],
+                    visit_type=form.cleaned_data["visit_type"],
+                    start_date=form.cleaned_data["start_date"],
+                    end_date=form.cleaned_data["end_date"],
+                    n_people=form.cleaned_data["people"],
+                )
+            except ValidationError as exc:
+                form.add_error(None, exc)
+            else:
+                messages.success(
+                    request,
+                    f"Reservación #{reservation.pk} confirmada.",
+                )
+                return redirect("sistema_app:reservation_list")
+    else:
+        initial = {}
+        park_id = request.GET.get("park")
+        if park_id and park_id.isdigit():
+            initial["park"] = int(park_id)
+        form = ReservationForm(initial=initial)
+    return render(request, "reservaciones/reservacion_form.html", {"form": form})
+
+
+@login_required
+def reservation_list(request):
+    reservas = ReservationService.get_user_reservations(request.user)
+    return render(
+        request,
+        "reservaciones/reservacion_list.html",
+        {"reservaciones": reservas},
+    )
+
+
+@login_required
+@require_POST
+def reservation_cancel(request, pk):
+    reservation = get_object_or_404(Reservation, pk=pk)
+    try:
+        ReservationService.cancel_reservation(request.user, reservation)
+        messages.success(request, f"Reservación #{reservation.pk} cancelada.")
+    except ValidationError as exc:
+        messages.error(request, "; ".join(exc.messages))
+    return redirect("sistema_app:reservation_list")

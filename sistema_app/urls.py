@@ -1,6 +1,6 @@
-from django.urls import path  # ← así
+from django.urls import path
+
 from . import views
-from django.contrib.auth.views import LoginView
 
 app_name = "sistema_app"
 urlpatterns = [
@@ -9,4 +9,7 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('mapa/', views.mapa, name='mapa'),
+    path('reservaciones/', views.reservation_list, name='reservation_list'),
+    path('reservaciones/nueva/', views.reservation_create, name='reservation_create'),
+    path('reservaciones/<int:pk>/cancelar/', views.reservation_cancel, name='reservation_cancel'),
 ]
