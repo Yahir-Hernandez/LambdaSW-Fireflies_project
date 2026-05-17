@@ -1,21 +1,17 @@
 """Capa de servicios para la lógica de reservaciones.
 
 Servicios disponibles:
-    * ReservationValidator:
-        Reglas de negocio sobre los datos de entrada.
-    * AvailabilityService: 
-        Cálculo y reserva de capacidad por parque/cabaña.
-    * NotificationService: 
-        Envío de correos y notificaciones.
-    * ReservationService: 
-        Orquesta los servicios anteriores.
+    * ReservationValidator: Reglas de negocio sobre los datos de entrada.
+    * AvailabilityService:  Disponibilidad de hospedajes.
+    * NotificationService:  Envío de correos.
+    * ReservationService:   Orquesta los servicios anteriores.
 """
 
 from __future__ import annotations
 
 import logging
 from datetime import date, timedelta
-from typing import Iterable, Optional
+from typing import Iterable
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -23,47 +19,19 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Sum
 
-from .models import Cabin, Park, Reservation
+from .models import Lodging, Park, Reservation
 
 logger = logging.getLogger(__name__)
 
 
 class ReservationValidator:
-    """
-    Aplica las reglas RNB-01<->04 sobre los datos 
-    de una posible reservación.
-    - Solo se permite reservar entre Junio y Agosto de 2026
-    - No se puede reservar en martes.
-    - Cada parque puede ser consigurado por el Administrador.
-    - Todos los parques deben contar con zona de camping.
-
-    Methods:
-        validate_date(start_date, end_date) Valida coherencia
-         y restricciones de fechas.
-
-        validate_tuesday(start_date) Verifica que la estancia
-          no inicie en martes.
-
-        validate_visit_type(park, visit_type) Comprueba que el
-          tipo de visita exista y que el parque soporte dicho
-          servicio.
-
-        validate_people(n_people) Valida límites mínimos y
-          máximos de personas.
-
-        validate() Ejecuta todas las validaciones anteriores
-          de forma centralizada.
-
-    Raises:
-        ValidationError:
-            Se lanza cuando alguna regla de negocio es violada.
-    """
+    """Reglas RNB-01..04 sobre los datos de una posible reservación."""
 
     SEASON_START = date(2026, 6, 1)
     SEASON_END = date(2026, 8, 31)
     MIN_PEOPLE = 1
     MAX_PEOPLE = 20
-    TUESDAY = 1 
+    TUESDAY = 1
 
     @classmethod
     def validate_date(cls, start_date: date, end_date: date) -> None:
@@ -90,13 +58,6 @@ class ReservationValidator:
             )
 
     @classmethod
-    def validate_visit_type(cls, park: Park, visit_type: str) -> None:
-        if visit_type not in Reservation.VisitType.values:
-            raise ValidationError("Tipo de visita inválido.")
-        if visit_type == Reservation.VisitType.CABIN and not park.has_cabins:
-            raise ValidationError("Este parque no ofrece servicio de cabañas.")
-
-    @classmethod
     def validate_people(cls, n_people: int) -> None:
         if n_people is None or n_people < cls.MIN_PEOPLE:
             raise ValidationError(
@@ -108,34 +69,38 @@ class ReservationValidator:
             )
 
     @classmethod
-    def validate(cls, park: Park, visit_type: str, start_date: date,
-        end_date: date, n_people: int,) -> None:
+    def validate_lodging(cls, lodging: Lodging, park: Park, n_people: int) -> None:
+        if lodging.park_id != park.id:
+            raise ValidationError("La opción seleccionada no pertenece a este parque.")
+        if n_people > lodging.capacity:
+            raise ValidationError(
+                f"Esta opción admite máximo {lodging.capacity} personas."
+            )
+
+    @classmethod
+    def validate(
+        cls,
+        park: Park,
+        lodging: Lodging,
+        start_date: date,
+        end_date: date,
+        n_people: int,
+    ) -> None:
         cls.validate_date(start_date, end_date)
         cls.validate_tuesday(start_date)
-        cls.validate_visit_type(park, visit_type)
         cls.validate_people(n_people)
+        cls.validate_lodging(lodging, park, n_people)
 
 
 class AvailabilityService:
-    """
-    Servicio encargado del cálculo y validación de disponibilidad
-    de hospedaje dentro del sistema de reservaciones.
+    """Disponibilidad de hospedajes.
 
-    Methods: 
-        _overlap()
-            Filtra reservaciones activas con traslape de fechas.
-
-        camping_available_slots()
-            Calcula espacios disponibles de camping.
-
-        available_cabins()
-            Recupera las cabañas disponibles para un rango de fechas.
-
-        check_availability()
-            Verifica disponibilidad para camping o cabaña.
-
-        reserve_capacity()
-            Realiza la asignación efectiva de capacidad.
+    Reglas distintas según el kind del lodging:
+      * CABIN:   exclusivo. Cualquier reserva activa traslapada lo bloquea.
+      * CAMPING: compartible. Una parcela admite varias reservas hasta
+                 ``capacity`` personas en total dentro del rango. La capacidad
+                 disponible para un nuevo huésped es ``capacity - SUM(people)``
+                 de las reservas activas traslapadas.
     """
 
     @staticmethod
@@ -147,77 +112,70 @@ class AvailabilityService:
         )
 
     @classmethod
-    def camping_available_slots(
-        cls, park: Park, start_date: date, end_date: date
+    def people_booked(
+        cls, lodging: Lodging, start_date: date, end_date: date
     ) -> int:
-        cupos = (
+        """Suma de personas ya reservadas para ese lodging en el rango."""
+        return (
             cls._overlap(
-                Reservation.objects.filter(
-                    park=park,
-                    visit_type=Reservation.VisitType.CAMPING,
-                ),
+                Reservation.objects.filter(lodging=lodging),
                 start_date,
                 end_date,
             ).aggregate(total=Sum("people"))["total"]
             or 0
         )
-        return max(park.camping_capacity - cupos, 0)
 
     @classmethod
-    def available_cabins(
-        cls, park: Park, start_date: date, end_date: date, n_people: int
-    ) -> Iterable[Cabin]:
-        candidates = park.cabins.filter(capacity__gte=n_people).order_by("capacity")
-        cupos_ids = cls._overlap(
-            Reservation.objects.filter(cabin__in=candidates),
-            start_date,
-            end_date,
-        ).values_list("cabin_id", flat=True)
-        return candidates.exclude(id__in=list(cupos_ids))
+    def remaining_capacity(
+        cls, lodging: Lodging, start_date: date, end_date: date
+    ) -> int:
+        """Cuántas personas más caben en este lodging para ese rango.
 
-    @classmethod
-    def check_availability(cls, park: Park, visit_type: str,
-            start_date: date, end_date: date, n_people: int, 
-            cabin: Optional[Cabin] = None,) -> bool:
-        if visit_type == Reservation.VisitType.CAMPING:
-            return cls.camping_available_slots(park, start_date, end_date) >= n_people
-
-        if visit_type == Reservation.VisitType.CABIN:
-            if cabin is not None:
-                if cabin.park_id != park.id or cabin.capacity < n_people:
-                    return False
-                return not cls._overlap(
-                    Reservation.objects.filter(cabin=cabin),
-                    start_date,
-                    end_date,
-                ).exists()
-            return cls.available_cabins(park, start_date, end_date, n_people).exists()
-
-        return False
-
-    @classmethod
-    def reserve_capacity( cls, park: Park, visit_type: str, start_date: date,
-        end_date: date, n_people: int, 
-        cabin: Optional[Cabin] = None,) -> Optional[Cabin]:
-        """Reserva cupo dentro de una transacción.
-
-        Devuelve la cabaña efectivamente asignada (o ``None`` si es camping).
-        Debe llamarse dentro de ``transaction.atomic()`` con el parque ya bloqueado.
+        Para cabaña: capacity si está libre, 0 si tiene cualquier reserva
+        traslapada (es exclusiva).
+        Para camping: capacity - personas ya reservadas (acotado a 0).
         """
-        if visit_type == Reservation.VisitType.CABIN and cabin is None:
-            cabin = cls.available_cabins(park, start_date, end_date, n_people).first()
-            if cabin is None:
-                raise ValidationError(
-                    "No hay cabañas disponibles para las fechas y personas indicadas."
-                )
+        if lodging.kind == Lodging.Kind.CABIN:
+            booked = cls._overlap(
+                Reservation.objects.filter(lodging=lodging),
+                start_date,
+                end_date,
+            ).exists()
+            return 0 if booked else lodging.capacity
+        return max(lodging.capacity - cls.people_booked(lodging, start_date, end_date), 0)
 
-        if not cls.check_availability(
-            park, visit_type, start_date, end_date, n_people, cabin
-        ):
-            raise ValidationError(
-                "No hay disponibilidad para las fechas seleccionadas."
-            )
-        return cabin
+    @classmethod
+    def available_lodgings(
+        cls,
+        park: Park,
+        kind: str,
+        start_date: date,
+        end_date: date,
+        n_people: int = 1,
+    ) -> Iterable[Lodging]:
+        """Lodgings del kind dado que admiten al menos ``n_people`` en el rango.
+
+        Devuelve cada Lodging con un atributo extra ``available_capacity``
+        calculado en Python para evitar repetir la consulta en los callers.
+        """
+        candidates = park.lodgings.filter(kind=kind).order_by("capacity", "name")
+        result = []
+        for lo in candidates:
+            remaining = cls.remaining_capacity(lo, start_date, end_date)
+            if remaining >= n_people:
+                lo.available_capacity = remaining
+                result.append(lo)
+        return result
+
+    @classmethod
+    def is_lodging_available(
+        cls,
+        lodging: Lodging,
+        start_date: date,
+        end_date: date,
+        n_people: int = 1,
+    ) -> bool:
+        return cls.remaining_capacity(lodging, start_date, end_date) >= n_people
 
 
 class NotificationService:
@@ -253,11 +211,11 @@ class NotificationService:
 
     @classmethod
     def _format(cls, reservation: Reservation) -> str:
-        visit = reservation.get_visit_type_display()
-        cabin = f"\nCabaña: {reservation.cabin.name}" if reservation.cabin else ""
+        lodging = reservation.lodging
         return (
             f"Parque: {reservation.park.name}\n"
-            f"Tipo de visita: {visit}{cabin}\n"
+            f"Tipo: {lodging.get_kind_display()}\n"
+            f"Hospedaje: {lodging.name}\n"
             f"Fecha de inicio: {reservation.start_date.isoformat()}\n"
             f"Fecha de término: {reservation.end_date.isoformat()}\n"
             f"Personas: {reservation.people}\n"
@@ -295,38 +253,49 @@ class ReservationService:
     def create_reservation(
         cls,
         user,
-        park: Park,
-        visit_type: str,
+        lodging: Lodging,
         start_date: date,
         end_date: date,
         n_people: int,
-        cabin: Optional[Cabin] = None,
     ) -> Reservation:
-        ReservationValidator.validate(
-            park, visit_type, start_date, end_date, n_people
+        # Lock por hospedaje: evita doble-booking concurrente del mismo recurso
+        # sin bloquear todo el parque.
+        locked_lodging = (
+            Lodging.objects.select_for_update().select_related("park").get(pk=lodging.pk)
         )
-
-        # Bloqueo del parque para evitar carreras al verificar disponibilidad.
-        locked_park = Park.objects.select_for_update().get(pk=park.pk)
-        if locked_park.is_deleted:
+        park = locked_lodging.park
+        if park.is_deleted:
             raise ValidationError("Este parque ya no está disponible.")
 
-        assigned_cabin = AvailabilityService.reserve_capacity(
-            locked_park, visit_type, start_date, end_date, n_people, cabin
+        ReservationValidator.validate(
+            park, locked_lodging, start_date, end_date, n_people
         )
+
+        remaining = AvailabilityService.remaining_capacity(
+            locked_lodging, start_date, end_date
+        )
+        if remaining < n_people:
+            if locked_lodging.kind == Lodging.Kind.CABIN:
+                raise ValidationError(
+                    "Esta cabaña ya está reservada para las fechas seleccionadas."
+                )
+            if remaining == 0:
+                raise ValidationError(
+                    "Esta parcela ya está completamente reservada para esas fechas."
+                )
+            raise ValidationError(
+                f"En esta parcela solo quedan {remaining} lugar(es) disponible(s) para esas fechas."
+            )
 
         reservation = Reservation.objects.create(
             user=user,
-            park=locked_park,
-            cabin=assigned_cabin,
-            visit_type=visit_type,
+            park=park,
+            lodging=locked_lodging,
             start_date=start_date,
             end_date=end_date,
             people=n_people,
         )
 
-        # Disparamos el correo en on_commit: si la transacción falla, no se envía
-        # nada; si tiene éxito, un error de SMTP no revierte la reservación.
         transaction.on_commit(
             lambda: NotificationService.send_confirmation_email(reservation)
         )
@@ -352,7 +321,7 @@ class ReservationService:
 
     @classmethod
     def get_user_reservations(cls, user, only_active: bool = False):
-        qs = Reservation.objects.filter(user=user).select_related("park", "cabin")
+        qs = Reservation.objects.filter(user=user).select_related("park", "lodging")
         if only_active:
             qs = qs.filter(status=Reservation.Status.ACTIVE)
         return qs

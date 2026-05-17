@@ -67,6 +67,7 @@
 <script>
     const parkIconUrl = "{% static 'img/luciernaga.png' %}";
     const reservationUrl = "{% url 'sistema_app:reservation_create' %}";
+    const availabilityUrl = "{% url 'sistema_app:disponibilidad_api' %}";
     const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
     const loginUrl = "{% url 'sistema_app:login' %}";
     <!-- Modelamos los datos de los parques recibidos desde Backend -->
@@ -81,7 +82,7 @@
         latitud: {{ parque.latitude }},
         longitud: {{ parque.longitude }},
         maximo_visitantes: {{ parque.camping_capacity }},
-        disponibilidad_actual: {{ parque.camping_capacity }},
+        disponibilidad_actual: {{ parque.disponibilidad_actual }},
         has_cabins: {{ parque.has_cabins|yesno:"true,false" }},
         telefono_contacto: "{{ parque.contact_phone|escapejs }}",
         email_contacto: "{{ parque.contact_email|escapejs }}",
@@ -129,36 +130,44 @@
           <div class="reserva-form-fields">
             <div class="reserva-message" id="reservaMessage" role="alert" aria-live="polite"></div>
             <input type="hidden" id="parkId" name="parkId">
-            
+            <input type="hidden" id="lodgingId" name="lodging_id">
+
             <div class="form-group">
               <label for="fechaInicio">Fecha de inicio de la estancia</label>
               <input type="date" id="fechaInicio" name="fecha_inicio" required>
             </div>
-            
+
             <div class="form-group">
               <label for="fechaTermino">Fecha de término de la estancia</label>
               <input type="date" id="fechaTermino" name="fecha_termino" required>
             </div>
-            
+
             <div class="form-group">
               <label for="numPersonas">Número de personas</label>
-              <input type="number" id="numPersonas" name="num_personas" min="1" max="10" value="1" required>
+              <input type="number" id="numPersonas" name="num_personas" min="1" max="20" value="1" required>
             </div>
-            
+
             <div class="form-group">
               <label>Tipo de visita</label>
-              <div class="radio-group">
-                <label class="radio-option">
-                  <input type="radio" name="tipo_visita" value="cabaña" checked>
+              <div class="radio-group" id="tipoVisitaGroup">
+                <label class="radio-option" id="tipoVisitaCabin">
+                  <input type="radio" name="tipo_visita" value="CABIN">
                   <span>Cabaña</span>
                 </label>
                 <label class="radio-option">
-                  <input type="radio" name="tipo_visita" value="camping">
+                  <input type="radio" name="tipo_visita" value="CAMPING" checked>
                   <span>Camping</span>
                 </label>
               </div>
             </div>
-            
+
+            <div class="form-group">
+              <label>Selecciona una opción disponible</label>
+              <div class="lodging-options" id="lodgingOptions">
+                <p class="lodging-options__hint">Selecciona fechas y tipo de visita para ver opciones disponibles.</p>
+              </div>
+            </div>
+
             <div class="form-actions">
               <button type="button" class="btn btn--outline" onclick="closeReservaModal()">Cancelar</button>
               <button type="submit" class="btn btn--primary">Confirmar Reserva</button>

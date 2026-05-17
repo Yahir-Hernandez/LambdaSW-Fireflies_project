@@ -26,9 +26,6 @@
     <ul class="nav__links">
       <li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" ><i class="fa-solid fa-house"></i> <a href="{% url 'sistema_app:home' %}"  >Inicio</a></li>
       <li class="park_link {% if request.resolver_match.url_name == 'mapa' %}active{% endif %}"><i class="fa-solid fa-location-dot"></i> <a href="{% url 'sistema_app:mapa' %}" >Mapa de parques</a></li>
-      {% if user.is_authenticated %}
-        <li class="reservation_link {% if 'reservation' in request.resolver_match.url_name %}active{% endif %}"><i class="fa-solid fa-ticket"></i> <a href="{% url 'sistema_app:reservation_list' %}">Mis reservaciones</a></li>
-      {% endif %}
       <li class="party_link {% if request.resolver_match.url_name == 'festival' %}active{% endif %}"><i class="fa-solid fa-circle-info"></i>  <a href="#festival" >El Festival</a></li>
     </ul>
     <div class="nav__auth">
@@ -49,6 +46,53 @@
       {% endfor %}
     </ul>
   {% endif %}
+
+  <dialog id="error-dialog" class="auth-dialog auth-dialog--error">
+    <div class="auth-dialog__body">
+      <div class="auth-dialog__icon" aria-hidden="true">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="auth-dialog__title">Algo salió mal</h3>
+      <p class="auth-dialog__desc" id="error-dialog-message"></p>
+      <div class="auth-dialog__actions">
+        <button type="button" class="btn btn--accent" id="error-dialog-ok">Entendido</button>
+      </div>
+      <button type="button" class="auth-dialog__close" id="error-dialog-close" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </dialog>
+  <script>
+    (function () {
+      const errorToasts = Array.from(
+        document.querySelectorAll('.flash-messages__item--error')
+      );
+      if (errorToasts.length === 0) return;
+
+      const dlg = document.getElementById('error-dialog');
+      const messageEl = document.getElementById('error-dialog-message');
+      if (!dlg || !messageEl) return;
+
+      messageEl.textContent = errorToasts
+        .map((el) => el.textContent.trim())
+        .filter(Boolean)
+        .join(' ');
+
+      errorToasts.forEach((el) => el.remove());
+      const list = document.querySelector('.flash-messages');
+      if (list && list.children.length === 0) list.remove();
+
+      if (typeof dlg.showModal === 'function') dlg.showModal();
+      else dlg.setAttribute('open', '');
+
+      const close = () => dlg.close();
+      document.getElementById('error-dialog-ok')?.addEventListener('click', close);
+      document.getElementById('error-dialog-close')?.addEventListener('click', close);
+      dlg.addEventListener('click', (e) => {
+        if (e.target === dlg) close();
+      });
+    })();
+  </script>
 
   {% block content %}{% endblock %}
 

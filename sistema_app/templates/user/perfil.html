@@ -109,8 +109,8 @@
                   <span>{{ reserva.people }} {{ reserva.people|pluralize:"persona,personas" }}</span>
                 </div>
                 <div class="detail-item">
-                  <i class="fa-solid {% if reserva.visit_type == 'CABIN' %}fa-house-chimney{% else %}fa-campground{% endif %}"></i>
-                  <span>{{ reserva.get_visit_type_display }}{% if reserva.cabin %} · {{ reserva.cabin.name }}{% endif %}</span>
+                  <i class="fa-solid {% if reserva.lodging.kind == 'CABIN' %}fa-house-chimney{% else %}fa-campground{% endif %}"></i>
+                  <span>{{ reserva.lodging.get_kind_display }} · {{ reserva.lodging.name }}</span>
                 </div>
               </div>
 

@@ -1,18 +1,14 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
 
-from .models import Cabin, Park, Reservation, Service
+from .models import Lodging, Park, Reservation, Service
 from .services import ReservationService
 
 
-class ServiceInline(admin.TabularInline):
-    model = Service
+class LodgingInline(admin.TabularInline):
+    model = Lodging
     extra = 0
-
-
-class CabinInline(admin.TabularInline):
-    model = Cabin
-    extra = 0
+    fields = ("kind", "name", "capacity", "description")
 
 
 @admin.register(Park)
@@ -22,12 +18,13 @@ class ParkAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "camping_capacity",
-        "has_cabins",
+        "has_cabins_display",
         "is_deleted",
     )
-    list_filter = ("has_cabins", "is_deleted")
+    list_filter = ("is_deleted",)
     search_fields = ("name", "address")
-    inlines = [ServiceInline, CabinInline]
+    filter_horizontal = ("services",)
+    inlines = [LodgingInline]
     actions = ["soft_delete_selected", "restore_selected"]
 
     def get_queryset(self, request):
@@ -40,6 +37,10 @@ class ParkAdmin(admin.ModelAdmin):
     def delete_queryset(self, request, queryset):
         for park in queryset:
             park.soft_delete()
+
+    @admin.display(description="Tiene cabañas", boolean=True)
+    def has_cabins_display(self, obj):
+        return obj.has_cabins
 
     @admin.action(description="Eliminar lógicamente los parques seleccionados")
     def soft_delete_selected(self, request, queryset):
@@ -64,15 +65,14 @@ class ParkAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ("name", "park")
-    list_filter = ("park",)
-    search_fields = ("name", "park__name")
+    list_display = ("name",)
+    search_fields = ("name",)
 
 
-@admin.register(Cabin)
-class CabinAdmin(admin.ModelAdmin):
-    list_display = ("name", "park", "capacity")
-    list_filter = ("park",)
+@admin.register(Lodging)
+class LodgingAdmin(admin.ModelAdmin):
+    list_display = ("name", "park", "kind", "capacity")
+    list_filter = ("kind", "park")
     search_fields = ("name", "park__name")
 
 
@@ -85,14 +85,14 @@ class ReservationAdmin(admin.ModelAdmin):
         "user",
         "user_email",
         "park",
-        "visit_type",
+        "lodging",
         "start_date",
         "duration_days",
         "people",
         "status",
     )
-    list_filter = ("status", "visit_type", "park")
-    search_fields = ("user__username", "user__email", "park__name")
+    list_filter = ("status", "lodging__kind", "park")
+    search_fields = ("user__username", "user__email", "park__name", "lodging__name")
     actions = ["cancel_reservations"]
     readonly_fields = ("created_at",)
 

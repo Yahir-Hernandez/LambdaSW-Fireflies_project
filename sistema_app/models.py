@@ -3,6 +3,21 @@ from django.db import models
 from django.utils import timezone
 
 
+class Service(models.Model):
+    """Catálogo global. Los parques se asocian vía M2M."""
+
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Servicio"
+        verbose_name_plural = "Servicios"
+        ordering = ("name",)
+
+    def __str__(self):
+        return self.name
+
+
 class ParkQuerySet(models.QuerySet):
     def active(self):
         return self.filter(is_deleted=False)
@@ -16,10 +31,8 @@ class Park(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
 
-    camping_capacity = models.PositiveIntegerField(default=0)
-    has_cabins = models.BooleanField(default=False)
-
     working_hours = models.CharField(max_length=120, blank=True)
+    services = models.ManyToManyField(Service, blank=True, related_name="parks")
 
     contact_phone = models.CharField(max_length=20, blank=True)
     contact_email = models.EmailField(blank=True)
@@ -42,44 +55,45 @@ class Park(models.Model):
             self.is_deleted = False
             self.save(update_fields=["is_deleted"])
 
+    @property
+    def has_cabins(self) -> bool:
+        return self.lodgings.filter(kind=Lodging.Kind.CABIN).exists()
+
+    @property
+    def camping_capacity(self) -> int:
+        total = self.lodgings.filter(kind=Lodging.Kind.CAMPING).aggregate(
+            total=models.Sum("capacity")
+        )["total"]
+        return total or 0
+
     def __str__(self):
         return self.name
 
 
-class Cabin(models.Model):
-    park = models.ForeignKey(Park, on_delete=models.CASCADE, related_name="cabins")
+class Lodging(models.Model):
+    """Unidad reservable. Una cabaña o una parcela de camping."""
+
+    class Kind(models.TextChoices):
+        CABIN = "CABIN", "Cabaña"
+        CAMPING = "CAMPING", "Parcela de camping"
+
+    park = models.ForeignKey(Park, on_delete=models.CASCADE, related_name="lodgings")
+    kind = models.CharField(max_length=10, choices=Kind.choices)
     name = models.CharField(max_length=100)
     capacity = models.PositiveIntegerField()
     description = models.TextField(blank=True)
 
     class Meta:
-        verbose_name = "Cabaña"
-        verbose_name_plural = "Cabañas"
+        verbose_name = "Hospedaje"
+        verbose_name_plural = "Hospedajes"
         unique_together = ("park", "name")
+        ordering = ("kind", "name")
 
     def __str__(self):
-        return f"{self.park.name} · {self.name}"
-
-
-class Service(models.Model):
-    park = models.ForeignKey(Park, on_delete=models.CASCADE, related_name="services")
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-
-    class Meta:
-        verbose_name = "Servicio"
-        verbose_name_plural = "Servicios"
-        unique_together = ("park", "name")
-
-    def __str__(self):
-        return f"{self.park.name} · {self.name}"
+        return f"{self.park.name} · {self.get_kind_display()}: {self.name}"
 
 
 class Reservation(models.Model):
-    class VisitType(models.TextChoices):
-        CAMPING = "CAMPING", "Camping"
-        CABIN = "CABIN", "Cabaña"
-
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "Activa"
         CANCELLED = "CANCELLED", "Cancelada"
@@ -91,14 +105,11 @@ class Reservation(models.Model):
         related_name="reservations",
     )
     park = models.ForeignKey(Park, on_delete=models.PROTECT, related_name="reservations")
-    cabin = models.ForeignKey(
-        Cabin,
+    lodging = models.ForeignKey(
+        Lodging,
         on_delete=models.PROTECT,
-        null=True,
-        blank=True,
         related_name="reservations",
     )
-    visit_type = models.CharField(max_length=10, choices=VisitType.choices)
 
     start_date = models.DateField()
     end_date = models.DateField()
@@ -116,7 +127,7 @@ class Reservation(models.Model):
         verbose_name_plural = "Reservaciones"
         ordering = ("-start_date",)
         indexes = [
-            models.Index(fields=["park", "visit_type", "status"]),
+            models.Index(fields=["park", "status"]),
             models.Index(fields=["start_date", "end_date"]),
         ]
 
