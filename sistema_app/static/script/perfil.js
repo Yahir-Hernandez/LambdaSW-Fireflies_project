@@ -51,6 +51,7 @@ function setupEventListeners() {
     const viewDetailsBtns = document.querySelectorAll('.reservation-actions .btn--outline');
     if (viewDetailsBtns) {
         viewDetailsBtns.forEach(btn => {
+            if (btn.type === 'submit' || btn.closest('form')) return;
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const reservationCard = this.closest('.reservation-card');

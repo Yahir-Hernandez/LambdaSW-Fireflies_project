@@ -313,10 +313,9 @@ class ReservationService:
         with transaction.atomic():
             reservation.status = Reservation.Status.CANCELLED
             reservation.save(update_fields=["status"])
-
-        transaction.on_commit(
-            lambda: NotificationService.send_cancellation_email(reservation)
-        )
+            transaction.on_commit(
+                lambda: NotificationService.send_cancellation_email(reservation)
+            )
         return reservation
 
     @classmethod

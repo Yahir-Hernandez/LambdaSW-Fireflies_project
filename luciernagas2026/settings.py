@@ -118,10 +118,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
 USE_I18N = True
 
 USE_TZ = True
@@ -143,6 +139,12 @@ DEFAULT_FROM_EMAIL = env(
     'DEFAULT_FROM_EMAIL',
     default='noreply@luciernagas2026.mx',
 )
+
+EMAIL_HOST          = env('EMAIL_HOST',          default='smtp.gmail.com')
+EMAIL_PORT          = env.int('EMAIL_PORT',      default=587)
+EMAIL_USE_TLS       = env.bool('EMAIL_USE_TLS',  default=True)
+EMAIL_HOST_USER     = env('EMAIL_HOST_USER',     default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
