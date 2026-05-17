@@ -7,10 +7,16 @@ def consolidate_services(apps, schema_editor):
     """Colapsa los Service per-park en un catálogo global y los reconecta vía M2M."""
     Service = apps.get_model("sistema_app", "Service")
     Park = apps.get_model("sistema_app", "Park")
-    # Insertamos en la tabla intermedia M2M directamente porque los managers de
-    # relaciones inversas (`park.services.add(...)`) no siempre están disponibles
-    # sobre los modelos históricos que Django reconstruye en migraciones.
-    Through = Park.services.through
+
+    # Buscamos la tabla intermedia M2M vía _meta porque los modelos históricos
+    # que Django reconstruye dentro de RunPython no siempre exponen el atajo
+    # ``Park.services.through`` como descriptor en la clase. Esta ruta funciona
+    # en cualquier versión de Django y tras cualquier secuencia de migraciones.
+    services_field = Park._meta.get_field("services")
+    Through = apps.get_model(
+        "sistema_app",
+        services_field.remote_field.through._meta.model_name,
+    )
 
     by_name = defaultdict(list)
     for s in Service.objects.all():
