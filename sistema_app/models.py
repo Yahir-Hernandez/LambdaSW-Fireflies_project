@@ -139,3 +139,36 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"Reservación #{self.pk} · {self.user} · {self.park.name}"
+
+
+class PendingRegistration(models.Model):
+    """Registro de un usuario que aún NO ha verificado su correo.
+
+    No existe en la tabla User hasta que el código se valida con éxito.
+    Esto evita squatting de usernames y polución de la BD con cuentas
+    inactivas.
+    """
+
+    EXPIRY_SECONDS = 300       # 5 minutos
+    RESEND_COOLDOWN_SECONDS = 120  # 2 minutos
+
+    username = models.CharField(max_length=150)
+    email = models.EmailField()
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+    password = models.CharField(max_length=128)  # ya hasheada
+    code = models.CharField(max_length=5)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "Registro pendiente"
+        verbose_name_plural = "Registros pendientes"
+
+    def seconds_elapsed(self) -> int:
+        return int((timezone.now() - self.created_at).total_seconds())
+
+    def is_expired(self) -> bool:
+        return self.seconds_elapsed() > self.EXPIRY_SECONDS
+
+    def seconds_until_resend(self) -> int:
+        return max(0, self.RESEND_COOLDOWN_SECONDS - self.seconds_elapsed())

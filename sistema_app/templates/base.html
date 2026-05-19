@@ -20,11 +20,7 @@
   <nav class="nav">
     <div class="nav__logo">
       <img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" class="logo--mini"/>
-      <div class="text-wrapper">
-        <span class="text-festival">Festival Internacional</span>
-        <span class="text-festival">de las</span>
-        <span class="text-main">LUCIERNAGAS</span>
-      </div>
+      <img src="{% static 'img/logo_text.png' %}" alt="Logo del Festival" class="logo--mini"/>
     </div>
     <ul class="nav__links">
       <li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" ><i class="fa-solid fa-house"></i> <a href="{% url 'sistema_app:home' %}"  >Inicio</a></li>
@@ -52,8 +48,8 @@
 
   <dialog id="error-dialog" class="auth-dialog auth-dialog--error">
     <div class="auth-dialog__body">
-      <div class="auth-dialog__icon" aria-hidden="true">
-        <i class="fa-solid fa-triangle-exclamation"></i>
+      <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
+        <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
       </div>
       <h3 class="auth-dialog__title">Algo salió mal</h3>
       <p class="auth-dialog__desc" id="error-dialog-message"></p>
@@ -102,8 +98,8 @@
   {% if not user.is_authenticated %}
     <dialog id="auth-required-dialog" class="auth-dialog">
       <div class="auth-dialog__body">
-        <div class="auth-dialog__icon" aria-hidden="true">
-          <i class="fa-solid fa-circle-exclamation"></i>
+        <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
+          <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
         </div>
         <h3 class="auth-dialog__title">Inicia sesión para reservar</h3>
         <p class="auth-dialog__desc">
