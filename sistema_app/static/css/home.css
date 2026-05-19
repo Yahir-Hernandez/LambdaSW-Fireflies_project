@@ -542,3 +542,47 @@
 .auth-dialog--error .auth-dialog__title {
   color: #ff8a80;
 }
+
+/* Variante en verde: éxito ----------------------------------------- */
+.auth-dialog--success {
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(76,175,80,.35);
+}
+.auth-dialog--success::backdrop {
+  background: rgba(8, 35, 14, .7);
+  backdrop-filter: blur(4px);
+}
+.auth-dialog--success .auth-dialog__icon {
+  background: rgba(76, 175, 80, .12);
+  border-color: rgba(76, 175, 80, .45);
+  color: #6fc56f;
+}
+.auth-dialog--success .auth-dialog__title {
+  color: #8fdb8f;
+}
+
+/* Input de código de verificación + mensaje de error inline -------- */
+#verify-code {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  color: #fff;
+  font-family: 'Inter', monospace;
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: .5em;
+  text-indent: .5em; /* centrado óptico con el letter-spacing */
+}
+#verify-code:focus {
+  outline: none;
+  border-color: var(--accent, #c8ff00);
+}
+.verify-error {
+  margin: 10px 0 4px;
+  min-height: 18px;
+  color: #ff8a80;
+  font-size: .85rem;
+}

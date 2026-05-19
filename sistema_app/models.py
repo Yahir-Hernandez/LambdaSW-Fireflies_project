@@ -139,3 +139,31 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"Reservación #{self.pk} · {self.user} · {self.park.name}"
+
+
+class EmailVerification(models.Model):
+    """Código de verificación de correo electrónico para registro de usuario."""
+
+    EXPIRY_SECONDS = 300       # 5 minutos
+    RESEND_COOLDOWN_SECONDS = 120  # 2 minutos
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="email_verification",
+    )
+    code = models.CharField(max_length=5)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Verificación de correo"
+        verbose_name_plural = "Verificaciones de correo"
+
+    def seconds_elapsed(self) -> int:
+        return int((timezone.now() - self.created_at).total_seconds())
+
+    def is_expired(self) -> bool:
+        return self.seconds_elapsed() > self.EXPIRY_SECONDS
+
+    def seconds_until_resend(self) -> int:
+        return max(0, self.RESEND_COOLDOWN_SECONDS - self.seconds_elapsed())

@@ -10,6 +10,7 @@ Servicios disponibles:
 from __future__ import annotations
 
 import logging
+import secrets
 from datetime import date, timedelta
 from typing import Iterable
 
@@ -20,6 +21,25 @@ from django.db import transaction
 from django.db.models import Sum
 
 from .models import Lodging, Park, Reservation
+
+
+def generate_verification_code() -> str:
+    """Código numérico de 5 dígitos, generado con secrets para criptografía."""
+    return f"{secrets.randbelow(100000):05d}"
+
+
+def mask_email(email: str) -> str:
+    """Censura el email: primeras 2 letras + asteriscos + última letra antes del @.
+
+    Ejemplo: 'saosapis.666@gmail.com' -> 'sa*********6@gmail.com'.
+    Para locales de 3 caracteres o menos se devuelve sin modificar.
+    """
+    if not email or "@" not in email:
+        return email or ""
+    local, _, domain = email.partition("@")
+    if len(local) <= 3:
+        return email
+    return f"{local[:2]}{'*' * (len(local) - 3)}{local[-1]}@{domain}"
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +262,36 @@ class NotificationService:
                 + cls._format(reservation)
             ),
             reservation=reservation,
+        )
+
+    @classmethod
+    def _send_to(cls, subject: str, body: str, recipient: str) -> bool:
+        if not recipient:
+            return False
+        try:
+            send_mail(
+                subject,
+                body,
+                cls.DEFAULT_FROM,
+                [recipient],
+                fail_silently=False,
+            )
+            return True
+        except Exception:
+            logger.exception("Fallo enviando correo a %s.", recipient)
+            return False
+
+    @classmethod
+    def send_verification_email(cls, user, code: str) -> bool:
+        return cls._send_to(
+            subject="Código de verificación - Festival de las Luciérnagas",
+            body=(
+                f"Hola {user.username},\n\n"
+                f"Tu código de verificación es: {code}\n\n"
+                "El código es válido por 5 minutos. Si no fuiste tú quien "
+                "intentó registrarse, ignora este correo."
+            ),
+            recipient=user.email or "",
         )
 
 
