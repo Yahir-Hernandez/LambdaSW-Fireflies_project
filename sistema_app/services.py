@@ -282,16 +282,17 @@ class NotificationService:
             return False
 
     @classmethod
-    def send_verification_email(cls, user, code: str) -> bool:
+    def send_verification_email(cls, recipient_email: str, code: str, recipient_name: str = "") -> bool:
+        greeting = f"Hola {recipient_name}," if recipient_name else "Hola,"
         return cls._send_to(
             subject="Código de verificación - Festival de las Luciérnagas",
             body=(
-                f"Hola {user.username},\n\n"
+                f"{greeting}\n\n"
                 f"Tu código de verificación es: {code}\n\n"
                 "El código es válido por 5 minutos. Si no fuiste tú quien "
                 "intentó registrarse, ignora este correo."
             ),
-            recipient=user.email or "",
+            recipient=recipient_email or "",
         )
 
 

@@ -20,9 +20,42 @@
     if (typeof dlg.showModal === 'function') dlg.showModal();
     else dlg.setAttribute('open', '');
 
+    // Bloquear ESC: la página detrás está vacía y se ve fea.
+    // 1) Interceptamos keydown en fase de captura para que llegue ANTES
+    //    que cualquier handler interno del navegador sobre <dialog>.
+    // 2) preventDefault del evento "cancel" como segunda barrera.
+    // 3) Si por alguna razón el dialog se cierra, lo reabrimos.
+    window.addEventListener(
+        'keydown',
+        (event) => {
+            if (event.key === 'Escape' || event.keyCode === 27) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                event.stopPropagation();
+            }
+        },
+        true,
+    );
+    dlg.addEventListener('cancel', (event) => event.preventDefault());
+    dlg.addEventListener('close', () => {
+        // Si se cierra sin que lo hayamos pedido (verify success o back btn
+        // navegan antes de poder ver el close), lo reabrimos.
+        if (!intentionalClose) {
+            if (typeof dlg.showModal === 'function') dlg.showModal();
+            else dlg.setAttribute('open', '');
+        }
+    });
+
+    const backBtn = document.getElementById('verify-back-btn');
+    backBtn?.addEventListener('click', () => {
+        intentionalClose = true;
+        window.location.href = verifyUrls.back;
+    });
+
     let resendRemaining = Math.max(0, initialResendIn);
     let resendInterval = null;
     let submitting = false;
+    let intentionalClose = false;
 
     const setError = (text) => {
         errorEl.textContent = text || '';
@@ -106,6 +139,7 @@
             });
             const data = await res.json().catch(() => ({}));
             if (res.ok && data.ok) {
+                intentionalClose = true;
                 dlg.close();
                 if (typeof successDlg.showModal === 'function') successDlg.showModal();
                 else successDlg.setAttribute('open', '');

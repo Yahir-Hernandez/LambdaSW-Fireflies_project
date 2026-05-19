@@ -544,6 +544,29 @@
   color: #fff;
 }
 
+.auth-dialog__back {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .15);
+  color: rgba(255, 255, 255, .65);
+  font-size: .95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.auth-dialog__back:hover {
+  background: rgba(255, 255, 255, .06);
+  color: #fff;
+  border-color: rgba(255, 255, 255, .3);
+}
+
 /* Variante en rojo: errores ---------------------------------------- */
 .auth-dialog--error {
   box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(244,67,54,.35);

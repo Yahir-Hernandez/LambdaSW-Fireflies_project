@@ -17,6 +17,9 @@
 
   <dialog id="verify-dialog" class="auth-dialog">
     <div class="auth-dialog__body">
+      <button type="button" class="auth-dialog__back" id="verify-back-btn" aria-label="Volver">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
       <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
         <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
       </div>
@@ -63,7 +66,8 @@
   const verifyUrls = {
     verify: "{% url 'sistema_app:verify_email_api' %}",
     resend: "{% url 'sistema_app:resend_code_api' %}",
-    profile: "{% url 'sistema_app:perfil' %}"
+    profile: "{% url 'sistema_app:perfil' %}",
+    back: "{% url 'sistema_app:home' %}"
   };
   const initialResendIn = {{ resend_in|default:120 }};
 </script>

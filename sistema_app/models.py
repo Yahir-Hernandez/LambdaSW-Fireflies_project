@@ -141,23 +141,28 @@ class Reservation(models.Model):
         return f"Reservación #{self.pk} · {self.user} · {self.park.name}"
 
 
-class EmailVerification(models.Model):
-    """Código de verificación de correo electrónico para registro de usuario."""
+class PendingRegistration(models.Model):
+    """Registro de un usuario que aún NO ha verificado su correo.
+
+    No existe en la tabla User hasta que el código se valida con éxito.
+    Esto evita squatting de usernames y polución de la BD con cuentas
+    inactivas.
+    """
 
     EXPIRY_SECONDS = 300       # 5 minutos
     RESEND_COOLDOWN_SECONDS = 120  # 2 minutos
 
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="email_verification",
-    )
+    username = models.CharField(max_length=150)
+    email = models.EmailField()
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+    password = models.CharField(max_length=128)  # ya hasheada
     code = models.CharField(max_length=5)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        verbose_name = "Verificación de correo"
-        verbose_name_plural = "Verificaciones de correo"
+        verbose_name = "Registro pendiente"
+        verbose_name_plural = "Registros pendientes"
 
     def seconds_elapsed(self) -> int:
         return int((timezone.now() - self.created_at).total_seconds())

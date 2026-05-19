@@ -12,8 +12,13 @@ from django.shortcuts import get_object_or_404, redirect, render, resolve_url
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from django.contrib.auth.hashers import make_password
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
+
 from .forms import CustomUserCreationForm
-from .models import EmailVerification, Lodging, Park, Reservation
+from .models import Lodging, Park, PendingRegistration, Reservation
 from .services import (
     AvailabilityService,
     NotificationService,
@@ -36,16 +41,15 @@ def _safe_next(request, fallback="sistema_app:home"):
     return resolve_url(fallback)
 
 
-PENDING_VERIFICATION_KEY = "pending_verification_user_id"
+PENDING_REGISTRATION_KEY = "pending_registration_id"
 
 
-def _start_email_verification(user) -> EmailVerification:
-    """Crea/reemplaza el código de verificación y dispara el correo."""
-    EmailVerification.objects.filter(user=user).delete()
-    code = generate_verification_code()
-    verification = EmailVerification.objects.create(user=user, code=code)
-    NotificationService.send_verification_email(user, code)
-    return verification
+def _send_pending_code(pending: PendingRegistration) -> None:
+    NotificationService.send_verification_email(
+        recipient_email=pending.email,
+        code=pending.code,
+        recipient_name=pending.username,
+    )
 
 
 def register(request):
@@ -53,91 +57,114 @@ def register(request):
     if request.method == "POST":
         formulario = CustomUserCreationForm(data=request.POST)
         if formulario.is_valid():
-            user = formulario.save(commit=False)
-            user.is_active = False  # se activa al verificar el correo
-            user.save()
-            _start_email_verification(user)
-            request.session[PENDING_VERIFICATION_KEY] = user.pk
-            request.session["pending_verification_next"] = request.POST.get("next", "")
+            cleaned = formulario.cleaned_data
+            # Cualquier registro pendiente con el mismo username o email se
+            # reemplaza por el nuevo intento. Esto no afecta cuentas reales.
+            PendingRegistration.objects.filter(
+                Q(username=cleaned["username"]) | Q(email=cleaned["email"])
+            ).delete()
+            pending = PendingRegistration.objects.create(
+                username=cleaned["username"],
+                email=cleaned["email"],
+                first_name=cleaned.get("first_name", ""),
+                last_name=cleaned.get("last_name", ""),
+                password=make_password(cleaned["password1"]),
+                code=generate_verification_code(),
+            )
+            _send_pending_code(pending)
+            request.session[PENDING_REGISTRATION_KEY] = pending.pk
             return redirect("sistema_app:verify_email")
         data["form"] = formulario
     return render(request, "registration/sign_up.html", data)
 
 
-def verify_email_page(request):
-    user_id = request.session.get(PENDING_VERIFICATION_KEY)
-    if not user_id:
-        return redirect("sistema_app:register")
-    user = User.objects.filter(pk=user_id, is_active=False).first()
-    if not user:
-        request.session.pop(PENDING_VERIFICATION_KEY, None)
-        return redirect("sistema_app:register")
+def _get_pending(request):
+    pending_id = request.session.get(PENDING_REGISTRATION_KEY)
+    if not pending_id:
+        return None
+    pending = PendingRegistration.objects.filter(pk=pending_id).first()
+    if not pending:
+        request.session.pop(PENDING_REGISTRATION_KEY, None)
+    return pending
 
-    verification = EmailVerification.objects.filter(user=user).first()
-    resend_in = verification.seconds_until_resend() if verification else 0
+
+def verify_email_page(request):
+    pending = _get_pending(request)
+    if not pending:
+        return redirect("sistema_app:register")
     return render(
         request,
         "registration/verify_email.html",
         {
-            "masked_email": mask_email(user.email),
-            "resend_in": resend_in,
+            "masked_email": mask_email(pending.email),
+            "resend_in": pending.seconds_until_resend(),
         },
     )
 
 
 @require_POST
 def verify_email_api(request):
-    user_id = request.session.get(PENDING_VERIFICATION_KEY)
-    if not user_id:
-        return JsonResponse({"error": "Tu sesión de verificación expiró. Regístrate nuevamente."}, status=400)
-    user = User.objects.filter(pk=user_id, is_active=False).first()
-    if not user:
-        request.session.pop(PENDING_VERIFICATION_KEY, None)
-        return JsonResponse({"error": "Usuario no encontrado."}, status=400)
+    pending = _get_pending(request)
+    if not pending:
+        return JsonResponse(
+            {"error": "Tu sesión de verificación expiró. Regístrate nuevamente."},
+            status=400,
+        )
 
     code = (request.POST.get("code") or "").strip()
     if not code:
         return JsonResponse({"error": "Ingresa el código que recibiste por correo."}, status=400)
-
-    verification = EmailVerification.objects.filter(user=user).first()
-    if not verification:
-        return JsonResponse({"error": "Solicita un código primero."}, status=400)
-    if verification.is_expired():
-        verification.delete()
-        return JsonResponse({"error": "El código expiró. Solicita uno nuevo."}, status=400)
-    if verification.code != code:
+    if pending.is_expired():
+        pending.delete()
+        request.session.pop(PENDING_REGISTRATION_KEY, None)
+        return JsonResponse({"error": "El código expiró. Regístrate nuevamente."}, status=400)
+    if pending.code != code:
         return JsonResponse({"error": "Código incorrecto."}, status=400)
 
-    user.is_active = True
-    user.save(update_fields=["is_active"])
-    verification.delete()
+    # Defensa contra carreras: alguien pudo haber tomado el username/email
+    # entre el signup y la verificación.
+    with transaction.atomic():
+        if User.objects.filter(username__iexact=pending.username).exists():
+            return JsonResponse({"error": "El nombre de usuario ya está tomado."}, status=409)
+        if User.objects.filter(email__iexact=pending.email).exists():
+            return JsonResponse({"error": "Ya existe una cuenta con ese correo."}, status=409)
+        user = User(
+            username=pending.username,
+            email=pending.email,
+            first_name=pending.first_name,
+            last_name=pending.last_name,
+            is_active=True,
+        )
+        user.password = pending.password  # ya hasheada
+        user.save()
+        pending.delete()
+
     auth_login(request, user)
-    request.session.pop(PENDING_VERIFICATION_KEY, None)
-    request.session.pop("pending_verification_next", None)
+    request.session.pop(PENDING_REGISTRATION_KEY, None)
     return JsonResponse({"ok": True})
 
 
 @require_POST
 def resend_verification_code_api(request):
-    user_id = request.session.get(PENDING_VERIFICATION_KEY)
-    if not user_id:
-        return JsonResponse({"error": "Tu sesión de verificación expiró. Regístrate nuevamente."}, status=400)
-    user = User.objects.filter(pk=user_id, is_active=False).first()
-    if not user:
-        request.session.pop(PENDING_VERIFICATION_KEY, None)
-        return JsonResponse({"error": "Usuario no encontrado."}, status=400)
+    pending = _get_pending(request)
+    if not pending:
+        return JsonResponse(
+            {"error": "Tu sesión de verificación expiró. Regístrate nuevamente."},
+            status=400,
+        )
 
-    existing = EmailVerification.objects.filter(user=user).first()
-    if existing:
-        remaining = existing.seconds_until_resend()
-        if remaining > 0:
-            return JsonResponse(
-                {"error": f"Espera {remaining} segundos para reenviar.", "retry_in": remaining},
-                status=429,
-            )
+    remaining = pending.seconds_until_resend()
+    if remaining > 0:
+        return JsonResponse(
+            {"error": f"Espera {remaining} segundos para reenviar.", "retry_in": remaining},
+            status=429,
+        )
 
-    _start_email_verification(user)
-    return JsonResponse({"ok": True, "masked_email": mask_email(user.email)})
+    pending.code = generate_verification_code()
+    pending.created_at = timezone.now()
+    pending.save(update_fields=["code", "created_at"])
+    _send_pending_code(pending)
+    return JsonResponse({"ok": True, "masked_email": mask_email(pending.email)})
 
 
 def login(request):
