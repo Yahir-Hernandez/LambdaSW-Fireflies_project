@@ -486,11 +486,29 @@
   font-size: 1.8rem;
   color: var(--accent, #c8ff00);
 }
+.auth-dialog__icon--image {
+  display: block;
+  width: 56px;
+  height: 56px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0 auto 14px;
+  overflow: hidden;
+}
+.auth-dialog__icon--image img {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 10px rgba(200, 255, 0, 0.2));
+}
 .auth-dialog__title {
-  font-family: var(--font-display, "Cinzel", serif);
-  font-size: 1.4rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.55rem;
   font-weight: 700;
-  margin: 0 0 10px;
+  letter-spacing: -0.005em;
+  margin: 0 0 12px;
   color: #fff;
 }
 .auth-dialog__desc {
@@ -543,46 +561,61 @@
   color: #ff8a80;
 }
 
-/* Variante en verde: éxito ----------------------------------------- */
-.auth-dialog--success {
-  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(76,175,80,.35);
-}
-.auth-dialog--success::backdrop {
-  background: rgba(8, 35, 14, .7);
-  backdrop-filter: blur(4px);
-}
+/* Variante en verde: éxito (solo el ícono cambia, nada más) -------- */
 .auth-dialog--success .auth-dialog__icon {
-  background: rgba(76, 175, 80, .12);
-  border-color: rgba(76, 175, 80, .45);
-  color: #6fc56f;
-}
-.auth-dialog--success .auth-dialog__title {
-  color: #8fdb8f;
+  background: rgba(34, 197, 94, .15);
+  border: 2px solid #22c55e;
+  color: #22c55e;
+  font-size: 2.1rem;
 }
 
-/* Input de código de verificación + mensaje de error inline -------- */
-#verify-code {
-  width: 100%;
-  padding: 14px;
-  margin-top: 8px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.12);
+/* Grid de 5 celdas para el código de verificación ------------------ */
+.code-grid {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 14px 0 6px;
+}
+.code-cell {
+  width: 52px;
+  height: 64px;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, .15);
   border-radius: 10px;
   color: #fff;
   font-family: 'Inter', monospace;
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 1.8rem;
+  font-weight: 700;
   text-align: center;
-  letter-spacing: .5em;
-  text-indent: .5em; /* centrado óptico con el letter-spacing */
+  caret-color: #fff;
+  transition: border-color .15s ease, transform .15s ease;
 }
-#verify-code:focus {
+.code-cell:focus {
   outline: none;
-  border-color: var(--accent, #c8ff00);
+  border-color: rgba(255, 255, 255, .45);
 }
+.code-cell.is-filled {
+  border-color: rgba(255, 255, 255, .3);
+}
+.code-cell.is-error {
+  border-color: #ef4444;
+  animation: code-shake .25s ease-in-out;
+}
+@keyframes code-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
 .verify-error {
   margin: 10px 0 4px;
   min-height: 18px;
   color: #ff8a80;
   font-size: .85rem;
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .code-cell { width: 44px; height: 56px; font-size: 1.5rem; }
+  .code-grid { gap: 8px; }
 }

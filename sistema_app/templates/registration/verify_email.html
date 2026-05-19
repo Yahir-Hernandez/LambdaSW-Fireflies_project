@@ -17,8 +17,8 @@
 
   <dialog id="verify-dialog" class="auth-dialog">
     <div class="auth-dialog__body">
-      <div class="auth-dialog__icon" aria-hidden="true">
-        <i class="fa-solid fa-envelope-open-text"></i>
+      <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
+        <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
       </div>
       <h3 class="auth-dialog__title">Verifica tu correo</h3>
       <p class="auth-dialog__desc">
@@ -29,17 +29,13 @@
 
       <form id="verify-form" novalidate>
         {% csrf_token %}
-        <input
-          type="text"
-          id="verify-code"
-          name="code"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          maxlength="5"
-          pattern="[0-9]{5}"
-          placeholder="•••••"
-          required
-        >
+        <div class="code-grid" id="verify-code-grid">
+          <input class="code-cell" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Dígito 1" autofocus>
+          <input class="code-cell" type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 2">
+          <input class="code-cell" type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 3">
+          <input class="code-cell" type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 4">
+          <input class="code-cell" type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 5">
+        </div>
         <p id="verify-error" class="verify-error" aria-live="polite"></p>
 
         <div class="auth-dialog__actions">
@@ -55,7 +51,7 @@
   <dialog id="verify-success-dialog" class="auth-dialog auth-dialog--success">
     <div class="auth-dialog__body">
       <div class="auth-dialog__icon" aria-hidden="true">
-        <i class="fa-solid fa-circle-check"></i>
+        <i class="fa-solid fa-check"></i>
       </div>
       <h3 class="auth-dialog__title">¡Verificación exitosa!</h3>
       <p class="auth-dialog__desc">Te estamos redirigiendo a tu perfil...</p>

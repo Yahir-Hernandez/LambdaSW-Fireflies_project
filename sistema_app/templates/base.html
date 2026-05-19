@@ -49,8 +49,8 @@
 
   <dialog id="error-dialog" class="auth-dialog auth-dialog--error">
     <div class="auth-dialog__body">
-      <div class="auth-dialog__icon" aria-hidden="true">
-        <i class="fa-solid fa-triangle-exclamation"></i>
+      <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
+        <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
       </div>
       <h3 class="auth-dialog__title">Algo salió mal</h3>
       <p class="auth-dialog__desc" id="error-dialog-message"></p>
@@ -99,8 +99,8 @@
   {% if not user.is_authenticated %}
     <dialog id="auth-required-dialog" class="auth-dialog">
       <div class="auth-dialog__body">
-        <div class="auth-dialog__icon" aria-hidden="true">
-          <i class="fa-solid fa-circle-exclamation"></i>
+        <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
+          <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
         </div>
         <h3 class="auth-dialog__title">Inicia sesión para reservar</h3>
         <p class="auth-dialog__desc">
