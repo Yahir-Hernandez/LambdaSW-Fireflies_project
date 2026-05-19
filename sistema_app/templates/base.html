@@ -17,11 +17,7 @@
   <nav class="nav">
     <div class="nav__logo">
       <img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" class="logo--mini"/>
-      <div class="text-wrapper">
-        <span class="text-festival">Festival Internacional</span>
-        <span class="text-festival">de las</span>
-        <span class="text-main">LUCIERNAGAS</span>
-      </div>
+      <img src="{% static 'img/logo_text.png' %}" alt="Logo del Festival" class="logo--mini"/>
     </div>
     <ul class="nav__links">
       <li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" ><i class="fa-solid fa-house"></i> <a href="{% url 'sistema_app:home' %}"  >Inicio</a></li>

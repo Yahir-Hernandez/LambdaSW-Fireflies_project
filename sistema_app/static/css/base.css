@@ -189,6 +189,7 @@ ul { list-style: none; }
     height: 27pt;
     align-items: center;
 }
+
 .btn--ghost:hover { border-color: var(--accent); color: var(--accent); }
 .btn--sm { padding: 9px 18px; font-size: .82rem; }
 .btn--map { padding: 14px 28px; }
