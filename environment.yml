@@ -20,6 +20,16 @@ dependencies:
     - psycopg2-binary==2.9.10
     - reportlab==4.5.1
     - openpyxl==3.1.5
+    
+    # Testing
+    - pytest==9.0.3
+    - pytest-django==4.12.0
+    - pytest-cov==7.1.0
+    - coverage==7.14.0
+    - factory-boy==3.3.3
+    - faker==40.18.0
+    - playwright==1.60.0
+    - pytest-playwright==0.8.0
 
 # Define la ruta base donde Conda está instalado en TU SISTEMA
 # prefix: /Users/TuUsuario/miniconda3
