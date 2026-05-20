@@ -86,6 +86,26 @@ class TestCustomUserCreationForm:
         form = CustomUserCreationForm(data=data)
         assert not form.is_valid()
 
+    def test_password_without_uppercase_rejected(self):
+        data = {**VALID_DATA, "password1": "abcdefg1!", "password2": "abcdefg1!"}
+        form = CustomUserCreationForm(data=data)
+        assert not form.is_valid()
+
+    def test_password_without_lowercase_rejected(self):
+        data = {**VALID_DATA, "password1": "ABCDEFG1!", "password2": "ABCDEFG1!"}
+        form = CustomUserCreationForm(data=data)
+        assert not form.is_valid()
+
+    def test_password_without_number_rejected(self):
+        data = {**VALID_DATA, "password1": "Abcdefgh!", "password2": "Abcdefgh!"}
+        form = CustomUserCreationForm(data=data)
+        assert not form.is_valid()
+
+    def test_password_without_special_char_rejected(self):
+        data = {**VALID_DATA, "password1": "Abcdefg1", "password2": "Abcdefg1"}
+        form = CustomUserCreationForm(data=data)
+        assert not form.is_valid()
+
     def test_invalid_email_format_rejected(self):
         data = {**VALID_DATA, "email": "no-es-un-email"}
         form = CustomUserCreationForm(data=data)

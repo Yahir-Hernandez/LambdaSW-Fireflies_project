@@ -60,6 +60,10 @@ class TestParkModel:
         park.refresh_from_db()
         assert park.is_deleted is True
 
+    def test_soft_delete_raises_if_park_has_active_reservations(self, active_reservation, park):
+        with pytest.raises(Exception):
+            park.soft_delete()
+
     def test_restore_clears_flag(self, park):
         park.soft_delete()
         park.restore()

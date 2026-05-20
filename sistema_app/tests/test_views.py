@@ -248,6 +248,34 @@ class TestLoginView:
         })
         assert response.status_code == 200
 
+    def test_account_blocked_after_6_failed_attempts(self, client, user):
+        for _ in range(6):
+            client.post(url("login"), {
+                "username": "visitante",
+                "password": "contrasena_incorrecta",
+            })
+        response = client.post(url("login"), {
+            "username": "visitante",
+            "password": "TestPass123!",
+        })
+        assert response.status_code == 200
+
+    def test_lockout_message_shown_after_6_failed_attempts(self, client, user):
+        for _ in range(6):
+            client.post(url("login"), {
+                "username": "visitante",
+                "password": "contrasena_incorrecta",
+            })
+        response = client.post(url("login"), {
+            "username": "visitante",
+            "password": "contrasena_incorrecta",
+        })
+        content = response.content.decode("utf-8")
+        assert "bloqueada" in content.lower() or "bloqueado" in content.lower()
+
+    def test_session_cookie_age_is_30_minutes(self):
+        from django.conf import settings as django_settings
+        assert getattr(django_settings, "SESSION_COOKIE_AGE", None) == 1800
 
 # ===========================================================================
 # logout
@@ -282,6 +310,14 @@ class TestPerfilView:
         response = auth_client.get(url("perfil"))
         assert response.status_code == 200
         assert active_reservation in response.context["reservas"]
+
+    def test_perfil_shows_cancelled_and_past_reservations(self, auth_client, active_reservation, cancelled_reservation, past_reservation):
+        response = auth_client.get(url("perfil"))
+        assert response.status_code == 200
+        reservas = response.context["reservas"]
+        assert active_reservation in reservas
+        assert cancelled_reservation in reservas
+        assert past_reservation in reservas
 
     def test_user_does_not_see_other_users_reservations(self, auth_client, db, other_user, park, cabin, season_start, season_end_date):
         other_res = Reservation.objects.create(
