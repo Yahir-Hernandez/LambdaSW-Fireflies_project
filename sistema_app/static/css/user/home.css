@@ -1,0 +1,418 @@
+/* Home page sections */
+.hero__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+.hero__calendar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .82rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.section-title--left { text-align: left; }
+.section-title--system {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.section-sub {
+  font-size: .92rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 48px;
+}
+.section-sub--left { text-align: left; }
+
+.link-arrow {
+  color: var(--accent);
+  font-size: .84rem;
+  font-weight: 500;
+  transition: gap .2s;
+  white-space: nowrap;
+}
+.link-arrow:hover { text-decoration: underline; }
+.link-arrow--sm { font-size: .8rem; }
+
+/* Why */
+.why {
+  background: var(--bg-section);
+  padding: 88px 0;
+}
+.why__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.why__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 28px;
+  transition: transform .3s, box-shadow .3s, opacity .5s, transform .5s;
+  opacity: 0;
+  transform: translateY(24px);
+}
+.why__card.visible { opacity: 1; transform: translateY(0); }
+.why__card:nth-child(2).visible { transition-delay: .12s; }
+.why__card:nth-child(3).visible { transition-delay: .24s; }
+.why__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(200,255,0,.12);
+}
+.why__icon {
+  margin-bottom: 16px;
+  width: 44px; height: 44px;
+  background: rgba(200,255,0,.08);
+  border: 1px solid rgba(200,255,0,.2);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.why__card h3 {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+}
+.why__card p {
+  font-size: .86rem;
+  color: var(--text-dim);
+  line-height: 1.68;
+}
+
+/* Parques */
+.parques {
+  padding: 88px 0 60px;
+  background: var(--bg-deep);
+}
+.parques__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+.parques__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.parques__cta {
+  text-align: center;
+  margin-top: 36px;
+}
+
+.parques-highlight {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) minmax(0, 1fr);
+  gap: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(0,0,0,.35);
+}
+.parques-highlight__media {
+  min-height: 220px;
+  background:
+    radial-gradient(ellipse 60% 70% at 30% 30%, rgba(255, 186, 10, 0.18) 0%, transparent 65%),
+    linear-gradient(160deg, #0b1f0e 0%, #0f2a10 40%, #071208 100%);
+  padding: 20px;
+  display: flex;
+  align-items: flex-end;
+}
+.parques-highlight__media-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.parques-highlight__badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, .4);
+  border: 1px solid rgba(255, 255, 255, .2);
+  color: var(--text);
+}
+.parques-highlight__content {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+}
+.parques-highlight__eyebrow {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--text-dim);
+  margin: 0;
+}
+.parques-highlight__title {
+  font-family: var(--font-title);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: .04em;
+  margin: 0;
+  color: #fff;
+}
+.parques-highlight__desc {
+  margin: 0;
+  font-size: .9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.parques-highlight__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+/* Festival highlight */
+.festival-highlight {
+  padding: 80px 0 100px;
+  background: var(--bg-section);
+}
+.festival-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 380px);
+  gap: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0,0,0,.4);
+}
+.festival-card__content {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+}
+.festival-card__eyebrow {
+  font-size: .75rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0;
+}
+.festival-card__title {
+  font-family: var(--font-title);
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  letter-spacing: .04em;
+  margin: 0;
+  color: #fff;
+}
+.festival-card__desc {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: .9rem;
+  line-height: 1.7;
+}
+.festival-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+.festival-card__media {
+  min-height: 240px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 70% 20%, rgba(255, 186, 10, 0.2) 0%, transparent 55%),
+    linear-gradient(160deg, #0b1220 0%, #0c1a2b 50%, #09121c 100%);
+  display: flex;
+  align-items: flex-end;
+}
+.festival-card__media-inner {
+  width: 100%;
+  min-height: 160px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background:
+    radial-gradient(circle at 70% 25%, rgba(255,255,255,.15) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.65) 100%);
+  position: relative;
+  padding: 16px;
+}
+.festival-card__media-caption {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  font-size: .85rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.parque-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform .3s, box-shadow .3s, opacity .5s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.parque-card.visible { opacity: 1; transform: translateY(0); }
+.parque-card:nth-child(2).visible { transition-delay: .1s; }
+.parque-card:nth-child(3).visible { transition-delay: .2s; }
+.parque-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0,0,0,.5);
+}
+.parque-card--featured .parque-card__img { height: 220px; }
+
+.parque-card__img {
+  height: 180px;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px;
+  overflow: hidden;
+}
+.parque-card__img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,.1) 40%, rgba(0,0,0,.7) 100%);
+  z-index: 1;
+}
+.parque-card__img--1 {
+  background:
+    radial-gradient(ellipse 40% 60% at 30% 70%, #0a3a1a 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 70% 60%, #0d2a0d 0%, transparent 70%),
+    linear-gradient(160deg, #0b1f0e 0%, #0f2a10 40%, #071208 100%);
+}
+.parque-card__img--2 {
+  background:
+    radial-gradient(ellipse 50% 70% at 50% 80%, #0d2614 0%, transparent 70%),
+    radial-gradient(ellipse 80% 60% at 20% 40%, #1a3320 0%, transparent 60%),
+    linear-gradient(180deg, #0e1a12 0%, #152d18 50%, #0a1a0c 100%);
+}
+.parque-card__img--3 {
+  background:
+    radial-gradient(ellipse 60% 50% at 60% 60%, #182e18 0%, transparent 70%),
+    radial-gradient(ellipse 40% 70% at 20% 80%, #0d2010 0%, transparent 60%),
+    linear-gradient(200deg, #131e13 0%, #0f2412 50%, #0a150c 100%);
+}
+
+.tag {
+  position: relative;
+  z-index: 2;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  background: rgba(20,30,25,.85);
+  border: 1px solid rgba(255,255,255,.15);
+  color: var(--text);
+}
+.tag--green {
+  background: rgba(0,80,30,.7);
+  border-color: rgba(50,200,80,.25);
+  color: #90e8a0;
+}
+
+.parque-card__body { padding: 20px 18px 16px; }
+.parque-card__body h3 {
+  font-family: var(--font-body);
+  font-size: .98rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+}
+.parque-card__loc,
+.parque-card__hours {
+  font-size: .78rem;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.parque-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.parque-card__avail {
+  font-size: .76rem;
+  color: var(--accent2);
+  font-weight: 500;
+}
+
+/* CTA */
+.cta-reserva {
+  padding: 72px 32px;
+  background: var(--bg-section);
+}
+.cta-reserva__inner {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 56px 48px;
+  text-align: center;
+  box-shadow: 0 0 60px rgba(200,255,0,.05), 0 24px 60px rgba(0,0,0,.4);
+}
+.cta-reserva__icon {
+  width: 60px; height: 60px;
+  background: rgba(200,255,0,.08);
+  border: 1px solid rgba(200,255,0,.2);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px;
+}
+.cta-reserva__inner h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: #fff;
+  margin-bottom: 14px;
+}
+.cta-reserva__inner p {
+  font-size: .88rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+.cta-reserva__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .why__grid,
+  .parques__grid { grid-template-columns: 1fr; }
+  .parques__header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .parques-highlight { grid-template-columns: 1fr; }
+  .parques-highlight__media { min-height: 200px; }
+  .festival-card { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .cta-reserva__inner { padding: 36px 24px; }
+}

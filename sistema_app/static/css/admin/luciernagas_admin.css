@@ -31,7 +31,7 @@ body.app-sistema_app.model-servicio #branding h1::before {
   display: inline-block;
   width: 28px;
   height: 28px;
-  background-image: url('../img/luciernaga.png');
+  background-image: url('../../img/luciernaga.png');
   background-repeat: no-repeat;
   background-size: contain;
 }

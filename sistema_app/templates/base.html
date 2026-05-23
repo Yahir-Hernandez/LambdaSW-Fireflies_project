@@ -2,228 +2,280 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-
-  <title>Festival Internacional de las Luciernagas 2026</title>
-  <link rel="stylesheet" href="{% static 'css/base.css' %}" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://kit.fontawesome.com/db1b884b1e.js" crossorigin="anonymous"></script>
-  {% block extra_css %}{% endblock %}
-  {% block head %}{% endblock %}
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Festival Internacional de las Luciernagas 2026</title>
+	<link rel="stylesheet" href="{% static 'css/user/base.css' %}" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+	<script src="https://kit.fontawesome.com/db1b884b1e.js" crossorigin="anonymous"></script>
+	{% block extra_css %}{% endblock %}
+	{% block head %}{% endblock %}
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav__logo">
-      <img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" class="logo--mini"/>
-      <img src="{% static 'img/logo_text.png' %}" alt="Logo del Festival" class="logo--mini"/>
-    </div>
-    <ul class="nav__links">
-      <li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" ><i class="fa-solid fa-house"></i> <a href="{% url 'sistema_app:home' %}"  >Inicio</a></li>
-      <li class="park_link {% if request.resolver_match.url_name == 'mapa' %}active{% endif %}"><i class="fa-solid fa-location-dot"></i> <a href="{% url 'sistema_app:mapa' %}" >Mapa de parques</a></li>
-      <li class="party_link {% if request.resolver_match.url_name == 'festival' %}active{% endif %}"><i class="fa-solid fa-circle-info"></i>  <a href="#festival" >El Festival</a></li>
-    </ul>
-    <div class="nav__auth">
+	{% url 'sistema_app:home' as home_url %}
+	{% url 'sistema_app:mapa' as mapa_url %}
+	{% url 'sistema_app:festival' as festival_url %}
+	<nav class="nav">
+		{% if request.resolver_match.url_name == 'home' %}
+			<div class="nav__logo" aria-current="page">
+				<img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" class="logo--mini"/>
+				<img src="{% static 'img/logo_text.png' %}" alt="Logo del Festival" class="logo--mini"/>
+			</div>
+		{% else %}
+			<a class="nav__logo" href="{{ home_url }}">
+				<img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" class="logo--mini"/>
+				<img src="{% static 'img/logo_text.png' %}" alt="Logo del Festival" class="logo--mini"/>
+			</a>
+		{% endif %}
+		{% with current=request.resolver_match.url_name %}
+			{% if current == 'home' %}
+				{% with nav_title='Inicio' prev_url='' next_url=mapa_url %}
+					<div class="nav__dock">
+						<div class="nav-dock" aria-live="polite">
+							{% if prev_url %}
+								<a class="nav-dock__btn" href="{{ prev_url }}" aria-label="Pagina anterior">
+									<i class="fa-solid fa-chevron-left"></i>
+								</a>
+							{% else %}
+								<span class="nav-dock__btn is-disabled" aria-disabled="true">
+									<i class="fa-solid fa-chevron-left"></i>
+								</span>
+							{% endif %}
+							<span class="nav-dock__title">{{ nav_title }}</span>
+							{% if next_url %}
+								<a class="nav-dock__btn" href="{{ next_url }}" aria-label="Pagina siguiente">
+									<i class="fa-solid fa-chevron-right"></i>
+								</a>
+							{% else %}
+								<span class="nav-dock__btn is-disabled" aria-disabled="true">
+									<i class="fa-solid fa-chevron-right"></i>
+								</span>
+							{% endif %}
+						</div>
+					</div>
+				{% endwith %}
+			{% elif current == 'mapa' %}
+				{% with nav_title='Mapa' prev_url=home_url next_url=festival_url %}
+					<div class="nav__dock">
+						<div class="nav-dock" aria-live="polite">
+							{% if prev_url %}
+								<a class="nav-dock__btn" href="{{ prev_url }}" aria-label="Pagina anterior">
+									<i class="fa-solid fa-chevron-left"></i>
+								</a>
+							{% else %}
+								<span class="nav-dock__btn is-disabled" aria-disabled="true">
+									<i class="fa-solid fa-chevron-left"></i>
+								</span>
+							{% endif %}
+							<span class="nav-dock__title">{{ nav_title }}</span>
+							{% if next_url %}
+								<a class="nav-dock__btn" href="{{ next_url }}" aria-label="Pagina siguiente">
+									<i class="fa-solid fa-chevron-right"></i>
+								</a>
+							{% else %}
+								<span class="nav-dock__btn is-disabled" aria-disabled="true">
+									<i class="fa-solid fa-chevron-right"></i>
+								</span>
+							{% endif %}
+						</div>
+					</div>
+				{% endwith %}
+			{% elif current == 'festival' %}
+				{% with nav_title='El Festival' prev_url=mapa_url next_url='' %}
+					<div class="nav__dock">
+						<div class="nav-dock" aria-live="polite">
+							{% if prev_url %}
+								<a class="nav-dock__btn" href="{{ prev_url }}" aria-label="Pagina anterior">
+									<i class="fa-solid fa-chevron-left"></i>
+								</a>
+							{% else %}
+								<span class="nav-dock__btn is-disabled" aria-disabled="true">
+									<i class="fa-solid fa-chevron-left"></i>
+								</span>
+							{% endif %}
+							<span class="nav-dock__title">{{ nav_title }}</span>
+							{% if next_url %}
+								<a class="nav-dock__btn" href="{{ next_url }}" aria-label="Pagina siguiente">
+									<i class="fa-solid fa-chevron-right"></i>
+								</a>
+							{% else %}
+								<span class="nav-dock__btn is-disabled" aria-disabled="true">
+									<i class="fa-solid fa-chevron-right"></i>
+								</span>
+							{% endif %}
+						</div>
+					</div>
+				{% endwith %}
+			{% else %}
+				{% with nav_title='Perfil' prev_url='' next_url='' %}
+					<div class="nav__dock">
+						<div class="nav-dock" aria-live="polite">
+							{% if prev_url %}
+								<a class="nav-dock__btn" href="{{ prev_url }}" aria-label="Pagina anterior">
+									<i class="fa-solid fa-chevron-left"></i>
+								</a>
+							{% else %}
+								<span class="nav-dock__btn is-disabled" aria-disabled="true">
+									<i class="fa-solid fa-chevron-left"></i>
+								</span>
+							{% endif %}
+							<span class="nav-dock__title">{{ nav_title }}</span>
+							{% if next_url %}
+								<a class="nav-dock__btn" href="{{ next_url }}" aria-label="Pagina siguiente">
+									<i class="fa-solid fa-chevron-right"></i>
+								</a>
+							{% else %}
+								<span class="nav-dock__btn is-disabled" aria-disabled="true">
+									<i class="fa-solid fa-chevron-right"></i>
+								</span>
+							{% endif %}
+						</div>
+					</div>
+				{% endwith %}
+			{% endif %}
+		{% endwith %}
+		<div class="nav__auth">
       {% if not user.is_authenticated %}
         <a href="{% url 'sistema_app:login' %}" class="btn">Inicio de sesion</a>
         <a href="{% url 'sistema_app:register' %}" class="btn btn--primary btn--sm">Registrarse</a>
-      {% else %}
-        <a href="{% url 'sistema_app:perfil' %}" class="btn btn--outline {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}"> <i class="fa-solid fa-circle-user"></i>  {{ user.username }}</a>
-        <a href="{% url 'sistema_app:logout' %}" class="btn  btn--primary btn--sm">Cerrar sesión</a>
-      {% endif %}
-    </div>
-  </nav>
-
-  {% if messages %}
-    <ul class="flash-messages">
-      {% for message in messages %}
-        <li class="flash-messages__item flash-messages__item--{{ message.tags|default:'info' }}">{{ message }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-
-  <dialog id="error-dialog" class="auth-dialog auth-dialog--error">
-    <div class="auth-dialog__body">
-      <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
-        <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
-      </div>
-      <h3 class="auth-dialog__title">Algo salió mal</h3>
-      <p class="auth-dialog__desc" id="error-dialog-message"></p>
-      <div class="auth-dialog__actions">
-        <button type="button" class="btn btn--accent" id="error-dialog-ok">Entendido</button>
-      </div>
-      <button type="button" class="auth-dialog__close" id="error-dialog-close" aria-label="Cerrar">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-  </dialog>
-  <script>
-    (function () {
-      const errorToasts = Array.from(
-        document.querySelectorAll('.flash-messages__item--error')
-      );
-      if (errorToasts.length === 0) return;
-
-      const dlg = document.getElementById('error-dialog');
-      const messageEl = document.getElementById('error-dialog-message');
-      if (!dlg || !messageEl) return;
-
-      messageEl.textContent = errorToasts
-        .map((el) => el.textContent.trim())
-        .filter(Boolean)
-        .join(' ');
-
-      errorToasts.forEach((el) => el.remove());
-      const list = document.querySelector('.flash-messages');
-      if (list && list.children.length === 0) list.remove();
-
-      if (typeof dlg.showModal === 'function') dlg.showModal();
-      else dlg.setAttribute('open', '');
-
-      const close = () => dlg.close();
-      document.getElementById('error-dialog-ok')?.addEventListener('click', close);
-      document.getElementById('error-dialog-close')?.addEventListener('click', close);
-      dlg.addEventListener('click', (e) => {
-        if (e.target === dlg) close();
-      });
-    })();
-  </script>
-
-  {% block content %}{% endblock %}
-
-  {% if not user.is_authenticated %}
-    <dialog id="auth-required-dialog" class="auth-dialog">
-      <div class="auth-dialog__body">
-        <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
-          <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
-        </div>
-        <h3 class="auth-dialog__title">Inicia sesión para reservar</h3>
-        <p class="auth-dialog__desc">
-          Para realizar una reservación necesitas tener una cuenta.
-          Inicia sesión si ya tienes una, o regístrate gratis en menos de un minuto.
-        </p>
-        <div class="auth-dialog__actions">
-          <a href="{% url 'sistema_app:login' %}"
-             data-auth-action="login"
-             data-base-url="{% url 'sistema_app:login' %}"
-             class="btn btn--accent">
-            <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
-          </a>
-          <a href="{% url 'sistema_app:register' %}"
-             data-auth-action="register"
-             data-base-url="{% url 'sistema_app:register' %}"
-             class="btn btn--outline">
-            <i class="fa-solid fa-user-plus"></i> Registrarse
-          </a>
-        </div>
-        <button type="button" class="auth-dialog__close" id="auth-required-close" aria-label="Cerrar">
-          <i class="fa-solid fa-xmark"></i>
+        <button type="button" class="btn btn--outline btn--sm nav__menu-btn" aria-controls="nav-sidebar" aria-expanded="false">
+          <i class="fa-solid fa-bars"></i> 
         </button>
-      </div>
-    </dialog>
-    <script>
-      (function () {
-        const dlg = document.getElementById('auth-required-dialog');
-        if (!dlg) return;
-        const close = document.getElementById('auth-required-close');
-        const defaultNext = "{% url 'sistema_app:reservation_create' %}";
+      {% else %}
+        <button type="button" class="btn btn--outline btn--sm nav__menu-btn" aria-controls="nav-sidebar" aria-expanded="false">
+          <i class="fa-solid fa-bars"></i> 
+        </button>
+      {% endif %}
+		</div>
+	</nav>
 
-        window.openAuthDialog = function (nextUrl) {
-          const target = nextUrl || defaultNext;
-          dlg.querySelectorAll('[data-auth-action]').forEach((link) => {
-            const base = link.dataset.baseUrl;
-            link.href = `${base}?next=${encodeURIComponent(target)}`;
-          });
-          if (typeof dlg.showModal === 'function') dlg.showModal();
-          else dlg.setAttribute('open', '');
-        };
+	<div class="nav-backdrop" data-nav-backdrop aria-hidden="true"></div>
 
-        close.addEventListener('click', () => dlg.close());
-        dlg.addEventListener('click', (e) => {
-          if (e.target === dlg) dlg.close();
-        });
-      })();
-    </script>
-  {% endif %}
-  <!--- 
-  <div class="trust-bar">
-    <div class="trust-item">
-      <span class="icon-placeholder icon-placeholder--sm" aria-hidden="true"></span>
-      <div>
-        <strong>Parques Certificados</strong>
-        <small>Solo sitios oficiales</small>
-      </div>
-    </div>
-    <div class="trust-item">
-      <span class="icon-placeholder icon-placeholder--sm" aria-hidden="true"></span>
-      <div>
-        <strong>Guias Especializados</strong>
-        <small>En cada parque</small>
-      </div>
-    </div>
-    <div class="trust-item">
-      <span class="icon-placeholder icon-placeholder--sm" aria-hidden="true"></span>
-      <div>
-        <strong>Jun - Ago 2026</strong>
-        <small>Temporada del festival</small>
-      </div>
-    </div>
-    <div class="trust-item">
-      <span class="icon-placeholder icon-placeholder--sm" aria-hidden="true"></span>
-      <div>
-        <strong>Sin martes</strong>
-        <small>Dia de mantenimiento</small>
-      </div>
-    </div>
-  </div>
-  -->
+	<aside class="nav-sidebar" id="nav-sidebar" aria-hidden="true">
+		<div class="nav-sidebar__content">
+			<div class="nav-sidebar__header">
+				<span class="nav-sidebar__title">Menu</span>
+				<button type="button" class="nav-sidebar__close" aria-label="Cerrar menu">
+					<i class="fa-solid fa-xmark"></i>
+				</button>
+			</div>
+			<div class="nav-sidebar__links">
+				<ul class="nav__links">
+					<li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" ><i class="fa-solid fa-house"></i> <a href="{% url 'sistema_app:home' %}"  >Inicio</a></li>
+					<li class="park_link {% if request.resolver_match.url_name == 'mapa' %}active{% endif %}"><i class="fa-solid fa-location-dot"></i> <a href="{% url 'sistema_app:mapa' %}" >Mapa de parques</a></li>
+					<li class="party_link {% if request.resolver_match.url_name == 'festival' %}active{% endif %}"><i class="fa-solid fa-circle-info"></i>  <a href="{{ festival_url }}" >El Festival</a></li>
+				</ul>
+			</div>
+			<div class="nav-sidebar__auth">
+				{% if not user.is_authenticated %}
+					<a href="{% url 'sistema_app:login' %}" class="btn">Inicio de sesion</a>
+					<a href="{% url 'sistema_app:register' %}" class="btn btn--primary btn--sm">Registrarse</a>
+				{% else %}
+					<a href="{% url 'sistema_app:perfil' %}" class="btn btn--outline {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}"> <i class="fa-solid fa-circle-user"></i>  {{ user.username }}</a>
+					<a href="{% url 'sistema_app:logout' %}" class="btn  btn--primary btn--sm">Cerrar sesión</a>
+				{% endif %}
+			</div>
+		</div>
+	</aside>
 
-  <footer class="footer">
-    <div class="footer__main">
-      <div class="footer__brand">
-        <p class="footer__brand-name">Festival Internacional de las<br><strong class="accent">LUCIERNAGAS 2026</strong></p>
-        <p class="footer__brand-desc">Una experiencia unica donde la naturaleza se convierte en espectaculo. Descubre los parques oficiales y vive la magia del fenomeno de las luciernagas en Mexico, de junio a agosto 2026.</p>
-        <div class="footer__socials">
-          <a href="#" class="social-btn" aria-label="Instagram"></a>
-          <a href="#" class="social-btn" aria-label="Facebook"></a>
-          <a href="#" class="social-btn" aria-label="X"></a>
-        </div>
-      </div>
-      <div class="footer__nav">
-        <h4>Navegacion</h4>
-        <ul>
-          <li><a href="{% url 'sistema_app:home' %}">Inicio</a></li>
-          <li><a href="{% url 'sistema_app:mapa' %}">Mapa de parques</a></li>
-          <li><a href="#fest">El Festival</a></li>
-        </ul>
-      </div>
-      <div class="footer__contact">
-        <h4>Contacto</h4>
-        <ul>
-          <li>correo</li>
-          <li>número</li>
-          <li>ubicacion</li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer__bottom">
-      <div class="footer__bottom__lambda">
-        <img src="{% static 'img/lambda_logo.png' %}" alt="Logo de Lambda" class="lambda_logo"/>
-        <span>Desarrollado por Lambda Software © 2026 Festival Internacional de las Luciernagas. Todos los derechos reservados.</span>
-      </div>
+	{% if messages %}
+		<ul class="flash-messages">
+			{% for message in messages %}
+				<li class="flash-messages__item flash-messages__item--{{ message.tags|default:'info' }}">{{ message }}</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+
+	<dialog id="error-dialog" class="auth-dialog auth-dialog--error">
+		<div class="auth-dialog__body">
+			<div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
+				<img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
+			</div>
+			<h3 class="auth-dialog__title">Algo salió mal</h3>
+			<p class="auth-dialog__desc" id="error-dialog-message"></p>
+			<div class="auth-dialog__actions">
+				<button type="button" class="btn btn--accent" id="error-dialog-ok">Entendido</button>
+			</div>
+			<button type="button" class="auth-dialog__close" id="error-dialog-close" aria-label="Cerrar">
+				<i class="fa-solid fa-xmark"></i>
+			</button>
+		</div>
+	</dialog>
+
+	{% block content %}{% endblock %}
+
+	{% if not user.is_authenticated %}
+		<dialog id="auth-required-dialog" class="auth-dialog" data-default-next="{% url 'sistema_app:reservation_create' %}">
+			<div class="auth-dialog__body">
+				<div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
+					<img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
+				</div>
+				<h3 class="auth-dialog__title">Inicia sesión para reservar</h3>
+				<p class="auth-dialog__desc">
+					Para realizar una reservación necesitas tener una cuenta.
+					Inicia sesión si ya tienes una, o regístrate gratis en menos de un minuto.
+				</p>
+				<div class="auth-dialog__actions">
+					<a href="{% url 'sistema_app:login' %}"
+						 data-auth-action="login"
+						 data-base-url="{% url 'sistema_app:login' %}"
+						 class="btn btn--accent">
+						<i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+					</a>
+					<a href="{% url 'sistema_app:register' %}"
+						 data-auth-action="register"
+						 data-base-url="{% url 'sistema_app:register' %}"
+						 class="btn btn--outline">
+						<i class="fa-solid fa-user-plus"></i> Registrarse
+					</a>
+				</div>
+				<button type="button" class="auth-dialog__close" id="auth-required-close" aria-label="Cerrar">
+					<i class="fa-solid fa-xmark"></i>
+				</button>
+			</div>
+		</dialog>
+	{% endif %}
+
+	<footer class="footer">
+		<div class="footer__main">
+			<div class="footer__brand">
+				<p class="footer__brand-name">Festival Internacional de las<br><strong class="accent">LUCIERNAGAS 2026</strong></p>
+				<p class="footer__brand-desc">Una experiencia unica donde la naturaleza se convierte en espectaculo. Descubre los parques oficiales y vive la magia del fenomeno de las luciernagas en Mexico, de junio a agosto 2026.</p>
+			</div>
+			<div class="footer__nav">
+				<h4>Navegacion</h4>
+				<ul>
+					<li><a href="{% url 'sistema_app:home' %}">Inicio</a></li>
+					<li><a href="{% url 'sistema_app:mapa' %}">Mapa de parques</a></li>
+					<li><a href="#fest">El Festival</a></li>
+				</ul>
+			</div>
+			<div class="footer__contact">
+				<h4>Contacto</h4>
+				<ul>
+					<li>correo</li>
+					<li>número</li>
+					<li>ubicacion</li>
+				</ul>
+			</div>
+		</div>
+		<div class="footer__bottom">
+			<div class="footer__bottom__lambda">
+				<img src="{% static 'img/lambda_logo.png' %}" alt="Logo de Lambda" class="lambda_logo"/>
+				<span>Desarrollado por Lambda Software © 2026 Festival Internacional de las Luciernagas. Todos los derechos reservados.</span>
+			</div>
       
-      <div class="footer__bottom-links">
-        <a href="#">Aviso de privacidad</a>
-        <a href="#">Terminos y condiciones</a>
-      </div>
-    </div>
-  </footer>
+			<div class="footer__bottom-links">
+				<a href="#">Aviso de privacidad</a>
+				<a href="#">Terminos y condiciones</a>
+			</div>
+		</div>
+	</footer>
 
-  {% block extra_js %}{% endblock %}
+	<script src="{% static 'script/base.js' %}"></script>
+	{% block extra_js %}{% endblock %}
 
 </body>
 </html>

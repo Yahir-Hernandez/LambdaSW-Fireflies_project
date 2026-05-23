@@ -29,7 +29,38 @@ from .services import (
 
 
 def home(request):
-    return render(request, "home.html")
+    parques = list(Park.objects.active().prefetch_related("lodgings"))
+    today = date.today()
+    for parque in parques:
+        camping_lodgings = parque.lodgings.filter(kind=Lodging.Kind.CAMPING)
+        total = camping_lodgings.aggregate(total=Sum("capacity"))["total"] or 0
+        used = (
+            Reservation.objects.filter(
+                lodging__in=camping_lodgings,
+                status=Reservation.Status.ACTIVE,
+                end_date__gte=today,
+            ).aggregate(total=Sum("people"))["total"]
+            or 0
+        )
+        parque.disponibilidad_actual = max(total - used, 0)
+    featured_parks = parques[:3]
+    featured_park = featured_parks[0] if featured_parks else None
+    total_parks = len(parques)
+    lodging_parks = sum(1 for parque in parques if parque.lodgings.all())
+    return render(
+        request,
+        "home.html",
+        {
+            "featured_parks": featured_parks,
+            "featured_park": featured_park,
+            "total_parks": total_parks,
+            "lodging_parks": lodging_parks,
+        },
+    )
+
+
+def festival(request):
+    return render(request, "festival.html")
 
 
 def _safe_next(request, fallback="sistema_app:home"):

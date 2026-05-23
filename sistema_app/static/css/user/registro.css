@@ -1,28 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap');
 
-:root {
-  --bg-deep: #080e10;
-  --bg-dark: #0d1a1e;
-  --bg-card: #0f2028;
-  --bg-section: #111d22;
-  --accent: #ffba0a;
-  --accentHover: #d19b07;
-  --accent2: #c93103;
-  --orange: #e8603a;
-  --text: #d4e8e0;
-  --text-dim: #7a9e94;
-  --border: rgba(13, 27, 42, 1);
-  --glow: rgba(8, 16, 28, 1);
-  --glow-sm: rgba(8, 16, 28, 1);
-  --radius:      12px;
-  --transition:  0.25s ease;
-  --font-display: 'Cinzel', serif;
-  --font-title: 'Bebas Neue', sans-serif;
-  --font-body: 'Inter', sans-serif;
-}
-
-*, *::before, *::after { box-sizing: border-box; }
-
+/* Auth forms (login/registro) */
 .card {
   position: fixed;
   top: 50%;
@@ -40,15 +18,6 @@
   overflow: visible;
 }
 
-.auth-dialog__title {
-  font-family: 'Inter', sans-serif;
-  font-size: 1.55rem;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  margin: 0 0 12px;
-  color: #fff;
-}
-
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -58,22 +27,7 @@
   padding: 2.5rem 2.25rem 2rem;
 }
 
-/* ---------- Encabezado ---------- */
-.card-body h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.85rem;
-  font-weight: 400;
-  color: var(--text);
-  margin: 0 0 0.25rem;
-  letter-spacing: -0.02em;
-}
-
-.card-body hr {
-  border: none;
-  border-top: 1px solid var(--card-border);
-  margin: 1rem 0 1.6rem;
-}
-
+/* Encabezado */
 .card-body h2 {
   font-family: 'DM Serif Display', serif;
   font-size: 1.85rem;
@@ -88,6 +42,7 @@
   border-top: 1px solid var(--text);
   margin: 1rem 0 1.6rem;
 }
+
 .form-label,
 label {
   font-size: 0.78rem;
@@ -123,7 +78,7 @@ label {
 }
 
 .btn-success {
-    background: var(--accent);
+  background: var(--accent);
   color: #0a1208;
   font-weight: 700;
   width: 60%;
