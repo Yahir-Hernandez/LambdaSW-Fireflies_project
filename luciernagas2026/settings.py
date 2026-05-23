@@ -112,7 +112,17 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {'NAME': 'sistema_app.validators.UppercaseValidator'},
+    {'NAME': 'sistema_app.validators.LowercaseValidator'},
+    {'NAME': 'sistema_app.validators.NumberValidator'},
+    {'NAME': 'sistema_app.validators.SpecialCharValidator'},
 ]
+
+
+# Sesión: 30 minutos de inactividad. Cualquier request renueva el timeout
+# (ver SESSION_SAVE_EVERY_REQUEST).
+SESSION_COOKIE_AGE = 1800
+SESSION_SAVE_EVERY_REQUEST = True
 
 
 # Internationalization

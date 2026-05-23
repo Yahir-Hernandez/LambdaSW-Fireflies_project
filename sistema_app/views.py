@@ -18,7 +18,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .forms import CustomUserCreationForm
-from .models import Lodging, Park, PendingRegistration, Reservation
+from .models import Lodging, LoginAttempt, Park, PendingRegistration, Reservation
 from .services import (
     AvailabilityService,
     NotificationService,
@@ -199,16 +199,31 @@ def resend_verification_code_api(request):
 
 
 def login(request):
-    data = {"form": AuthenticationForm(), "next": request.GET.get("next", "")}
+    data = {
+        "form": AuthenticationForm(),
+        "next": request.GET.get("next", ""),
+        "lockout": False,
+    }
     if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        if LoginAttempt.is_locked_out(username):
+            data["lockout"] = True
+            data["form"] = AuthenticationForm(data=request.POST)
+            return render(request, "registration/login.html", data)
+
         formulario = AuthenticationForm(data=request.POST)
         if formulario.is_valid():
-            username = formulario.cleaned_data["username"]
-            password = formulario.cleaned_data["password"]
-            user = authenticate(username=username, password=password)
+            user = authenticate(
+                username=formulario.cleaned_data["username"],
+                password=formulario.cleaned_data["password"],
+            )
             if user is not None:
+                LoginAttempt.register(username, success=True)
                 auth_login(request, user)
                 return redirect(_safe_next(request))
+            LoginAttempt.register(username, success=False)
+        elif username:
+            LoginAttempt.register(username, success=False)
         data["form"] = formulario
     return render(request, "registration/login.html", data)
 

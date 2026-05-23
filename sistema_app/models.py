@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -46,6 +49,10 @@ class Park(models.Model):
         verbose_name_plural = "Parques"
 
     def soft_delete(self):
+        if self.reservations.filter(status=Reservation.Status.ACTIVE).exists():
+            raise ValidationError(
+                "No se puede eliminar un parque con reservaciones activas."
+            )
         if not self.is_deleted:
             self.is_deleted = True
             self.save(update_fields=["is_deleted"])
@@ -172,3 +179,51 @@ class PendingRegistration(models.Model):
 
     def seconds_until_resend(self) -> int:
         return max(0, self.RESEND_COOLDOWN_SECONDS - self.seconds_elapsed())
+
+
+class LoginAttempt(models.Model):
+    """Registro de intentos de login para implementar bloqueo tras N fallos.
+
+    El bloqueo se evalúa por ``username`` dentro de una ventana móvil de
+    ``LOCKOUT_WINDOW_SECONDS``. Si en esa ventana hay ``MAX_FAILED_ATTEMPTS``
+    o más fallos, futuros intentos (incluso con la contraseña correcta) son
+    rechazados hasta que la ventana se vacíe.
+    """
+
+    MAX_FAILED_ATTEMPTS = 6
+    LOCKOUT_WINDOW_SECONDS = 900  # 15 minutos
+
+    username = models.CharField(max_length=150, db_index=True)
+    attempted_at = models.DateTimeField(default=timezone.now, db_index=True)
+    success = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Intento de inicio de sesión"
+        verbose_name_plural = "Intentos de inicio de sesión"
+        ordering = ("-attempted_at",)
+        indexes = [
+            models.Index(fields=["username", "attempted_at"]),
+        ]
+
+    @classmethod
+    def is_locked_out(cls, username: str) -> bool:
+        if not username:
+            return False
+        since = timezone.now() - timedelta(seconds=cls.LOCKOUT_WINDOW_SECONDS)
+        return (
+            cls.objects.filter(
+                username=username,
+                success=False,
+                attempted_at__gte=since,
+            ).count()
+            >= cls.MAX_FAILED_ATTEMPTS
+        )
+
+    @classmethod
+    def register(cls, username: str, success: bool) -> None:
+        if username:
+            cls.objects.create(username=username, success=success)
+
+    def __str__(self) -> str:
+        estado = "éxito" if self.success else "fallo"
+        return f"{self.username} · {estado} · {self.attempted_at:%Y-%m-%d %H:%M}"

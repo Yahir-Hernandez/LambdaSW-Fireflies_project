@@ -61,6 +61,11 @@
               <div class="card-body">
                 <h2  class="auth-dialog__title">Iniciar sesión</h2>
                 <hr />
+                {% if lockout %}
+                  <div class="alert alert-danger" role="alert">
+                    Tu cuenta ha sido bloqueada temporalmente tras múltiples intentos fallidos. Intenta de nuevo más tarde.
+                  </div>
+                {% endif %}
                 <form action="" method="post">
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ next }}" />
