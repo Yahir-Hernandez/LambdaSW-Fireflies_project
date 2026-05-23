@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  <script src="https://kit.fontawesome.com/db1b884b1e.js" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div class="hero__stars" aria-hidden="true"></div>
+    <div class="hero__fireflies" aria-hidden="true">
+      <span class="ff" style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%;"></span>
+      <span class="ff" style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%;"></span>
+      <span class="ff" style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%;"></span>
+      <span class="ff" style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%;"></span>
+      <span class="ff" style="--dx: 12px; --dy: -14px; --dur: 3.4s; left: 55%; top: 78%;"></span>
+      <span class="ff" style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%;"></span>
+    </div>
+
+    <div class="hero__content">
+      <div class="hero__badge"><i class="fa-solid fa-calendar"></i> Junio - Agosto 2026</div>
+
+      <!--div class="hero__firefly-icon hero__firefly-icon--placeholder" aria-hidden="true"></-div>
+
+      <h1 class="hero__title">
+        <span class="hero__title--thin">Festival Internacional</span>
+        <span class="hero__title--sub">de las</span>
+        <span class="hero__title--main">Luciérnagas</span>
+      </h1>-->
+      <img src="{% static 'img/logo_b.png' %}" alt="Logo del Festival" class="logo"/>
+
+      <p class="hero__desc">
+        Vive el espectaculo natural mas magico de Mexico. Miles de luciernagas
+        iluminan los bosques de oyamel creando una sinfonia de luz que solo ocurre
+        durante el verano.
+      </p>
+
+      <div class="hero__actions">
+        <a href="{% url 'sistema_app:mapa' %}" class="btn btn--accent">
+          <span><i class="fa-solid fa-location-dot"></i> Explorar Parques</span>
+        </a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'sistema_app:reservation_create' %}" class="btn btn--outline">
+            Reservar ahora <i class="fa-solid fa-right-long"></i>
+          </a>
+        {% else %}
+          <button type="button" class="btn btn--outline" id="reservar-ahora-btn">
+            Reservar ahora <i class="fa-solid fa-right-long"></i>
+          </button>
+        {% endif %}
+      </div>
+
+      {% if not user.is_authenticated %}
+        <script>
+          (function () {
+            const btn = document.getElementById('reservar-ahora-btn');
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+              if (typeof window.openAuthDialog === 'function') window.openAuthDialog();
+            });
+          })();
+        </script>
+      {% endif %}
+
+      <!--<div class="hero__stats">
+        <div class="stat">
+          <span class="stat__num">5</span>
+          <span class="stat__label">Parques Oficiales</span>
+        </div>
+        <div class="stat">
+          <span class="stat__num">3</span>
+          <span class="stat__label">Meses del Festival</span>
+        </div>
+        <div class="stat">
+          <span class="stat__num">+200</span>
+          <span class="stat__label">Visitantes diarios</span>
+        </div>
+      </-div> -->
+    </div>
+    <!--
+    <a href="#why" class="hero__scroll" aria-label="Descubre mas">
+      <span class="hero__scroll-label">Descubre mas</span>
+      <span class="hero__scroll-box"><span class="scroll-dot"></span></span>
+    </a>
+    -->
+  </section>
+  <!--
+  <section class="why" id="why">
+    <div class="container">
+      <h2 class="section-title">¿Por que visitarnos?</h2>
+      <p class="section-sub">Una experiencia unica e irrepetible en los bosques mas magicos de Mexico</p>
+
+      <div class="why__grid">
+        <div class="why__card">
+          <div class="why__icon"><span class="icon-placeholder" aria-hidden="true"></span></div>
+          <h3>Fenomeno Natural Unico</h3>
+          <p>Miles de <em>Photinus sp.</em> iluminan el bosque con destellos sincronizados, un espectaculo que solo ocurre en estas regiones de Mexico.</p>
+        </div>
+        <div class="why__card">
+          <div class="why__icon"><span class="icon-placeholder" aria-hidden="true"></span></div>
+          <h3>Bosques Protegidos</h3>
+          <p>Todos los parques son reservas naturales certificadas con guias especializados que garantizan una experiencia responsable y segura.</p>
+        </div>
+        <div class="why__card">
+          <div class="why__icon"><span class="icon-placeholder" aria-hidden="true"></span></div>
+          <h3>Reservacion Sencilla</h3>
+          <p>Reserva tu lugar en cabañas o zona de camping directamente desde nuestra plataforma, sin complicaciones ni intermediarios.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="parques" id="parques">
+    <div class="container">
+      <div class="parques__header">
+        <div>
+          <h2 class="section-title section-title--left">Parques Oficiales 2026</h2>
+          <p class="section-sub section-sub--left">Selecciona tu destino y vive la magia</p>
+        </div>
+        <a href="#" class="link-arrow">Ver todos en el mapa →</a>
+      </div>
+
+      <div class="parques__grid">
+        <div class="parque-card">
+          <div class="parque-card__img parque-card__img--1">
+            <span class="tag">Cabañas</span>
+            <span class="tag tag--green">Camping</span>
+          </div>
+          <div class="parque-card__body">
+            <h3>Reserva de Nanacamilpa</h3>
+            <p class="parque-card__loc">Nanacamilpa de Mariano Arista, Tlaxcala</p>
+            <p class="parque-card__hours">Martes a Domingo, 19:00 - 23:00 hrs (Jun - Ago)</p>
+            <div class="parque-card__footer">
+              <span class="parque-card__avail">45 lugares disponibles</span>
+              <a href="#" class="link-arrow link-arrow--sm">Ver detalles →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="parque-card parque-card--featured">
+          <div class="parque-card__img parque-card__img--2">
+            <span class="tag tag--green">Camping</span>
+          </div>
+          <div class="parque-card__body">
+            <h3>Bosque de San Felipe Hidalgo</h3>
+            <p class="parque-card__loc">San Felipe Hidalgo, Tlaxcala</p>
+            <p class="parque-card__hours">Martes a Domingo, 19:00 - 22:00 hrs (Jun - Ago)</p>
+            <div class="parque-card__footer">
+              <span class="parque-card__avail">28 lugares disponibles</span>
+              <a href="#" class="link-arrow link-arrow--sm">Ver detalles →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="parque-card">
+          <div class="parque-card__img parque-card__img--3">
+            <span class="tag">Cabañas</span>
+            <span class="tag tag--green">Camping</span>
+          </div>
+          <div class="parque-card__body">
+            <h3>Parque Ecoturistico La Malinche</h3>
+            <p class="parque-card__loc">Huamantla, Tlaxcala</p>
+            <p class="parque-card__hours">Martes a Domingo, 18:30 - 22:30 hrs (Jun - Ago)</p>
+            <div class="parque-card__footer">
+              <span class="parque-card__avail">62 lugares disponibles</span>
+              <a href="#" class="link-arrow link-arrow--sm">Ver detalles →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="parques__cta">
+        <a href="#" class="btn btn--outline btn--map">Ver todos los parques en el mapa</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-reserva" id="reservar">
+    <div class="cta-reserva__inner">
+      <div class="cta-reserva__icon"><span class="icon-placeholder" aria-hidden="true"></span></div>
+      <h2>Reserva tu lugar hoy</h2>
+      <p>Los lugares son limitados. Asegura tu experiencia en los bosques mas magicos de Mexico durante el Festival Internacional de las Luciernagas 2026.</p>
+      <div class="cta-reserva__actions">
+        <a href="#" class="btn btn--primary">Crear cuenta gratis →</a>
+        <a href="#parques" class="btn btn--ghost">Ver parques</a>
+      </div>
+    </div>
+  </section>
+    -->
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'script/luciernagas.js' %}"></script>
+{% endblock %}

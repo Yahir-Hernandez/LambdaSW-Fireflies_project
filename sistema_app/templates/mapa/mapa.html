@@ -1,0 +1,184 @@
+{% extends "base.html" %} {% load static %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}" />
+<link rel="stylesheet" href="{% static 'css/mapa.css' %}" />
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script
+  src="https://kit.fontawesome.com/db1b884b1e.js"
+  crossorigin="anonymous"
+></script>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin="anonymous"
+/>
+{% endblock %} {% block content %}
+<section class="hero map-page">
+  <div class="hero__stars" aria-hidden="true"></div>
+  <div class="hero__fireflies" aria-hidden="true">
+    <span
+      class="ff"
+      style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: 12px; --dy: -14px; --dur: 3.4s; left: 55%; top: 78%"
+    ></span>
+    <span
+      class="ff"
+      style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%"
+    ></span>
+  </div>
+
+    <!-- Mapa de parques -->
+    <div class="map-container">
+      <div class="park-list" id="park-list">
+        <!-- Lista de parques se llenará con JavaScript -->
+      </div>
+      <div id="map"></div>
+      <div class="park-info" id="park-info">
+        <!-- Información del parque seleccionado -->
+        <div class="park-info-default">
+          <h3>Selecciona un parque</h3>
+          <p>Haz clic en un marcador del mapa o en un parque de la lista para ver sus detalles.</p>
+        </div>
+      </div>
+    </div>
+</section>
+{% endblock %} {% block extra_js %}
+<script src="{% static 'script/luciernagas.js' %}"></script>
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin="anonymous"
+></script>
+
+<script>
+    const parkIconUrl = "{% static 'img/luciernaga.png' %}";
+    const reservationUrl = "{% url 'sistema_app:reservation_create' %}";
+    const availabilityUrl = "{% url 'sistema_app:disponibilidad_api' %}";
+    const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    const loginUrl = "{% url 'sistema_app:login' %}";
+    <!-- Modelamos los datos de los parques recibidos desde Backend -->
+    <!-- Estos datos serán usados en script/map_script.js  -->
+    const data_parks = [
+      {% for parque in parques %}
+      {
+        id: {{ parque.id }},
+        nombre: "{{ parque.name|escapejs }}",
+        direccion: "{{ parque.address|escapejs }}",
+        descripcion: "{{ parque.description|escapejs }}",
+        latitud: {{ parque.latitude }},
+        longitud: {{ parque.longitude }},
+        maximo_visitantes: {{ parque.camping_capacity }},
+        disponibilidad_actual: {{ parque.disponibilidad_actual }},
+        has_cabins: {{ parque.has_cabins|yesno:"true,false" }},
+        telefono_contacto: "{{ parque.contact_phone|escapejs }}",
+        email_contacto: "{{ parque.contact_email|escapejs }}",
+        servicios: [
+          {% for servicio in parque.services.all %}
+          "{{ servicio.name|escapejs }}"{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+  ];
+</script>
+<script src="{% static 'script/map_script.js' %}"></script>
+
+<!-- Modal de Reserva -->
+<div id="reservaModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalParkName">Reservar Parque</h2>
+      <button class="modal-close" onclick="closeReservaModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <form id="reservaForm" method="post" action="{% url 'sistema_app:crear_reserva' %}">
+        {% csrf_token %}
+        <div class="reserva-layout">
+          <div class="reserva-info-sidebar">
+            <div class="reserva-park-summary" id="reservaParkSummary">
+              <div class="reserva-park-title">Parque seleccionado</div>
+              <div class="reserva-park-name" id="reservaParkName">Sin seleccionar</div>
+              <div class="reserva-park-availability" id="reservaParkAvailability">Disponibilidad: --/--</div>
+            </div>
+
+            <div class="reserva-rules" id="reservaRules">
+              <p class="reserva-rules-title">Reglas para reservar</p>
+              <ul>
+                <li>La fecha de inicio debe estar entre junio y agosto de 2026.</li>
+                <li>No se permiten reservas con inicio en martes.</li>
+                <li>La fecha de término no puede ser anterior a la fecha de inicio.</li>
+                <li>La cantidad de personas no puede superar la disponibilidad actual.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="reserva-form-fields">
+            <div class="reserva-message" id="reservaMessage" role="alert" aria-live="polite"></div>
+            <input type="hidden" id="parkId" name="parkId">
+            <input type="hidden" id="lodgingId" name="lodging_id">
+
+            <div class="form-group">
+              <label for="fechaInicio">Fecha de inicio de la estancia</label>
+              <input type="date" id="fechaInicio" name="fecha_inicio" required>
+            </div>
+
+            <div class="form-group">
+              <label for="fechaTermino">Fecha de término de la estancia</label>
+              <input type="date" id="fechaTermino" name="fecha_termino" required>
+            </div>
+
+            <div class="form-group">
+              <label for="numPersonas">Número de personas</label>
+              <input type="number" id="numPersonas" name="num_personas" min="1" max="20" value="1" required>
+            </div>
+
+            <div class="form-group">
+              <label>Tipo de visita</label>
+              <div class="radio-group" id="tipoVisitaGroup">
+                <label class="radio-option" id="tipoVisitaCabin">
+                  <input type="radio" name="tipo_visita" value="CABIN">
+                  <span>Cabaña</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="tipo_visita" value="CAMPING" checked>
+                  <span>Camping</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Selecciona una opción disponible</label>
+              <div class="lodging-options" id="lodgingOptions">
+                <p class="lodging-options__hint">Selecciona fechas y tipo de visita para ver opciones disponibles.</p>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn--outline" onclick="closeReservaModal()">Cancelar</button>
+              <button type="submit" class="btn btn--primary">Confirmar Reserva</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="{% static 'script/reservas.js' %}"></script>
+
+{% endblock %}

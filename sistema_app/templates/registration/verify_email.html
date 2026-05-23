@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero__stars" aria-hidden="true"></div>
+  <div class="hero__fireflies" aria-hidden="true">
+    <span class="ff" style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%;"></span>
+    <span class="ff" style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%;"></span>
+    <span class="ff" style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%;"></span>
+    <span class="ff" style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%;"></span>
+  </div>
+
+  <dialog id="verify-dialog" class="auth-dialog">
+    <div class="auth-dialog__body">
+      <button type="button" class="auth-dialog__back" id="verify-back-btn" aria-label="Volver">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div class="auth-dialog__icon auth-dialog__icon--image" aria-hidden="true">
+        <img src="{% static 'img/lambda_logo.png' %}" alt="Lambda">
+      </div>
+      <h3 class="auth-dialog__title">Verifica tu correo</h3>
+      <p class="auth-dialog__desc">
+        Enviamos un código de 5 dígitos a
+        <strong id="verify-masked-email">{{ masked_email }}</strong>.
+        El código es válido por 5 minutos.
+      </p>
+
+      <form id="verify-form" novalidate>
+        {% csrf_token %}
+        <div class="code-grid" id="verify-code-grid">
+          <input class="code-cell" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Dígito 1" autofocus>
+          <input class="code-cell" type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 2">
+          <input class="code-cell" type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 3">
+          <input class="code-cell" type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 4">
+          <input class="code-cell" type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 5">
+        </div>
+        <p id="verify-error" class="verify-error" aria-live="polite"></p>
+
+        <div class="auth-dialog__actions">
+          <button type="submit" class="btn btn--accent">Verificar</button>
+          <button type="button" id="verify-resend-btn" class="btn btn--outline" disabled>
+            Reenviar en <span id="verify-resend-timer">2:00</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="verify-success-dialog" class="auth-dialog auth-dialog--success">
+    <div class="auth-dialog__body">
+      <div class="auth-dialog__icon" aria-hidden="true">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h3 class="auth-dialog__title">¡Verificación exitosa!</h3>
+      <p class="auth-dialog__desc">Te estamos redirigiendo a tu perfil...</p>
+    </div>
+  </dialog>
+</section>
+
+<script>
+  const verifyUrls = {
+    verify: "{% url 'sistema_app:verify_email_api' %}",
+    resend: "{% url 'sistema_app:resend_code_api' %}",
+    profile: "{% url 'sistema_app:perfil' %}",
+    back: "{% url 'sistema_app:home' %}"
+  };
+  const initialResendIn = {{ resend_in|default:120 }};
+</script>
+<script src="{% static 'script/verify_email.js' %}"></script>
+{% endblock %}
