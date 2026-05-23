@@ -31,16 +31,24 @@ LambdaSW-Fireflies_project/
 ├── .env                         # Variables de entorno (no versionar valores reales)
 ├── luciernagas2026/             # Proyecto Django (settings, urls raíz, wsgi/asgi)
 └── sistema_app/                 # App principal
-    ├── models.py                # Service, Park, Lodging, Reservation, PendingRegistration
-    ├── services.py              # Capa de lógica de negocio (RNB-01..04)
+    ├── models.py                # Service, Park, Lodging, Reservation, PendingRegistration, LoginAttempt
+    ├── services/                # Paquete: capa de lógica de negocio (1 módulo por responsabilidad)
+    │   ├── __init__.py          # Re-exporta API pública (backward-compat)
+    │   ├── validation.py        # ReservationValidator (RNB-01..04)
+    │   ├── availability.py      # AvailabilityService (CABIN vs CAMPING)
+    │   ├── notification.py      # NotificationService (usa templates/emails/)
+    │   └── reservations.py      # ReservationService (orquestador)
+    ├── domain_rules.py          # Constantes RNB (SEASON_*, MIN/MAX_PEOPLE, TUESDAY)
+    ├── utils.py                 # Helpers puros (generate_verification_code, mask_email)
+    ├── validators.py            # Password validators (BasePasswordRegexValidator + 4 subclases)
     ├── views.py                 # 15 vistas (HTML + JSON)
     ├── urls.py                  # 15 rutas
     ├── forms.py                 # CustomUserCreationForm
     ├── admin.py                 # Configuración del admin
     ├── tests.py                 # LEGACY (vacío, ignorar)
-    ├── migrations/              # 6 migraciones
+    ├── migrations/              # 7 migraciones
     ├── tests/                   # Suite real de pytest
-    │   ├── test_services.py     # Unit, ~100% de services.py
+    │   ├── test_services.py     # Unit, cobertura de la capa services/
     │   ├── test_models.py       # Unit, 100% de models.py
     │   ├── test_forms.py        # Unit, 100% de forms.py
     │   ├── test_views.py        # Integration (HTML)
@@ -53,6 +61,10 @@ LambdaSW-Fireflies_project/
     │   ├── registration/{login,sign_up,verify_email}.html
     │   ├── mapa/mapa.html
     │   ├── user/perfil.html
+    │   ├── emails/              # Plantillas de texto plano para correos
+    │   │   ├── reservation_confirmation.txt
+    │   │   ├── reservation_cancellation.txt
+    │   │   └── verification_code.txt
     │   └── admin/...            # Override del admin de Django
     └── static/
         ├── img/                 # luciernaga.png, logos
@@ -65,7 +77,8 @@ LambdaSW-Fireflies_project/
 - **Soft-delete de parques**: `Park.is_deleted` + manager [`ParkQuerySet.active()`](sistema_app/models.py#L21). Las reservas se rechazan si el parque está marcado eliminado.
 - **Transacciones atómicas en reservas**: `ReservationService.create_reservation` usa `@transaction.atomic` + `select_for_update()` sobre el `Lodging` para evitar double-booking.
 - **Notificaciones post-commit**: el envío de email se agenda con `transaction.on_commit(...)`; si el SMTP falla, la reserva ya quedó persistida (graceful degradation, error en `logger.exception`).
-- **Reglas de negocio RNB-01..04** centralizadas en `ReservationValidator` ([sistema_app/services.py:47-112](sistema_app/services.py#L47-L112)).
+- **Reglas de negocio RNB-01..04** aplicadas en [`ReservationValidator`](sistema_app/services/validation.py), con las constantes en un módulo de configuración aparte ([`domain_rules.py`](sistema_app/domain_rules.py)) — modificar reglas se hace ahí, no en los servicios.
+- **Capa de servicios como paquete**: `sistema_app/services/` separa cada responsabilidad en su propio archivo (validación, disponibilidad, notificación, orquestación). El `__init__.py` re-exporta la API pública para que ningún consumidor externo dependa de la organización interna.
 - **Frontend mínimo**: sin React/Vue. Lógica AJAX directa con `fetch()` y un par de endpoints JSON; el resto son formularios POST tradicionales con redirect.
 
 ---
@@ -108,96 +121,106 @@ LambdaSW-Fireflies_project/
 
 ---
 
-## 3. Capa de servicios — [sistema_app/services.py](sistema_app/services.py)
+## 3. Capa de servicios — paquete [sistema_app/services/](sistema_app/services/)
 
-Estructura: dos funciones módulo-level + cuatro clases con métodos `@classmethod`/`@staticmethod`. No hay instancias.
+Tras el refactor, `services` es un paquete con un módulo por responsabilidad. La API pública sigue accesible vía `from sistema_app.services import ...` gracias al re-export en [`__init__.py`](sistema_app/services/__init__.py); ningún consumidor externo (views, admin, tests) tuvo que cambiar.
 
-### 3.1 Utilidades módulo-level
+Helpers transversales fueron extraídos:
 
-#### `generate_verification_code() -> str` — [services.py:26-28](sistema_app/services.py#L26-L28)
-- Genera un código numérico de **5 dígitos** con `secrets.randbelow(100000)` (criptográficamente seguro).
-- Format string `f"{n:05d}"` garantiza padding a 5 (ej. `"00123"`).
-- Sin excepciones.
+- **[sistema_app/utils.py](sistema_app/utils.py)** — `generate_verification_code`, `mask_email`. Funciones puras sin dependencias de modelos.
+- **[sistema_app/domain_rules.py](sistema_app/domain_rules.py)** — constantes RNB (`SEASON_START`, `SEASON_END`, `MIN_PEOPLE`, `MAX_PEOPLE`, `TUESDAY`). Único lugar a tocar cuando producto cambia una regla.
+- **[sistema_app/templates/emails/](sistema_app/templates/emails/)** — `reservation_confirmation.txt`, `reservation_cancellation.txt`, `verification_code.txt`. El copy de los correos vive aquí.
 
-#### `mask_email(email: str) -> str` — [services.py:31-42](sistema_app/services.py#L31-L42)
-- Censura la parte local del email: `sa*********6@gmail.com`.
-- Si `local <= 3` o no hay `@`, devuelve sin modificar.
-- Si `email` es vacío/`None`, devuelve `""`.
+### 3.1 `ReservationValidator` — [sistema_app/services/validation.py](sistema_app/services/validation.py)
 
-### 3.2 `ReservationValidator` — [services.py:47-112](sistema_app/services.py#L47-L112)
-
-Reglas de negocio RNB-01..04. Constantes:
-
-```python
-SEASON_START = date(2026, 6, 1)
-SEASON_END   = date(2026, 8, 31)
-MIN_PEOPLE   = 1
-MAX_PEOPLE   = 20
-TUESDAY      = 1   # weekday() del martes
-```
+Reglas RNB-01..04 sobre los datos de una posible reserva. Lee las constantes de [`domain_rules`](sistema_app/domain_rules.py).
 
 | Método | Firma | Excepción y mensaje |
 |---|---|---|
-| `validate_date` ([L57](sistema_app/services.py#L57-L71)) | `(start_date, end_date) -> None` | `ValidationError` si fechas faltantes, `end <= start`, fuera de temporada Jun-Ago 2026, o `end > SEASON_END + 1 día` |
-| `validate_tuesday` ([L74](sistema_app/services.py#L74-L78)) | `(start_date) -> None` | `ValidationError("No es posible iniciar una estancia un día martes.")` si `weekday() == 1` |
-| `validate_people` ([L81](sistema_app/services.py#L81-L89)) | `(n_people) -> None` | `ValidationError` si `n_people` es `None`, `< 1`, o `> 20` |
-| `validate_lodging` ([L92](sistema_app/services.py#L92-L98)) | `(lodging, park, n_people) -> None` | `ValidationError` si `lodging.park_id != park.id` o `n_people > lodging.capacity` |
-| `validate` ([L101](sistema_app/services.py#L101-L112)) | `(park, lodging, start, end, n_people) -> None` | Orquesta los 4 anteriores en orden: date → tuesday → people → lodging |
+| `validate_date` | `(start_date, end_date) -> None` | `ValidationError` si fechas faltantes, `end <= start`, fuera de temporada, o `end > SEASON_END + 1 día` |
+| `validate_tuesday` | `(start_date) -> None` | `ValidationError("No es posible iniciar una estancia un día martes.")` si `weekday() == TUESDAY` |
+| `validate_people` | `(n_people) -> None` | `ValidationError` si `n_people` es `None`, `< MIN_PEOPLE`, o `> MAX_PEOPLE` |
+| `validate_lodging` | `(lodging, park, n_people) -> None` | `ValidationError` si `lodging.park_id != park.id` o `n_people > lodging.capacity` |
+| `validate` | `(park, lodging, start, end, n_people) -> None` | Orquesta los 4 anteriores en orden: date → tuesday → people → lodging |
 
-### 3.3 `AvailabilityService` — [services.py:115-198](sistema_app/services.py#L115-L198)
+### 3.2 `AvailabilityService` — [sistema_app/services/availability.py](sistema_app/services/availability.py)
 
 Lógica diferenciada por `kind`:
-- **CABIN** = recurso exclusivo. Cualquier reserva ACTIVE traslapada lo bloquea (capacidad 0).
-- **CAMPING** = recurso compartible. `capacity - SUM(people de reservas ACTIVE traslapadas)`.
+- **CABIN** = exclusivo. Cualquier reserva ACTIVE traslapada lo bloquea (capacidad 0).
+- **CAMPING** = compartible. `capacity - SUM(people de reservas ACTIVE traslapadas)`.
 
 | Método | Firma | Notas |
 |---|---|---|
-| `_overlap(qs, start, end)` ([L126](sistema_app/services.py#L126-L132)) | static | Filtra `status=ACTIVE AND start_date < end AND end_date > start` |
-| `people_booked(lodging, start, end)` ([L134](sistema_app/services.py#L134-L146)) | classmethod → `int` | Agrega `Sum("people")` de reservas activas traslapadas; devuelve 0 si no hay |
-| `remaining_capacity(lodging, start, end)` ([L148](sistema_app/services.py#L148-L165)) | classmethod → `int` | CABIN: `0` si hay overlap, sino `capacity`. CAMPING: `max(capacity - booked, 0)` |
-| `available_lodgings(park, kind, start, end, n_people=1)` ([L167](sistema_app/services.py#L167-L188)) | classmethod → `list[Lodging]` | Ordena por `(capacity, name)`, filtra por `remaining >= n_people`, agrega atributo dinámico `available_capacity` a cada instancia |
-| `is_lodging_available(lodging, start, end, n_people=1)` ([L190](sistema_app/services.py#L190-L198)) | classmethod → `bool` | Wrapper booleano sobre `remaining_capacity` |
+| `_overlap(qs, start, end)` | static | Filtra `status=ACTIVE AND start_date < end AND end_date > start` |
+| `people_booked(lodging, start, end)` | classmethod → `int` | Agrega `Sum("people")` de reservas activas traslapadas; devuelve 0 si no hay |
+| `remaining_capacity(lodging, start, end)` | classmethod → `int` | CABIN: `0` si hay overlap, sino `capacity`. CAMPING: `max(capacity - booked, 0)` |
+| `available_lodgings(park, kind, start, end, n_people=1)` | classmethod → `list[Lodging]` | Ordena por `(capacity, name)`, filtra por `remaining >= n_people`, agrega atributo dinámico `available_capacity` |
+| `is_lodging_available(lodging, start, end, n_people=1)` | classmethod → `bool` | Wrapper booleano sobre `remaining_capacity` |
 
-### 3.4 `NotificationService` — [services.py:201-296](sistema_app/services.py#L201-L296)
+### 3.3 `NotificationService` — [sistema_app/services/notification.py](sistema_app/services/notification.py)
 
 Toma `DEFAULT_FROM_EMAIL` de settings (fallback `noreply@luciernagas2026.mx`). **Todas las excepciones de `send_mail` se capturan y se registran con `logger.exception`**; el método retorna `False` pero la reserva sigue vigente.
 
-| Método | Firma | Asunto |
+El cuerpo de los correos se renderiza con `render_to_string("emails/<plantilla>.txt", contexto)`. Para cambiar el copy editar las plantillas, **no este archivo**.
+
+| Método | Firma | Plantilla / Asunto |
 |---|---|---|
-| `_send(subject, body, reservation)` ([L208](sistema_app/services.py#L208-L230)) | privado → `bool` | Helper para enviar al `reservation.user.email` |
-| `_format(reservation)` ([L232](sistema_app/services.py#L232-L243)) | privado → `str` | Formatea bloque con parque, tipo, hospedaje, fechas, personas, código `#pk` |
-| `send_confirmation_email(reservation)` ([L245](sistema_app/services.py#L245-L254)) | → `bool` | `"Confirmación de reserva #<pk> — Festival de las Luciérnagas"` |
-| `send_cancellation_email(reservation)` ([L256](sistema_app/services.py#L256-L265)) | → `bool` | `"Cancelación de reserva #<pk>"` |
-| `_send_to(subject, body, recipient)` ([L267](sistema_app/services.py#L267-L282)) | privado → `bool` | Variante para destinatario libre (no atado a reserva) |
-| `send_verification_email(recipient_email, code, recipient_name="")` ([L284](sistema_app/services.py#L284-L296)) | → `bool` | `"Código de verificación - Festival de las Luciérnagas"` |
+| `_build_reservation_context(reservation)` | privado → `dict` | Diccionario consumido por las plantillas de reserva |
+| `_send(subject, body, reservation)` | privado → `bool` | Helper para enviar al `reservation.user.email` |
+| `_send_to(subject, body, recipient)` | privado → `bool` | Variante para destinatario libre |
+| `send_confirmation_email(reservation)` | → `bool` | `emails/reservation_confirmation.txt` · *"Confirmación de reserva #&lt;pk&gt;..."* |
+| `send_cancellation_email(reservation)` | → `bool` | `emails/reservation_cancellation.txt` · *"Cancelación de reserva #&lt;pk&gt;"* |
+| `send_verification_email(recipient_email, code, recipient_name="")` | → `bool` | `emails/verification_code.txt` · *"Código de verificación..."* |
 
-### 3.5 `ReservationService` — [services.py:299-377](sistema_app/services.py#L299-L377)
+### 3.4 `ReservationService` — [sistema_app/services/reservations.py](sistema_app/services/reservations.py)
 
-Orquestador principal. Es la única clase que vistas y endpoints AJAX consumen para escribir en la BD.
+Orquestador principal. Es la única clase que vistas y endpoints AJAX consumen para escribir reservaciones en la BD.
 
-#### `create_reservation(user, lodging, start_date, end_date, n_people) -> Reservation` — [services.py:302-353](sistema_app/services.py#L302-L353)
+#### `create_reservation(user, lodging, start_date, end_date, n_people) -> Reservation`
 
 Decorado con `@transaction.atomic`. Flujo:
 
-1. **Lock por hospedaje**: `Lodging.objects.select_for_update().select_related("park").get(pk=lodging.pk)` ([L314-L316](sistema_app/services.py#L314-L316)) — evita doble-booking concurrente sin bloquear todo el parque.
-2. Si `park.is_deleted` → `ValidationError("Este parque ya no está disponible.")` ([L318-L319](sistema_app/services.py#L318-L319)).
+1. **Lock por hospedaje**: `Lodging.objects.select_for_update().select_related("park").get(pk=lodging.pk)` — evita doble-booking concurrente sin bloquear todo el parque.
+2. Si `park.is_deleted` → `ValidationError("Este parque ya no está disponible.")`.
 3. `ReservationValidator.validate(...)` → puede lanzar cualquiera de los 4 errores de validación.
-4. `AvailabilityService.remaining_capacity(...)` y comparación:
+4. `AvailabilityService.remaining_capacity(...)` bajo el lock y comparación:
    - CABIN no disponible → `"Esta cabaña ya está reservada para las fechas seleccionadas."`
    - CAMPING vacío → `"Esta parcela ya está completamente reservada para esas fechas."`
    - CAMPING insuficiente → `"En esta parcela solo quedan N lugar(es) disponible(s) para esas fechas."`
-5. `Reservation.objects.create(...)`.
+5. `Reservation.objects.create(status=ACTIVE)`.
 6. `transaction.on_commit(lambda: NotificationService.send_confirmation_email(reservation))` — el correo se envía **después** del commit; si falla, la reserva ya está persistida.
 
-#### `cancel_reservation(user, reservation) -> Reservation` — [services.py:355-370](sistema_app/services.py#L355-L370)
+#### `cancel_reservation(user, reservation) -> Reservation`
 
 1. Permisos: `reservation.user_id == user.id` OR `user.is_staff`, sino `ValidationError("No tienes permisos para cancelar esta reservación.")`.
 2. `reservation.is_cancellable()` (status=ACTIVE y `start_date > localdate()`), sino `ValidationError("Solo es posible cancelar una reserva activa antes de su fecha de inicio.")`.
 3. `transaction.atomic()`: cambia status a `CANCELLED`, guarda con `update_fields=["status"]`, agenda email de cancelación con `on_commit`.
 
-#### `get_user_reservations(user, only_active=False) -> QuerySet` — [services.py:372-377](sistema_app/services.py#L372-L377)
+#### `get_user_reservations(user, only_active=False) -> QuerySet`
 
 `Reservation.objects.filter(user=user).select_related("park", "lodging")`, filtrando por `status=ACTIVE` si `only_active=True`. Lo consume `perfil` y los tests.
+
+### 3.5 Utilidades — [sistema_app/utils.py](sistema_app/utils.py)
+
+| Función | Descripción |
+|---|---|
+| `generate_verification_code()` | Código numérico de 5 dígitos con `secrets.randbelow(100000)` (criptográficamente seguro). |
+| `mask_email(email)` | Censura visual: `sa*********6@gmail.com`. Devuelve sin cambio si `local ≤ 3` o no hay `@`. |
+
+Se re-exportan en `sistema_app.services.__init__` por compatibilidad con el código pre-refactor.
+
+### 3.6 Validadores de contraseña — [sistema_app/validators.py](sistema_app/validators.py)
+
+`BasePasswordRegexValidator` define el patrón regex + mensaje + código + help text como atributos de clase. Las 4 subclases concretas se reducen a ~5 líneas cada una:
+
+| Validador | Pattern |
+|---|---|
+| `UppercaseValidator` | `[A-Z]` |
+| `LowercaseValidator` | `[a-z]` |
+| `NumberValidator` | `\d` |
+| `SpecialCharValidator` | `[!@#$%^&*(),.?":{}|<>_\-+=\[\]/\\~`';]` |
+
+Para agregar una nueva regla: heredar de `BasePasswordRegexValidator`, definir los 4 atributos, registrar en `settings.AUTH_PASSWORD_VALIDATORS`.
 
 ---
 

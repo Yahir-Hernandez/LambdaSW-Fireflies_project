@@ -1,59 +1,89 @@
-"""Validadores custom de contraseña.
+"""Validadores de contraseña.
 
-Se enchufan vía settings.AUTH_PASSWORD_VALIDATORS y los aplica automáticamente
-Django al usar UserCreationForm / SetPasswordForm.
+Cómo agregar una nueva regla:
+
+1. Crear una clase que herede de :class:`RegexValidator`.
+2. Sobreescribir los atributos de clase ``pattern``, ``error_message``,
+   ``error_code`` y ``help_text``.
+3. Registrar la clase por su path en
+   ``luciernagas2026.settings.AUTH_PASSWORD_VALIDATORS``.
 """
+
+from __future__ import annotations
 
 import re
 
 from django.core.exceptions import ValidationError
 
 
-class UppercaseValidator:
-    def validate(self, password, user=None):
-        if not re.search(r"[A-Z]", password):
-            raise ValidationError(
-                "La contraseña debe contener al menos una letra mayúscula.",
-                code="password_no_upper",
-            )
+class RegexValidator:
+    """Base para validadores que exigen que un regex matchee la contraseña.
 
-    def get_help_text(self):
-        return "Tu contraseña debe contener al menos una letra mayúscula."
+    Attributes
+    ----------
+    pattern : str
+        Expresión regular. ``re.search`` debe encontrar al menos una
+        coincidencia o el validador lanza ``ValidationError``.
+    error_message : str
+        Texto del error que se muestra al usuario.
+    error_code : str
+        Código de error entendible para la computadora.
+    help_text : str
+        Mensaje de ayuda mostrado en formularios.
+    """
 
+    pattern: str = ""
+    error_message: str = ""
+    error_code: str = ""
+    help_text: str = ""
 
-class LowercaseValidator:
-    def validate(self, password, user=None):
-        if not re.search(r"[a-z]", password):
-            raise ValidationError(
-                "La contraseña debe contener al menos una letra minúscula.",
-                code="password_no_lower",
-            )
+    # Lanza una excepcion si el patron definido no esta en la contraseña
+    def validate(self, password: str, user=None) -> None:
+        if not re.search(self.pattern, password):
+            raise ValidationError(self.error_message, code=self.error_code)
 
-    def get_help_text(self):
-        return "Tu contraseña debe contener al menos una letra minúscula."
-
-
-class NumberValidator:
-    def validate(self, password, user=None):
-        if not re.search(r"\d", password):
-            raise ValidationError(
-                "La contraseña debe contener al menos un dígito.",
-                code="password_no_number",
-            )
-
-    def get_help_text(self):
-        return "Tu contraseña debe contener al menos un dígito."
+    def get_help_text(self) -> str:
+        return self.help_text
 
 
-class SpecialCharValidator:
-    SPECIAL_CHARS = r"[!@#$%^&*(),.?\":{}|<>_\-+=\[\]/\\~`';]"
+class UppercaseValidator(RegexValidator):
+    """Exige al menos una letra mayúscula ASCII."""
 
-    def validate(self, password, user=None):
-        if not re.search(self.SPECIAL_CHARS, password):
-            raise ValidationError(
-                "La contraseña debe contener al menos un carácter especial.",
-                code="password_no_special",
-            )
+    pattern = r"[A-Z]"
+    error_message = "La contraseña debe contener al menos una letra mayúscula."
+    error_code = "password_no_upper"
+    help_text = "Tu contraseña debe contener al menos una letra mayúscula."
 
-    def get_help_text(self):
-        return "Tu contraseña debe contener al menos un carácter especial."
+
+class LowercaseValidator(RegexValidator):
+    """Exige al menos una letra minúscula ASCII."""
+
+    pattern = r"[a-z]"
+    error_message = "La contraseña debe contener al menos una letra minúscula."
+    error_code = "password_no_lower"
+    help_text = "Tu contraseña debe contener al menos una letra minúscula."
+
+
+class NumberValidator(RegexValidator):
+    """Exige al menos un dígito decimal."""
+
+    pattern = r"\d"
+    error_message = "La contraseña debe contener al menos un dígito."
+    error_code = "password_no_number"
+    help_text = "Tu contraseña debe contener al menos un dígito."
+
+
+class SpecialCharValidator(RegexValidator):
+    """Exige al menos un carácter especial.
+
+    Notes
+    -----
+    El conjunto considerado "especial" es: ``! @ # $ % ^ & * ( ) , . ? "
+    : { } | < > _ - + = [ ] / \\ ~ \\` ' ;``. 
+    Se eligió para cubrir los teclados latinos comunes.
+    """
+
+    pattern = r"[!@#$%^&*(),.?\":{}|<>_\-+=\[\]/\\~`';]"
+    error_message = "La contraseña debe contener al menos un carácter especial."
+    error_code = "password_no_special"
+    help_text = "Tu contraseña debe contener al menos un carácter especial."

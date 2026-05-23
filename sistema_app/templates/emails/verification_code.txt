@@ -1,0 +1,5 @@
+{% if name %}Hola {{ name }},{% else %}Hola,{% endif %}
+
+Tu código de verificación es: {{ code }}
+
+El código es válido por 5 minutos. Si no fuiste tú quien intentó registrarse, ignora este correo.
