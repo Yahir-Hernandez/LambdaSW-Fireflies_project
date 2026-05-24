@@ -9,6 +9,9 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet">
 	<script src="https://kit.fontawesome.com/db1b884b1e.js" crossorigin="anonymous"></script>
 	{% block extra_css %}{% endblock %}
 	{% block head %}{% endblock %}
@@ -138,12 +141,17 @@
 		{% endwith %}
 		<div class="nav__auth">
       {% if not user.is_authenticated %}
-        <a href="{% url 'sistema_app:login' %}" class="btn">Inicio de sesion</a>
-        <a href="{% url 'sistema_app:register' %}" class="btn btn--primary btn--sm">Registrarse</a>
+        <a href="{% url 'sistema_app:login' %}" class="btn btn--none">Inicio de sesion</a>
+        <a href="{% url 'sistema_app:register' %}" class="btn btn--primary btn--sm btn--none">Registrarse</a>
         <button type="button" class="btn btn--outline btn--sm nav__menu-btn" aria-controls="nav-sidebar" aria-expanded="false">
           <i class="fa-solid fa-bars"></i> 
         </button>
       {% else %}
+				<a class="profile-info-card__avatar_b" aria-hidden="true" href="{% url 'sistema_app:perfil' %}">
+            <span class="profile-info-card__initials_b">
+              {{ user.first_name|default:user.username|slice:":1" }}
+            </span>
+        </a> 
         <button type="button" class="btn btn--outline btn--sm nav__menu-btn" aria-controls="nav-sidebar" aria-expanded="false">
           <i class="fa-solid fa-bars"></i> 
         </button>

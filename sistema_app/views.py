@@ -256,7 +256,58 @@ def mapa(request):
 @login_required
 def perfil(request):
     reservas = ReservationService.get_user_reservations(request.user)
-    return render(request, "user/perfil.html", {"reservas": reservas})
+    q = (request.GET.get("q") or "").strip()
+    status = (request.GET.get("status") or "").strip().lower()
+    date_from = (request.GET.get("from") or "").strip()
+    date_to = (request.GET.get("to") or "").strip()
+    sort = (request.GET.get("sort") or "recent").strip().lower()
+
+    status_map = {
+        "activa": Reservation.Status.ACTIVE,
+        "cancelada": Reservation.Status.CANCELLED,
+        "pasada": Reservation.Status.PAST,
+    }
+
+    if q:
+        q_filter = Q(park__name__icontains=q) | Q(lodging__name__icontains=q)
+        status_from_q = status_map.get(q.lower())
+        if status_from_q:
+            q_filter |= Q(status=status_from_q)
+        reservas = reservas.filter(q_filter)
+
+    if status:
+        status_value = status_map.get(status)
+        if status_value:
+            reservas = reservas.filter(status=status_value)
+
+    if date_from:
+        try:
+            reservas = reservas.filter(start_date__gte=date.fromisoformat(date_from))
+        except ValueError:
+            date_from = ""
+
+    if date_to:
+        try:
+            reservas = reservas.filter(end_date__lte=date.fromisoformat(date_to))
+        except ValueError:
+            date_to = ""
+
+    sort_map = {
+        "recent": ("-start_date", "-created_at"),
+        "oldest": ("start_date", "created_at"),
+        "park": ("park__name", "start_date"),
+        "status": ("status", "start_date"),
+    }
+    reservas = reservas.order_by(*sort_map.get(sort, ("-start_date", "-created_at")))
+
+    filters = {
+        "q": q,
+        "status": status,
+        "from": date_from,
+        "to": date_to,
+        "sort": sort,
+    }
+    return render(request, "user/perfil.html", {"reservas": reservas, "filters": filters})
 
 
 @login_required
