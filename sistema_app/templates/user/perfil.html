@@ -18,70 +18,44 @@
   </div>
 
   <div class="profile-container">
-    <!--  <div class="profile-header">
-       futura implementación ¿?
-      <div class="profile-avatar">
-        
-        <div class="avatar-placeholder">
-          <i class="fa-solid fa-circle-user"></i>
-        </div>
-        
-        <div class="profile-avatar-actions">
-          <button class="btn btn--outline btn--sm">
-            <i class="fa-solid fa-camera"></i> Cambiar foto
-          </button>
-        </div>
-      </div>
-      
-      
-      <div class="profile-info">
-        <h1 class="profile-name">{{ user.get_full_name|default:user.username }}</h1>
-        <p class="profile-username">@{{ user.username }}</p>
-        
-        <div class="profile-stats">
-          <div class="stat-item">
-            <span class="stat-value">{{ user.date_joined|date:"d/m/Y" }}</span>
-            <span class="stat-label">Miembro desde</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ user.last_login|date:"d/m/Y"|default:"Nunca" }}</span>
-            <span class="stat-label">Último acceso</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    -->
 
     <div class="profile-content">
-      <div class="profile-section">
-        <h2 class="section-title">
-          <i class="fa-solid fa-circle-info"></i> Información Personal
-        </h2>
-        
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">Nombre completo</span>
-            <span class="info-value">{{ user.get_full_name|default:"No especificado" }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="info-label">Correo electrónico</span>
-            <span class="info-value">{{ user.email|default:"No especificado" }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="info-label">Nombre de usuario</span>
-            <span class="info-value">{{ user.username }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="info-label">Estado de la cuenta</span>
-            <span class="info-value status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
-              {% if user.is_active %}Activa{% else %}Inactiva{% endif %}
+
+      <div class="profile-section profile-section--info">
+        <div class="profile-info-card">
+          <div class="profile-info-card__avatar" aria-hidden="true">
+            <span class="profile-info-card__initials">
+              {{ user.first_name|default:user.username|slice:":1" }}
             </span>
+          </div>
+          <div class="profile-info-card__text">
+            <p class="profile-info-card__eyebrow">Tu perfil</p>
+            <h2 class="profile-info-card__title">Hola {{ user.first_name|default:user.username }}</h2>
+            <p class="profile-info-card__subtitle">Resumen de tu cuenta</p>
+          </div>
+          <div class="profile-info-card__details">
+            <div class="profile-info-row">
+              <span class="profile-info-row__label">Nombre completo</span>
+              <span class="profile-info-row__value">{{ user.get_full_name|default:"No especificado" }}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-info-row__label">Correo electronico</span>
+              <span class="profile-info-row__value">{{ user.email|default:"No especificado" }}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-info-row__label">Nombre de usuario</span>
+              <span class="profile-info-row__value">{{ user.username }}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-info-row__label">Estado de la cuenta</span>
+              <span class="profile-info-row__value status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
+                {% if user.is_active %}Activa{% else %}Inactiva{% endif %}
+              </span>
+            </div>
           </div>
         </div>
       </div>
+      
 
       <div class="profile-section">
         <h2 class="section-title">

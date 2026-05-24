@@ -144,6 +144,7 @@
           <i class="fa-solid fa-bars"></i> 
         </button>
       {% else %}
+				<a href="{% url 'sistema_app:perfil' %}" class="btn btn--outline {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}"> <i class="fa-solid fa-circle-user"></i>  {{ user.username }}</a>
         <button type="button" class="btn btn--outline btn--sm nav__menu-btn" aria-controls="nav-sidebar" aria-expanded="false">
           <i class="fa-solid fa-bars"></i> 
         </button>
