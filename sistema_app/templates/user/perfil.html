@@ -61,7 +61,58 @@
         <h2 class="section-title">
           <i class="fa-solid fa-calendar-check"></i> Reservas Recientes
         </h2>
-        
+
+        <div class="reservations-toolbar">
+          <form class="reservations-filters" method="get" action="">
+            <div class="filters-grid">
+              <label class="filter-field">
+                <span class="filter-label">Buscar</span>
+                <input
+                  type="search"
+                  name="q"
+                  class="filter-input"
+                  placeholder="Parque, hospedaje o estado"
+                  value="{{ filters.q }}"
+                />
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">Estado</span>
+                <select name="status" class="filter-input">
+                  <option value="">Todos</option>
+                  <option value="activa" {% if filters.status == "activa" %}selected{% endif %}>Activa</option>
+                  <option value="cancelada" {% if filters.status == "cancelada" %}selected{% endif %}>Cancelada</option>
+                  <option value="pasada" {% if filters.status == "pasada" %}selected{% endif %}>Pasada</option>
+                </select>
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">Desde</span>
+                <input type="date" name="from" class="filter-input" value="{{ filters.from }}" />
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">Hasta</span>
+                <input type="date" name="to" class="filter-input" value="{{ filters.to }}" />
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">Ordenar</span>
+                <select name="sort" class="filter-input">
+                  <option value="recent" {% if filters.sort == "recent" %}selected{% endif %}>Mas recientes</option>
+                  <option value="oldest" {% if filters.sort == "oldest" %}selected{% endif %}>Mas antiguas</option>
+                  <option value="park" {% if filters.sort == "park" %}selected{% endif %}>Parque</option>
+                  <option value="status" {% if filters.sort == "status" %}selected{% endif %}>Estado</option>
+                </select>
+              </label>
+            </div>
+            <div class="filters-actions">
+              <button type="submit" class="btn btn--primary btn--sm">
+                Aplicar 
+              </button>
+              <a class="btn btn--ghost btn--sm" href="{% url 'sistema_app:perfil' %}">
+                Limpiar
+              </a>
+            </div>
+          </form>
+        </div>
+
         <div class="reservations-list">
           {% if reservas %}
             {% for reserva in reservas %}
@@ -113,53 +164,12 @@
           {% endif %}
         </div>
       </div>
-      <!-- Configuración de la Cuenta -->
-      <!-- Futura implementación ¿?
-      <div class="profile-section">
-        <h2 class="section-title">
-          <i class="fa-solid fa-gear"></i> Configuración de la Cuenta
-        </h2>
-        
-        <div class="settings-grid">
-          <div class="setting-item">
-            <i class="fa-solid fa-lock"></i>
-            <div class="setting-info">
-              <h3>Seguridad</h3>
-              <p>Cambia tu contraseña y configura la autenticación</p>
-            </div>
-            <a href="#" class="btn btn--outline btn--sm">Gestionar</a>
-          </div>
-          
-          <div class="setting-item">
-            <i class="fa-solid fa-bell"></i>
-            <div class="setting-info">
-              <h3>Notificaciones</h3>
-              <p>Configura cómo recibir notificaciones</p>
-            </div>
-            <a href="#" class="btn btn--outline btn--sm">Configurar</a>
-          </div>
-          
-          <div class="setting-item">
-            <i class="fa-solid fa-language"></i>
-            <div class="setting-info">
-              <h3>Preferencias</h3>
-              <p>Idioma y otras preferencias</p>
-            </div>
-            <a href="#" class="btn btn--outline btn--sm">Editar</a>
-          </div>
-        </div>
-      </div> -->
     </div>
 
     <div class="profile-actions">
       <a href="{% url 'sistema_app:home' %}" class="btn btn--outline">
         <i class="fa-solid fa-arrow-left"></i> Volver al inicio
       </a>
-      <!-- Futura implementación ¿?
-      <a href="#" class="btn btn--primary">
-        <i class="fa-solid fa-pen-to-square"></i> Editar perfil
-      </a>
-      -->
     </div>
   </div>
 </section>
