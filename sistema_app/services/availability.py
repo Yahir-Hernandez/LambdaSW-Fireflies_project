@@ -1,9 +1,9 @@
-"""Disponibilidad de hospedajes en un rango de fechas.
+"""
+Servicio de disponibilidad de hospedajes en un rango de fechas determinado.
 
-Reglas por tipo:
-
-* **CABIN**: exclusiva. Cualquier reserva ACTIVE traslapada la bloquea.
-* **CAMPING**: compartible. Admite varias reservas hasta sumar ``capacity``.
+Tipos de hospedaje:
+* **CABIN**: cabaña exclusiva. Cualquier reserva activa traslapada la bloquea.
+* **CAMPING**: parcela compartible. Admite varias reservas hasta sumar aluna capacidad n.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ class AvailabilityService:
     def people_booked(
         cls, lodging: Lodging, start_date: date, end_date: date
     ) -> int:
-        """Suma de n personas de las reservas activas traslapadas.
+        """Suma de las n personas de las reservas activas traslapadas.
         0 si no hay."""
         return (
             cls._overlap(
@@ -49,7 +49,7 @@ class AvailabilityService:
     def remaining_capacity(
         cls, lodging: Lodging, start_date: date, end_date: date
     ) -> int:
-        """Capacidad residual: 0/capacity para CABIN, resta para CAMPING."""
+        """Retorna la capacidad residual de un hospedaje."""
         if lodging.kind == Lodging.Kind.CABIN:
             booked = cls._overlap(
                 Reservation.objects.filter(lodging=lodging),
@@ -69,9 +69,6 @@ class AvailabilityService:
         n_people: int = 1,
     ) -> Iterable[Lodging]:
         """Hospedajes del tipo dado que admiten al menos n personas.
-
-        Cada Lodging retornado recibe un atributo dinámico
-        available_capacity para evitar repetir la consulta.
         Se ordenan en orden decreciente por capacidad.
         """
         candidates = park.lodgings.filter(kind=kind).order_by("capacity", "name")

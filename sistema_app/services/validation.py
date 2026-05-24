@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from django.core.exceptions import ValidationError
 from ..models import Lodging, Park
 
+# Constantes de las reglas de negocios
 SEASON_START: date = date(2026, 6, 1)
 SEASON_END: date = date(2026, 8, 31)
 MIN_PEOPLE: int = 1

@@ -7,7 +7,8 @@ from django.utils import timezone
 
 
 class Service(models.Model):
-    """Catálogo global. Los parques se asocian vía M2M."""
+    """Catálogo global cuyos elementos pueden
+     ser asociados a un parque con una relación n:m"""
 
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
@@ -22,11 +23,17 @@ class Service(models.Model):
 
 
 class ParkQuerySet(models.QuerySet):
+    """
+    Retorna todos los parques activos actualmente.
+    """
     def active(self):
         return self.filter(is_deleted=False)
 
 
 class Park(models.Model):
+    """
+    Modelo que representa a un parque con todos sus atributos.
+    """
     name = models.CharField(max_length=200, unique=True)
     address = models.CharField(max_length=300)
     description = models.TextField(blank=True)
@@ -78,7 +85,7 @@ class Park(models.Model):
 
 
 class Lodging(models.Model):
-    """Unidad reservable. Una cabaña o una parcela de camping."""
+    """Unidad de hospedaje reservable. Una cabaña o una parcela de camping."""
 
     class Kind(models.TextChoices):
         CABIN = "CABIN", "Cabaña"
@@ -101,6 +108,9 @@ class Lodging(models.Model):
 
 
 class Reservation(models.Model):
+    """
+    Modelo que representa a una reservación de un cliente.
+    """
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "Activa"
         CANCELLED = "CANCELLED", "Cancelada"
@@ -183,11 +193,6 @@ class PendingRegistration(models.Model):
 
 class LoginAttempt(models.Model):
     """Registro de intentos de login para implementar bloqueo tras N fallos.
-
-    El bloqueo se evalúa por ``username`` dentro de una ventana móvil de
-    ``LOCKOUT_WINDOW_SECONDS``. Si en esa ventana hay ``MAX_FAILED_ATTEMPTS``
-    o más fallos, futuros intentos (incluso con la contraseña correcta) son
-    rechazados hasta que la ventana se vacíe.
     """
 
     MAX_FAILED_ATTEMPTS = 6
