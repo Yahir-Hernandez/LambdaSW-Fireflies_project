@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Festival Internacional de las Luciérnagas 2026{% endblock %}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0b1521;
+      font-family: 'Inter', Helvetica, Arial, sans-serif;
+      color: #d4e8e0;
+      line-height: 1.65;
+    }
+    .email-outer {
+      background: #0b1521;
+      padding: 32px 12px;
+    }
+    .email-card {
+      background: #ffffff;
+      border: 1px solid #000000;
+      border-radius: 12px;
+      overflow: hidden;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .email-header {
+      background:#0f2028;
+      padding: 28px 24px 22px;
+      text-align: center;
+    }
+    .email-header img {
+      display: block;
+      margin: 0 auto 14px;
+    }
+    .email-header h1 {
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #080e10;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 0;
+      line-height: 1.45;
+    }
+    .email-header p {
+      font-family: 'Inter', Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: #3a2800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 6px 0 0;
+    }
+    .email-divider {
+      height: 4px;
+      background: #ffba0a;
+    }
+    .email-content {
+      padding: 36px 40px;
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.65;
+      color: #000000;
+    }
+    .email-content p      { margin: 0 0 16px; }
+    .email-content strong { color: #000000; font-weight: 600; }
+    .email-content a      { color: #ffba0a; text-decoration: none; }
+    .email-footer {
+      background: #0f2028;
+      border-top: 1px solid #0d1b2a;
+      padding: 20px 32px;
+      text-align: center;
+      font-family: 'Inter', Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      color: #7a9e94;
+    }
+    .email-footer p        { margin: 0 0 4px; }
+    .email-footer strong   { color: #ffba0a; }
+    .email-footer a        { color: #7a9e94; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-outer">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="email-card">
+
+          {# Header con logo #}
+          <tr>
+            <td class="email-header">
+              <img src="cid:{{ logo_cid|default:'logo' }}" alt="Festival Luciérnagas" width="170" height="100">
+            </td>
+          </tr>
+
+          {# Separador #}
+          <tr>
+            <td class="email-divider"></td>
+          </tr>
+
+          {# Contenido #}
+          <tr>
+            <td class="email-content">
+              {% block content %}{% endblock %}
+            </td>
+          </tr>
+
+          {# Footer #}
+          <tr>
+            <td class="email-footer">
+              <p><strong>Lambda Softworks</strong> © 2026. Todos los derechos reservados.</p>
+              <p>Este correo es automático, no respondas a esta dirección.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -1,9 +1,15 @@
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from django.http import HttpResponse
+from django.conf import settings as dj_settings
+from django.http import HttpResponse, JsonResponse
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.shortcuts import render
+from django.urls import path, reverse as url_reverse
+from django.utils.decorators import method_decorator
+from django.utils.html import format_html
+from django.views.decorators.http import require_GET, require_POST
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
@@ -13,7 +19,8 @@ from reportlab.lib.units import inch
 from django.utils import timezone
 
 from .models import Lodging, Park, Reservation, Service
-from .services import ReservationService
+from .services import ReservationCheckinService, ReservationService
+from .utils import generate_qr_png
 
 
 class LodgingInline(admin.TabularInline):
@@ -101,11 +108,124 @@ class ReservationAdmin(admin.ModelAdmin):
         "duration_days",
         "people",
         "status",
+        "qr_link",
     )
     list_filter = ("status", "lodging__kind", "park")
     search_fields = ("user__username", "user__email", "park__name", "lodging__name")
     actions = ["cancel_reservations", "export_as_pdf", "export_as_xlsx"]
-    readonly_fields = ("created_at",)
+    readonly_fields = ("created_at", "checkin_token")
+    change_list_template = "admin/sistema_app/reservation/change_list.html"
+
+    # ------------------------------------------------------------------
+    # URLs custom para el flujo de check-in por QR
+    # ------------------------------------------------------------------
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                "scan/",
+                self.admin_site.admin_view(self.scan_view),
+                name="sistema_app_reservation_scan",
+            ),
+            path(
+                "checkin/<uuid:token>/data/",
+                self.admin_site.admin_view(self.checkin_data_view),
+                name="sistema_app_reservation_checkin_data",
+            ),
+            path(
+                "checkin/<uuid:token>/confirm/",
+                self.admin_site.admin_view(self.checkin_confirm_view),
+                name="sistema_app_reservation_checkin_confirm",
+            ),
+            path(
+                "<int:pk>/qr.png",
+                self.admin_site.admin_view(self.qr_png_view),
+                name="sistema_app_reservation_qr_png",
+            ),
+        ]
+        return custom + urls
+
+    @admin.display(description="QR")
+    def qr_link(self, obj):
+        """Link a ``qr.png`` para visualizar/imprimir el QR de la reserva."""
+        url = url_reverse(
+            "admin:sistema_app_reservation_qr_png", args=[obj.pk]
+        )
+        return format_html('<a href="{}" target="_blank">Ver QR</a>', url)
+
+    def scan_view(self, request):
+        """Página HTML con el scanner JS."""
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Escanear QR de check-in",
+        }
+        return render(request, "admin/sistema_app/reservation/scan.html", context)
+
+    @method_decorator(require_GET)
+    def checkin_data_view(self, request, token):
+        """JSON con los datos de una reserva. Consumido por admin_qr_scanner.js."""
+        try:
+            reservation = (
+                Reservation.objects.select_related("user", "park", "lodging")
+                .get(checkin_token=token)
+            )
+        except Reservation.DoesNotExist:
+            return JsonResponse({"error": "Reserva no encontrada."}, status=404)
+        return JsonResponse({
+            "id": reservation.pk,
+            "token": str(reservation.checkin_token),
+            "user_name": (
+                reservation.user.get_full_name() or reservation.user.username
+            ),
+            "user_email": reservation.user.email,
+            "park": reservation.park.name,
+            "lodging": str(reservation.lodging),
+            "start_date": reservation.start_date.isoformat(),
+            "end_date": reservation.end_date.isoformat(),
+            "people": reservation.people,
+            "status": reservation.status,
+            "status_display": reservation.get_status_display(),
+            "can_check_in": reservation.status == Reservation.Status.ACTIVE,
+        })
+
+    @method_decorator(require_POST)
+    def checkin_confirm_view(self, request, token):
+        """POST que transita la reserva a USED. Responde JSON."""
+        try:
+            reservation = Reservation.objects.get(checkin_token=token)
+        except Reservation.DoesNotExist:
+            return JsonResponse({"error": "Reserva no encontrada."}, status=404)
+        try:
+            updated = ReservationCheckinService.check_in(reservation)
+        except ValidationError as exc:
+            return JsonResponse({"error": "; ".join(exc.messages)}, status=400)
+        return JsonResponse({
+            "ok": True,
+            "status": updated.status,
+            "status_display": updated.get_status_display(),
+        })
+
+    @method_decorator(require_GET)
+    def qr_png_view(self, request, pk):
+        """Devuelve el PNG del QR de check-in de una reservación.
+
+        Útil para:
+        - Testing local sin tener que extraer el QR del correo en consola.
+        - Reimprimir el QR si el usuario perdió el correo.
+        """
+        try:
+            reservation = Reservation.objects.get(pk=pk)
+        except Reservation.DoesNotExist:
+            return HttpResponse(status=404)
+
+        checkin_path = url_reverse(
+            "admin:sistema_app_reservation_checkin_data",
+            args=[reservation.checkin_token],
+        )
+        checkin_url = f"{dj_settings.SITE_URL.rstrip('/')}{checkin_path}"
+        png = generate_qr_png(checkin_url)
+        return HttpResponse(png, content_type="image/png")
 
     @admin.display(description="Correo")
     def user_email(self, obj):

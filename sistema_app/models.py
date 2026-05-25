@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -115,6 +116,7 @@ class Reservation(models.Model):
         ACTIVE = "ACTIVE", "Activa"
         CANCELLED = "CANCELLED", "Cancelada"
         PAST = "PAST", "Pasada"
+        USED = "USED", "Usada"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -139,6 +141,15 @@ class Reservation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Token único usado para construir el QR de check-in.
+    # Se genera automáticamente y nunca cambia tras la creación.
+    checkin_token = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        db_index=True,
+        editable=False,
+    )
+
     class Meta:
         verbose_name = "Reservación"
         verbose_name_plural = "Reservaciones"
@@ -153,6 +164,22 @@ class Reservation(models.Model):
             self.status == self.Status.ACTIVE
             and self.start_date > timezone.localdate()
         )
+
+    def mark_as_used(self) -> None:
+        """Marca la reserva como consumida tras un check-in exitoso.
+
+        Raises
+        ------
+        ValidationError
+            Si la reserva no está ACTIVE (ya usada, cancelada o pasada).
+        """
+        if self.status != self.Status.ACTIVE:
+            raise ValidationError(
+                f"No se puede marcar como usada una reserva en estado "
+                f"{self.get_status_display()}."
+            )
+        self.status = self.Status.USED
+        self.save(update_fields=["status"])
 
     def __str__(self):
         return f"Reservación #{self.pk} · {self.user} · {self.park.name}"

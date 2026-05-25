@@ -156,6 +156,11 @@ EMAIL_USE_TLS       = env.bool('EMAIL_USE_TLS',  default=True)
 EMAIL_HOST_USER     = env('EMAIL_HOST_USER',     default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
+# URL base usada para construir links absolutos desde código que no tiene
+# acceso a un ``request`` (ej. NotificationService al generar el QR de check-in).
+# En producción debe apuntar al dominio real con ``https://``.
+SITE_URL = env('SITE_URL', default='http://localhost:8000')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

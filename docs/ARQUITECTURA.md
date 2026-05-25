@@ -31,13 +31,14 @@ LambdaSW-Fireflies_project/
 ├── .env                         # Variables de entorno (no versionar valores reales)
 ├── luciernagas2026/             # Proyecto Django (settings, urls raíz, wsgi/asgi)
 └── sistema_app/                 # App principal
-    ├── models.py                # Service, Park, Lodging, Reservation, PendingRegistration, LoginAttempt
+    ├── models.py                # Service, Park, Lodging, Reservation (+checkin_token, USED), PendingRegistration, LoginAttempt
     ├── services/                # Paquete: capa de lógica de negocio (1 módulo por responsabilidad)
     │   ├── __init__.py          # Re-exporta API pública (backward-compat)
     │   ├── validation.py        # ReservationValidator (RNB-01..04)
     │   ├── availability.py      # AvailabilityService (CABIN vs CAMPING)
-    │   ├── notification.py      # NotificationService (usa templates/emails/)
-    │   └── reservations.py      # ReservationService (orquestador)
+    │   ├── notification.py      # NotificationService (HTML + texto + inline QR/logo CID)
+    │   ├── reservations.py      # ReservationService (orquestador)
+    │   └── checkin.py           # ReservationCheckinService (ACTIVE → USED)
     ├── domain_rules.py          # Constantes RNB (SEASON_*, MIN/MAX_PEOPLE, TUESDAY)
     ├── utils.py                 # Helpers puros (generate_verification_code, mask_email)
     ├── validators.py            # Password validators (BasePasswordRegexValidator + 4 subclases)
@@ -46,7 +47,7 @@ LambdaSW-Fireflies_project/
     ├── forms.py                 # CustomUserCreationForm
     ├── admin.py                 # Configuración del admin
     ├── tests.py                 # LEGACY (vacío, ignorar)
-    ├── migrations/              # 7 migraciones
+    ├── migrations/              # 8 migraciones
     ├── tests/                   # Suite real de pytest
     │   ├── test_services.py     # Unit, cobertura de la capa services/
     │   ├── test_models.py       # Unit, 100% de models.py
@@ -61,15 +62,18 @@ LambdaSW-Fireflies_project/
     │   ├── registration/{login,sign_up,verify_email}.html
     │   ├── mapa/mapa.html
     │   ├── user/perfil.html
-    │   ├── emails/              # Plantillas de texto plano para correos
-    │   │   ├── reservation_confirmation.txt
-    │   │   ├── reservation_cancellation.txt
-    │   │   └── verification_code.txt
-    │   └── admin/...            # Override del admin de Django
+    │   ├── emails/              # Plantillas de correos (HTML + texto plano)
+    │   │   ├── base.html        # layout HTML con logo CID + header/footer
+    │   │   ├── reservation_confirmation.{html,txt}   # HTML con QR inline
+    │   │   ├── reservation_cancellation.{html,txt}
+    │   │   └── verification_code.{html,txt}
+    │   └── admin/sistema_app/reservation/
+    │       ├── change_list.html # override mínimo: botón "Escanear QR"
+    │       └── scan.html        # página del scanner JS
     └── static/
         ├── img/                 # luciernaga.png, logos
         ├── css/{user,admin}/    # estilos por plantilla
-        └── script/              # base, luciernagas, map_script, reservas, perfil, verify_email
+        └── script/              # base, luciernagas, map_script, reservas, perfil, verify_email, admin_qr_scanner
 ```
 
 ### Convenciones y principios
@@ -111,7 +115,7 @@ LambdaSW-Fireflies_project/
 | `Service` | [models.py:6-18](sistema_app/models.py#L6-L18) | `__str__()` retorna `name`; `name` es `unique` |
 | `Park` | [models.py:26-70](sistema_app/models.py#L26-L70) | Manager [`ParkQuerySet.active()`](sistema_app/models.py#L21-L23), [`soft_delete()`](sistema_app/models.py#L48-L51), [`restore()`](sistema_app/models.py#L53-L56), props [`has_cabins`](sistema_app/models.py#L58-L60) y [`camping_capacity`](sistema_app/models.py#L62-L67) |
 | `Lodging` | [models.py:73-93](sistema_app/models.py#L73-L93) | Enum `Kind` con valores `CABIN` (exclusivo) y `CAMPING` (compartible); constraint `unique_together = ("park", "name")` |
-| `Reservation` | [models.py:96-141](sistema_app/models.py#L96-L141) | Enum `Status` (`ACTIVE` / `CANCELLED` / `PAST`), [`is_cancellable()`](sistema_app/models.py#L134-L138), índices por `(park, status)` y `(start_date, end_date)`, `on_delete=PROTECT` para `park`/`lodging` |
+| `Reservation` | [models.py:96-141](sistema_app/models.py#L96-L141) | Enum `Status` (`ACTIVE` / `CANCELLED` / `PAST` / `USED`), [`is_cancellable()`](sistema_app/models.py#L134-L138), [`mark_as_used()`](sistema_app/models.py) (transición ACTIVE→USED tras check-in), campo `checkin_token` (UUID único para QR), índices por `(park, status)` y `(start_date, end_date)`, `on_delete=PROTECT` para `park`/`lodging` |
 | `PendingRegistration` | [models.py:144-174](sistema_app/models.py#L144-L174) | `EXPIRY_SECONDS=300`, `RESEND_COOLDOWN_SECONDS=120`; helpers `seconds_elapsed()`, `is_expired()`, `seconds_until_resend()` |
 | `LoginAttempt` | [models.py:179-225](sistema_app/models.py#L179-L225) | `MAX_FAILED_ATTEMPTS=6`, `LOCKOUT_WINDOW_SECONDS=900`; classmethods [`is_locked_out(username)`](sistema_app/models.py#L205-L216) y [`register(username, success)`](sistema_app/models.py#L219-L221) |
 
@@ -199,6 +203,16 @@ Decorado con `@transaction.atomic`. Flujo:
 #### `get_user_reservations(user, only_active=False) -> QuerySet`
 
 `Reservation.objects.filter(user=user).select_related("park", "lodging")`, filtrando por `status=ACTIVE` si `only_active=True`. Lo consume `perfil` y los tests.
+
+### 3.4b `ReservationCheckinService` — [sistema_app/services/checkin.py](sistema_app/services/checkin.py)
+
+Marca reservaciones como `USED` tras escaneo del QR. Único método público:
+
+| Método | Firma | Notas |
+|---|---|---|
+| `check_in(reservation)` | classmethod, `@transaction.atomic` → `Reservation` | Lock por fila con `select_for_update()`, llama `mark_as_used()`. Lanza `ValidationError` si la reserva no está `ACTIVE` (ya usada, cancelada o pasada). |
+
+Lo consume `ReservationAdmin.checkin_confirm_view` desde [sistema_app/admin.py](sistema_app/admin.py).
 
 ### 3.5 Utilidades — [sistema_app/utils.py](sistema_app/utils.py)
 
@@ -437,6 +451,50 @@ Notas:
 - Bloqueo de cuenta tras 6 intentos fallidos. Verificado por
   test_account_blocked_after_6_failed_attempts en test_views.py.
   (La implementación está en django-axes o equivalente vía settings — fuera de services.py.)
+```
+
+### Flujo F. Check-in con QR (admin staff)
+
+```
+1. Al crear una reservación, NotificationService.send_confirmation_email genera:
+   - Body texto plano (emails/reservation_confirmation.txt) + body HTML
+     (emails/reservation_confirmation.html) en multipart/alternative.
+   - QR PNG con qrcode.QRCode → adjunto inline (Content-ID: <qr>).
+   - Logo PNG de static/img/luciernaga.png → adjunto inline (Content-ID: <logo>).
+   - El QR codifica: f"{SITE_URL}/admin/sistema_app/reservation/checkin/<uuid>/data/"
+
+2. El staff entra a /admin/ y navega a "Reservaciones" → click "Escanear QR"
+   en object-tools del changelist.
+
+3. GET /admin/sistema_app/reservation/scan/   (ReservationAdmin.scan_view)
+   → @staff_member_required vía admin_site.admin_view
+   → Renderiza scan.html que carga html5-qrcode (CDN) + admin_qr_scanner.js.
+
+4. JS solicita permiso de cámara, escanea, extrae UUID con regex.
+
+5. fetch GET /admin/sistema_app/reservation/checkin/<uuid>/data/
+   → ReservationAdmin.checkin_data_view (JSON)
+   → Devuelve { id, user_name, user_email, park, lodging, start_date,
+                end_date, people, status, status_display, can_check_in }
+
+6. JS renderiza inline los detalles. Si can_check_in:
+   muestra botón "Confirmar entrada".
+
+7. POST /admin/sistema_app/reservation/checkin/<uuid>/confirm/  (con X-CSRFToken)
+   → ReservationAdmin.checkin_confirm_view (JSON)
+   → ReservationCheckinService.check_in(reservation)
+      → @transaction.atomic + select_for_update
+      → Reservation.mark_as_used() → status = USED
+   → Responde { ok: true, status: "USED", status_display: "Usada" }
+
+8. JS muestra "Entrada confirmada" sin recargar. Botón "Escanear otro"
+   reanuda la cámara para el siguiente boleto.
+
+Errores manejados inline:
+- UUID inválido en el QR → "QR no reconocido."
+- Reserva no existe → 404 + mensaje.
+- Reserva ya USED / CANCELLED / PAST → 400 + mensaje "no se puede checar".
+- Doble check-in concurrente → bloqueado por select_for_update.
 ```
 
 ---

@@ -18,6 +18,7 @@ import secrets  # noqa: F401
 
 from ..utils import generate_verification_code, mask_email
 from .availability import AvailabilityService
+from .checkin import ReservationCheckinService
 from .notification import NotificationService
 from .reservations import ReservationService
 from .validation import ReservationValidator
@@ -25,6 +26,7 @@ from .validation import ReservationValidator
 __all__ = [
     "AvailabilityService",
     "NotificationService",
+    "ReservationCheckinService",
     "ReservationService",
     "ReservationValidator",
     "generate_verification_code",

@@ -1,0 +1,32 @@
+{% extends "emails/base.html" %}
+{% block title %}Reservación confirmada #{{ reservation_id }}{% endblock %}
+{% block content %}
+  <h2 style="margin:0 0 12px;color:#0a1d3a;font-size:22px;">¡Ya están tus boletos!</h2>
+  <p style="margin:0 0 16px;">
+    Hola <strong>{{ user_name }}</strong>, te mostramos un resumen de tu orden.
+  </p>
+
+  <table role="presentation" width="100%" cellpadding="8" cellspacing="0" border="0" style="border-collapse:collapse;margin:16px 0;background:#f8f6ef;border-radius:6px;">
+    <tr><td style="font-weight:bold;color:#0a1d3a;width:40%;">Tipo</td><td>{{ kind_display }}</td></tr>
+    <tr><td style="font-weight:bold;color:#0a1d3a;">Hospedaje</td><td>{{ lodging_name }}</td></tr>
+    <tr><td style="font-weight:bold;color:#0a1d3a;">Llegada</td><td>{{ start_date }}</td></tr>
+    <tr><td style="font-weight:bold;color:#0a1d3a;">Salida</td><td>{{ end_date }}</td></tr>
+    <tr><td style="font-weight:bold;color:#0a1d3a;">Personas</td><td>{{ people }}</td></tr>
+    <tr><td style="font-weight:bold;color:#0a1d3a;">Folio</td><td>#{{ reservation_id }}</td></tr>
+  </table>
+
+  <hr style="border:none;border-top:1px solid #e5e0d0;margin:24px 0;">
+
+  <h3 style="margin:0 0 8px;color:#0a1d3a;text-align:center;">Tu pase de entrada</h3>
+  <p style="margin:0 0 16px;text-align:center;color:#555;">
+    Presenta este código QR en la entrada del parque.
+  </p>
+  <p style="text-align:center;margin:0;">
+    <img src="cid:{{ qr_cid }}" alt="QR de check-in" width="240" height="240" style="display:inline-block;border:6px solid #f6c945;border-radius:8px;">
+  </p>
+
+  <p style="margin:24px 0 0;font-size:13px;color:#666;">
+    Este pase es <strong>de un solo uso</strong> y está vinculado únicamente a esta
+    reservación. Consérvalo y no lo compartas.
+  </p>
+{% endblock %}
