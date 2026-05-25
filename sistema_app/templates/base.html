@@ -23,12 +23,12 @@
 	<nav class="nav">
 		{% if request.resolver_match.url_name == 'home' %}
 			<div class="nav__logo" aria-current="page">
-				<img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" class="logo--mini"/>
+				<img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" width="80" height="50"/>
 				<img src="{% static 'img/logo_text.png' %}" alt="Logo del Festival" class="logo--mini"/>
 			</div>
 		{% else %}
 			<a class="nav__logo" href="{{ home_url }}">
-				<img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" class="logo--mini"/>
+				<img src="{% static 'img/luciernaga.png' %}" alt="Logo del Festival" width="80" height="50"/>
 				<img src="{% static 'img/logo_text.png' %}" alt="Logo del Festival" class="logo--mini"/>
 			</a>
 		{% endif %}

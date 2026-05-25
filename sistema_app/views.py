@@ -89,10 +89,17 @@ def register(request):
         formulario = CustomUserCreationForm(data=request.POST)
         if formulario.is_valid():
             cleaned = formulario.cleaned_data
-            # Cualquier registro pendiente con el mismo username o email se
-            # reemplaza por el nuevo intento. Esto no afecta cuentas reales.
+            # Sólo limpiamos registros pendientes ya EXPIRADOS — los activos
+            # los rechaza el formulario (ver CustomUserCreationForm.clean_*).
+            # Esto permite que un usuario que perdió su código reintente tras
+            # los 5 min de expiración.
+            from datetime import timedelta
+            cutoff = timezone.now() - timedelta(
+                seconds=PendingRegistration.EXPIRY_SECONDS
+            )
             PendingRegistration.objects.filter(
-                Q(username=cleaned["username"]) | Q(email=cleaned["email"])
+                Q(username=cleaned["username"]) | Q(email=cleaned["email"]),
+                created_at__lt=cutoff,
             ).delete()
             pending = PendingRegistration.objects.create(
                 username=cleaned["username"],
@@ -255,30 +262,24 @@ def mapa(request):
 
 @login_required
 def perfil(request):
+    show_past = request.GET.get("show") == "past"
     reservas = ReservationService.get_user_reservations(request.user)
+
+    # Por default: actuales (ACTIVE + USED). Con ?show=past sólo PAST.
+    if show_past:
+        reservas = reservas.filter(status=Reservation.Status.PAST)
+    else:
+        reservas = reservas.exclude(status=Reservation.Status.PAST)
+
     q = (request.GET.get("q") or "").strip()
-    status = (request.GET.get("status") or "").strip().lower()
     date_from = (request.GET.get("from") or "").strip()
     date_to = (request.GET.get("to") or "").strip()
     sort = (request.GET.get("sort") or "recent").strip().lower()
 
-    status_map = {
-        "activa": Reservation.Status.ACTIVE,
-        "cancelada": Reservation.Status.CANCELLED,
-        "pasada": Reservation.Status.PAST,
-    }
-
     if q:
-        q_filter = Q(park__name__icontains=q) | Q(lodging__name__icontains=q)
-        status_from_q = status_map.get(q.lower())
-        if status_from_q:
-            q_filter |= Q(status=status_from_q)
-        reservas = reservas.filter(q_filter)
-
-    if status:
-        status_value = status_map.get(status)
-        if status_value:
-            reservas = reservas.filter(status=status_value)
+        reservas = reservas.filter(
+            Q(park__name__icontains=q) | Q(lodging__name__icontains=q)
+        )
 
     if date_from:
         try:
@@ -296,18 +297,20 @@ def perfil(request):
         "recent": ("-start_date", "-created_at"),
         "oldest": ("start_date", "created_at"),
         "park": ("park__name", "start_date"),
-        "status": ("status", "start_date"),
     }
     reservas = reservas.order_by(*sort_map.get(sort, ("-start_date", "-created_at")))
 
     filters = {
         "q": q,
-        "status": status,
         "from": date_from,
         "to": date_to,
         "sort": sort,
     }
-    return render(request, "user/perfil.html", {"reservas": reservas, "filters": filters})
+    return render(request, "user/perfil.html", {
+        "reservas": reservas,
+        "filters": filters,
+        "show_past": show_past,
+    })
 
 
 @login_required

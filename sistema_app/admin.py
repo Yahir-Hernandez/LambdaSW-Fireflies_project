@@ -116,6 +116,12 @@ class ReservationAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "checkin_token")
     change_list_template = "admin/sistema_app/reservation/change_list.html"
 
+    def has_add_permission(self, request):
+        # Las reservaciones se crean desde el frontend de los usuarios.
+        # Bloqueamos la creación manual desde admin para evitar saltar las
+        # validaciones de RNB y cupos que viven en ReservationService.
+        return False
+
     # ------------------------------------------------------------------
     # URLs custom para el flujo de check-in por QR
     # ------------------------------------------------------------------

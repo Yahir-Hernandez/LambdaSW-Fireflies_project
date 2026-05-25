@@ -21,7 +21,11 @@
       border-left: 4px solid #79aec8;
       border-radius: 4px;
       min-height: 40px;
+      color: #000;
     }
+    /* Fuerza el negro también en h2, ul, li, strong dentro del bloque —
+       evita que el tema dark del admin haga el texto invisible. */
+    #qr-details, #qr-details * { color: #000; }
     #qr-details:empty { display: none; }
     #qr-details ul { list-style: none; padding: 0; margin: 12px 0; }
     #qr-details ul li { padding: 4px 0; }

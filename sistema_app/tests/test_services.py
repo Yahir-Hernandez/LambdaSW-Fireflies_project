@@ -432,13 +432,16 @@ class TestReservationServiceCreate:
 class TestReservationServiceCancel:
     def test_owner_can_cancel(self, user, active_reservation, settings):
         settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
-        result = ReservationService.cancel_reservation(user, active_reservation)
-        assert result.status == Reservation.Status.CANCELLED
+        pk = active_reservation.pk
+        ReservationService.cancel_reservation(user, active_reservation)
+        # Cancelar ahora elimina la fila (no la marca como CANCELLED).
+        assert not Reservation.objects.filter(pk=pk).exists()
 
     def test_staff_can_cancel_other_user_reservation(self, staff_user, active_reservation, settings):
         settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
-        result = ReservationService.cancel_reservation(staff_user, active_reservation)
-        assert result.status == Reservation.Status.CANCELLED
+        pk = active_reservation.pk
+        ReservationService.cancel_reservation(staff_user, active_reservation)
+        assert not Reservation.objects.filter(pk=pk).exists()
 
     def test_other_user_cannot_cancel(self, other_user, active_reservation):
         with pytest.raises(ValidationError, match="permisos"):

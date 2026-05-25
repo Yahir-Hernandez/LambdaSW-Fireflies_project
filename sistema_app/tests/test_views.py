@@ -311,13 +311,23 @@ class TestPerfilView:
         assert response.status_code == 200
         assert active_reservation in response.context["reservas"]
 
-    def test_perfil_shows_cancelled_and_past_reservations(self, auth_client, active_reservation, cancelled_reservation, past_reservation):
+    def test_perfil_default_excludes_past_reservations(self, auth_client, active_reservation, cancelled_reservation, past_reservation):
+        """Por default, /perfil/ muestra ACTIVE+USED (incluye CANCELLED si
+        existiera, aunque el flujo normal lo borra). PAST queda excluido."""
         response = auth_client.get(url("perfil"))
         assert response.status_code == 200
         reservas = response.context["reservas"]
         assert active_reservation in reservas
-        assert cancelled_reservation in reservas
+        assert past_reservation not in reservas
+
+    def test_perfil_show_past_only_includes_past(self, auth_client, active_reservation, past_reservation):
+        """Con ?show=past sólo aparecen las PAST."""
+        response = auth_client.get(url("perfil") + "?show=past")
+        assert response.status_code == 200
+        reservas = response.context["reservas"]
         assert past_reservation in reservas
+        assert active_reservation not in reservas
+        assert response.context["show_past"] is True
 
     def test_user_does_not_see_other_users_reservations(self, auth_client, db, other_user, park, cabin, season_start, season_end_date):
         other_res = Reservation.objects.create(
@@ -413,11 +423,12 @@ class TestCrearReservaView:
 class TestReservationCancelView:
     def test_owner_can_cancel_and_redirects_to_perfil(self, auth_client, active_reservation, settings):
         settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
-        response = auth_client.post(url("reservation_cancel", pk=active_reservation.pk))
+        pk = active_reservation.pk
+        response = auth_client.post(url("reservation_cancel", pk=pk))
         assert response.status_code == 302
         assert "perfil" in response["Location"]
-        active_reservation.refresh_from_db()
-        assert active_reservation.status == Reservation.Status.CANCELLED
+        # Cancelar ahora ELIMINA la fila (DELETE, no marca CANCELLED).
+        assert not Reservation.objects.filter(pk=pk).exists()
 
     def test_other_user_cannot_cancel(self, client, other_user, active_reservation, settings):
         settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

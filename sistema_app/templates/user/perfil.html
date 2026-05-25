@@ -46,12 +46,14 @@
               <span class="profile-info-row__label">Nombre de usuario</span>
               <span class="profile-info-row__value">{{ user.username }}</span>
             </div>
-            <div class="profile-info-row">
-              <span class="profile-info-row__label">Estado de la cuenta</span>
-              <span class="profile-info-row__value status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
-                {% if user.is_active %}Activa{% else %}Inactiva{% endif %}
-              </span>
-            </div>
+          </div>
+          <div class="profile-info-card__actions" style="margin-top:16px;display:flex;justify-content:flex-end;">
+            <form method="post" action="{% url 'sistema_app:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--outline btn--sm">
+                <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -59,11 +61,25 @@
 
       <div class="profile-section">
         <h2 class="section-title">
-          <i class="fa-solid fa-calendar-check"></i> Reservas Recientes
+          <i class="fa-solid fa-calendar-check"></i>
+          {% if show_past %}Reservas pasadas{% else %}Reservas actuales{% endif %}
         </h2>
+
+        <div class="reservations-tabs" style="margin:8px 0 16px;display:flex;gap:8px;">
+          {% if show_past %}
+            <a class="btn btn--outline btn--sm" href="{% url 'sistema_app:perfil' %}">
+              <i class="fa-solid fa-arrow-left"></i> Ver reservas actuales
+            </a>
+          {% else %}
+            <a class="btn btn--outline btn--sm" href="{% url 'sistema_app:perfil' %}?show=past">
+              <i class="fa-solid fa-clock-rotate-left"></i> Ver reservas pasadas
+            </a>
+          {% endif %}
+        </div>
 
         <div class="reservations-toolbar">
           <form class="reservations-filters" method="get" action="">
+            {% if show_past %}<input type="hidden" name="show" value="past" />{% endif %}
             <div class="filters-grid">
               <label class="filter-field">
                 <span class="filter-label">Buscar</span>
@@ -71,18 +87,9 @@
                   type="search"
                   name="q"
                   class="filter-input"
-                  placeholder="Parque, hospedaje o estado"
+                  placeholder="Parque u hospedaje"
                   value="{{ filters.q }}"
                 />
-              </label>
-              <label class="filter-field">
-                <span class="filter-label">Estado</span>
-                <select name="status" class="filter-input">
-                  <option value="">Todos</option>
-                  <option value="activa" {% if filters.status == "activa" %}selected{% endif %}>Activa</option>
-                  <option value="cancelada" {% if filters.status == "cancelada" %}selected{% endif %}>Cancelada</option>
-                  <option value="pasada" {% if filters.status == "pasada" %}selected{% endif %}>Pasada</option>
-                </select>
               </label>
               <label class="filter-field">
                 <span class="filter-label">Desde</span>
@@ -98,15 +105,14 @@
                   <option value="recent" {% if filters.sort == "recent" %}selected{% endif %}>Mas recientes</option>
                   <option value="oldest" {% if filters.sort == "oldest" %}selected{% endif %}>Mas antiguas</option>
                   <option value="park" {% if filters.sort == "park" %}selected{% endif %}>Parque</option>
-                  <option value="status" {% if filters.sort == "status" %}selected{% endif %}>Estado</option>
                 </select>
               </label>
             </div>
             <div class="filters-actions">
               <button type="submit" class="btn btn--primary btn--sm">
-                Aplicar 
+                Aplicar
               </button>
-              <a class="btn btn--ghost btn--sm" href="{% url 'sistema_app:perfil' %}">
+              <a class="btn btn--ghost btn--sm" href="{% if show_past %}{% url 'sistema_app:perfil' %}?show=past{% else %}{% url 'sistema_app:perfil' %}{% endif %}">
                 Limpiar
               </a>
             </div>
@@ -119,9 +125,6 @@
             <div class="reservation-card">
               <div class="reservation-header">
                 <h3 class="reservation-park">{{ reserva.park.name }}</h3>
-                <span class="reservation-status {{ reserva.get_status_display|lower }}">
-                  {{ reserva.get_status_display }}
-                </span>
               </div>
 
               <div class="reservation-details">

@@ -85,7 +85,11 @@ class ReservationService:
 
     @classmethod
     def cancel_reservation(cls, user, reservation: Reservation) -> Reservation:
-        """Cancela si user es dueño o is_staff y la reserva es cancelable.
+        """Cancela borrando la fila tras agendar el correo de cancelación.
+
+        El objeto Python retornado conserva los atributos cargados en memoria
+        (gracias a select_related), por lo que callers pueden seguir usando
+        ``reservation.pk`` para mensajes flash o logs.
 
         Raises
         ------
@@ -99,9 +103,20 @@ class ReservationService:
                 "Solo es posible cancelar una reserva activa antes de su fecha de inicio."
             )
 
+        # Re-cargamos con select_related para que el closure del email tenga
+        # todos los datos en memoria incluso después del DELETE.
+        reservation = (
+            Reservation.objects.select_related("user", "park", "lodging")
+            .get(pk=reservation.pk)
+        )
+
         with transaction.atomic():
-            reservation.status = Reservation.Status.CANCELLED
-            reservation.save(update_fields=["status"])
+            saved_pk = reservation.pk
+            reservation.delete()
+            # Django setea pk=None tras delete; lo restauramos para que el
+            # subject "Cancelación de reserva #N" quede correcto.
+            reservation.pk = saved_pk
+            reservation.id = saved_pk
             transaction.on_commit(
                 lambda: NotificationService.send_cancellation_email(reservation)
             )

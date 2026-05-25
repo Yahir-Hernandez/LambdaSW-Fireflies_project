@@ -65,14 +65,17 @@ class NotificationService:
         }
 
     @staticmethod
-    def _attach_inline_image(msg: EmailMultiAlternatives, cid: str, png_bytes: bytes) -> None:
-        """Adjunta una imagen inline con Content-ID dado."""
-        if not png_bytes:
-            return
-        image = MIMEImage(png_bytes, _subtype="png")
-        image.add_header("Content-ID", f"<{cid}>")
-        image.add_header("Content-Disposition", "inline", filename=f"{cid}.png")
-        msg.attach(image)
+    def _build_inline_image(cid: str, png_bytes: bytes) -> MIMEImage:
+        """Construye un MIMEImage inline con Content-ID dado, sin filename.
+
+        El filename intencionalmente se omite — con filename presente,
+        varios clientes (Gmail entre ellos) muestran la imagen como
+        descarga aunque el Content-Disposition diga inline.
+        """
+        img = MIMEImage(png_bytes, _subtype="png")
+        img.add_header("Content-ID", f"<{cid}>")
+        img.add_header("Content-Disposition", "inline")
+        return img
 
     @classmethod
     def _deliver(
@@ -83,20 +86,42 @@ class NotificationService:
         recipient: str,
         inline_images: list[tuple[str, bytes]] | None = None,
     ) -> bool:
-        """Construye y envía un Email multi alterantivas. Retorna false ante errores."""
+        """Construye y envía un email. Retorna False ante errores.
+
+        Cuando hay HTML + imágenes inline, la estructura MIME resultante es::
+
+            multipart/related
+            ├── multipart/alternative
+            │   ├── text/plain
+            │   └── text/html
+            ├── image/png  Content-ID: <cid>  Content-Disposition: inline
+            └── ...
+
+        Esta jerarquía hace que Gmail/Outlook/Apple Mail rendericen las
+        imágenes dentro del cuerpo en vez de mostrarlas como descargas
+        al pie del correo.
+        """
         if not recipient:
             return False
+
         msg = EmailMultiAlternatives(
             subject=subject,
             body=text_body,
             from_email=cls.DEFAULT_FROM,
             to=[recipient],
         )
+
         if html_body:
             msg.attach_alternative(html_body, "text/html")
-            msg.mixed_subtype = "related"  # necesario para que los CID resuelvan
-        for cid, png in (inline_images or []):
-            cls._attach_inline_image(msg, cid, png)
+            if inline_images:
+                # Cambia el root multipart de "mixed" a "related" para que
+                # los CID resuelvan contra las imágenes adjuntadas abajo.
+                msg.mixed_subtype = "related"
+                for cid, png_bytes in inline_images:
+                    if not png_bytes:
+                        continue
+                    msg.attach(cls._build_inline_image(cid, png_bytes))
+
         try:
             msg.send(fail_silently=False)
             return True
