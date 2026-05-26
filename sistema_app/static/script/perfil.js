@@ -22,9 +22,25 @@ function initProfilePage() {
     
     // Actualizar estadísticas si es necesario
     updateProfileStats();
+
+    // Asignar imagenes aleatorias a las reservas
+    setRandomReservationImages();
     
     // Verificar si hay notificaciones pendientes
     checkNotifications();
+}
+
+function setRandomReservationImages() {
+    const images = Array.isArray(window.forestImages) ? window.forestImages : [];
+    if (images.length === 0) return;
+
+    const cards = document.querySelectorAll('.reservation-image__img');
+    if (!cards.length) return;
+
+    cards.forEach((img) => {
+        const idx = Math.floor(Math.random() * images.length);
+        img.src = images[idx];
+    });
 }
 
 // Configurar event listeners
@@ -211,74 +227,6 @@ function showNotification(message) {
     }
 }
 
-// Cambiar foto de perfil
-function changeProfilePhoto() {
-    // Crear input de archivo
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.style.display = 'none';
-    
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            // Validar tipo de archivo
-            if (!file.type.match('image.*')) {
-                alert('Por favor, selecciona una imagen válida.');
-                return;
-            }
-            
-            // Validar tamaño (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('La imagen es demasiado grande. Máximo 5MB.');
-                return;
-            }
-            
-            // Mostrar preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const avatarPlaceholder = document.querySelector('.avatar-placeholder');
-                if (avatarPlaceholder) {
-                    // Reemplazar icono con imagen
-                    avatarPlaceholder.innerHTML = `<img src="${e.target.result}" alt="Foto de perfil" class="avatar-image">`;
-                    
-                    // Agregar estilos para la imagen
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        .avatar-image {
-                            width: 100%;
-                            height: 100%;
-                            border-radius: 50%;
-                            object-fit: cover;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    
-                    // Aquí podrías enviar la imagen al servidor
-                    // uploadProfilePhoto(file);
-                    
-                    showNotification('Foto de perfil actualizada exitosamente');
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    // Disparar el input de archivo
-    document.body.appendChild(fileInput);
-    fileInput.click();
-    document.body.removeChild(fileInput);
-}
-
-// Editar perfil
-function editProfile() {
-    // Aquí podrías abrir un modal o redirigir a una página de edición
-    console.log('Abriendo editor de perfil para:', user.username);
-    
-    // Ejemplo: mostrar un modal de edición
-    showEditModal();
-}
-
 // Ver detalles de reserva
 function viewReservationDetails(reservationCard) {
     // Obtener información de la reserva
@@ -291,277 +239,6 @@ function viewReservationDetails(reservationCard) {
     // o redirigir a una página de detalles
     
     showNotification(`Mostrando detalles de la reserva en ${parkName}`);
-}
-
-// Ver entrada de reserva
-function viewReservationTicket(reservationCard) {
-    const parkName = reservationCard.querySelector('.reservation-park').textContent;
-    
-    console.log('Viendo entrada de reserva para:', parkName);
-    
-    // Aquí podrías generar o mostrar la entrada
-    // Por ejemplo, abrir un PDF o mostrar un código QR
-    
-    showNotification(`Generando entrada para ${parkName}`);
-    
-    // Simular generación de entrada
-    setTimeout(() => {
-        alert(`🎟️ ENTRADA PARA: ${parkName}\n📅 Fecha: ${new Date().toLocaleDateString('es-MX')}\n👤 Usuario: ${user.username}\n✅ Esta entrada es válida para el acceso al parque.`);
-    }, 1000);
-}
-
-// Abrir configuración
-function openSetting(settingType) {
-    console.log('Abriendo configuración:', settingType);
-    
-    // Aquí podrías redirigir a diferentes páginas de configuración
-    // o mostrar modales específicos
-    
-    switch(settingType.toLowerCase()) {
-        case 'seguridad':
-            showSecuritySettings();
-            break;
-        case 'notificaciones':
-            showNotificationSettings();
-            break;
-        case 'preferencias':
-            showPreferencesSettings();
-            break;
-        default:
-            showNotification(`Configuración de ${settingType} abierta`);
-    }
-}
-
-// Mostrar modal de edición (ejemplo)
-function showEditModal() {
-    // Crear modal
-    const modal = document.createElement('div');
-    modal.className = 'profile-modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Editar Perfil</h3>
-                <button class="modal-close"><i class="fa-solid fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <form id="editProfileForm">
-                    <div class="form-group">
-                        <label for="editFirstName">Nombre</label>
-                        <input type="text" id="editFirstName" value="${user.first_name || ''}" placeholder="Tu nombre">
-                    </div>
-                    <div class="form-group">
-                        <label for="editLastName">Apellido</label>
-                        <input type="text" id="editLastName" value="${user.last_name || ''}" placeholder="Tu apellido">
-                    </div>
-                    <div class="form-group">
-                        <label for="editEmail">Correo electrónico</label>
-                        <input type="email" id="editEmail" value="${user.email || ''}" placeholder="tu@email.com">
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn--outline modal-close">Cancelar</button>
-                        <button type="submit" class="btn btn--primary">Guardar cambios</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    `;
-    
-    // Agregar al DOM
-    document.body.appendChild(modal);
-    
-    // Agregar estilos
-    const style = document.createElement('style');
-    style.textContent = `
-        .profile-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(8, 14, 16, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            color: var(--text);
-            font-size: 1.3rem;
-        }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 4px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        
-        .modal-close:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .modal-body {
-            padding: 20px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 10px 12px;
-            background: var(--bg-section);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 0.95rem;
-            transition: border-color 0.2s;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 30px;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Event listeners para el modal
-    const closeBtns = modal.querySelectorAll('.modal-close');
-    closeBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.remove();
-                style.remove();
-            }, 300);
-        });
-    });
-    
-    // Form submit
-    const form = modal.querySelector('#editProfileForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Aquí podrías enviar los datos al servidor
-            const formData = {
-                first_name: document.getElementById('editFirstName').value,
-                last_name: document.getElementById('editLastName').value,
-                email: document.getElementById('editEmail').value
-            };
-            
-            console.log('Datos del perfil a actualizar:', formData);
-            
-            // Simular actualización
-            showNotification('Perfil actualizado exitosamente');
-            
-            // Cerrar modal
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.remove();
-                style.remove();
-            }, 300);
-        });
-    }
-}
-
-// Funciones de ejemplo para configuraciones
-function showSecuritySettings() {
-    alert('Configuración de seguridad:\n\n• Cambiar contraseña\n• Autenticación de dos factores\n• Sesiones activas');
-}
-
-function showNotificationSettings() {
-    alert('Configuración de notificaciones:\n\n• Correos electrónicos\n• Notificaciones push\n• Recordatorios de reservas');
-}
-
-function showPreferencesSettings() {
-    alert('Preferencias:\n\n• Idioma\n• Zona horaria\n• Tema (claro/oscuro)');
-}
-
-// Función para subir foto de perfil (ejemplo)
-function uploadProfilePhoto(file) {
-    // Aquí iría la lógica para subir la foto al servidor
-    // usando AJAX o Fetch API
-    
-    const formData = new FormData();
-    formData.append('profile_photo', file);
-    
-    // Ejemplo con Fetch API
-    fetch('/api/upload-profile-photo/', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Foto de perfil actualizada exitosamente');
-        } else {
-            showNotification('Error al actualizar la foto: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error al subir la foto');
-    });
 }
 
 // Función auxiliar para obtener cookies

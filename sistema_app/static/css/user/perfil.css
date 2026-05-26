@@ -333,18 +333,28 @@
 .reservation-card {
   background: var(--bg-section);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   display: grid;
+  overflow: hidden;
   grid-template-columns: 1fr 3fr;
   gap: 20px;
+  align-items: start;
 }
 
 .reservation-image {
-  width: 95%;
-  height: 100px;
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+}
+.reservation__img,
+.reservation-image__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
   background: var(--accent);
   clip-path: polygon(0 2%, 100% 0, 75% 100%, 0% 100%);
   overflow: hidden;
-
 }
 
 #Luciernaga {
@@ -357,7 +367,10 @@
 .reservation-info {
   margin: 10px;
   width: 100%;
-  height: 80px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: space-between;
 }
 
 
