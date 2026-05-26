@@ -123,36 +123,43 @@
           {% if reservas %}
             {% for reserva in reservas %}
             <div class="reservation-card">
-              <div class="reservation-header">
-                <h3 class="reservation-park">{{ reserva.park.name }}</h3>
+              <div class="reservation-image">
+                <img src="{% static 'img/luciernaga.png' %}" id="Luciernaga" />
+              </div>
+              <div class="reservation-info">
+                <div class="reservation-header">
+                  <h3 class="reservation-park">{{ reserva.park.name }}</h3>
+                </div>
+
+                <div class="reservation-details">
+                  <div class="detail-item">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>{{ reserva.start_date|date:"d/m/Y" }} — {{ reserva.end_date|date:"d/m/Y" }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>{{ reserva.people }} {{ reserva.people|pluralize:"persona,personas" }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="fa-solid {% if reserva.lodging.kind == 'CABIN' %}fa-house-chimney{% else %}fa-campground{% endif %}"></i>
+                    <span>{{ reserva.lodging.get_kind_display }} · {{ reserva.lodging.name }}</span>
+                  </div>
+                </div>
+
+                <div class="reservation-actions">
+                  {% if reserva.is_cancellable %}
+                    <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
+                          onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn--outline btn--sm">
+                        <i class="fa-solid fa-xmark"></i> Cancelar reserva
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
               </div>
 
-              <div class="reservation-details">
-                <div class="detail-item">
-                  <i class="fa-solid fa-calendar-days"></i>
-                  <span>{{ reserva.start_date|date:"d/m/Y" }} — {{ reserva.end_date|date:"d/m/Y" }}</span>
-                </div>
-                <div class="detail-item">
-                  <i class="fa-solid fa-users"></i>
-                  <span>{{ reserva.people }} {{ reserva.people|pluralize:"persona,personas" }}</span>
-                </div>
-                <div class="detail-item">
-                  <i class="fa-solid {% if reserva.lodging.kind == 'CABIN' %}fa-house-chimney{% else %}fa-campground{% endif %}"></i>
-                  <span>{{ reserva.lodging.get_kind_display }} · {{ reserva.lodging.name }}</span>
-                </div>
-              </div>
-
-              <div class="reservation-actions">
-                {% if reserva.is_cancellable %}
-                  <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
-                        onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn--outline btn--sm">
-                      <i class="fa-solid fa-xmark"></i> Cancelar reserva
-                    </button>
-                  </form>
-                {% endif %}
-              </div>
+              
             </div>
             {% endfor %}
           {% else %}

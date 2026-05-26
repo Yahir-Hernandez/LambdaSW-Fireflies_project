@@ -15,13 +15,12 @@
 
 /* Contenedor principal del perfil */
 .profile-container {
-  width: min(96vw, 1400px);
-  max-width: 1400px;
+  width: 90%;
+  /*max-width: 1400px;*/
   margin: 100px auto 40px;
   padding: 0 16px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 28px;
+  grid-template-columns: minmax(0, 1fr) ;
   align-items: start;
 }
 
@@ -100,9 +99,10 @@
 .profile-content {
   margin-bottom: 40px;
   display: grid;
-  grid-template-columns: minmax(0, 0.45fr) minmax(0, 1.55fr);
+  grid-template-columns: minmax(0, 0.35fr) minmax(0, 1.55fr);
   gap: 10px;
   align-items: stretch;
+  
 }
 
 .profile-section {
@@ -113,6 +113,7 @@
   border: 1px solid var(--border);
   height: 100%;
   min-width: 0;
+  width: 100%;
 }
 
 .profile-section--info {
@@ -326,21 +327,39 @@
 .reservations-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
 }
 
 .reservation-card {
-  padding: 20px;
   background: var(--bg-section);
-  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.3s ease;
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 20px;
 }
 
-.reservation-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
+.reservation-image {
+  width: 95%;
+  height: 100px;
+  background: var(--accent);
+  clip-path: polygon(0 2%, 100% 0, 75% 100%, 0% 100%);
+  overflow: hidden;
+
 }
+
+#Luciernaga {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.reservation-info {
+  margin: 10px;
+  width: 100%;
+  height: 80px;
+}
+
 
 .reservation-header {
   display: flex;
@@ -501,7 +520,7 @@
   }
 
   .profile-content {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr 2fr;
     gap: 20px;
   }
 
@@ -577,8 +596,8 @@
     display: grid;
     grid-template-columns: auto 1fr ;
     grid-template-areas:
-      "avatar details "
-      "text details";
+      "avatar text"
+      "details  details";
     text-align: left;
     column-gap: 16px;
     row-gap: 12px;
@@ -603,6 +622,10 @@
 
   .profile-info-card__initials {
     font-size: 2.6rem;
+  }
+
+  .profile-info-card__actions {
+    align-self: center;
   }
 
   .profile-header {
@@ -721,7 +744,6 @@
 
   .profile-info-row__label {
     letter-spacing: 0.14em;
-    border: 1px solid var(--text-dim);
   }
 
   .profile-info-row__value {
