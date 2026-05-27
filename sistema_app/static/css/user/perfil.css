@@ -111,7 +111,7 @@
   background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border);
-  height: 100%;
+  height: 95%;
   min-width: 0;
   width: 100%;
 }
@@ -240,7 +240,7 @@
   padding: 15px;
   background: var(--bg-section);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
 }
 
 .info-label {
@@ -328,33 +328,39 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .reservation-card {
   background: var(--bg-section);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 10px;
+  min-height: 120px;
+  max-height: 140px; /* Limita la altura en pantallas grandes */
+  flex-shrink: 0; /* Previene que la tarjeta se aplaste en pantallas menores */
   display: grid;
   overflow: hidden;
   grid-template-columns: 1fr 3fr;
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .reservation-image {
   width: 100%;
-  height: 120px;
+  height: 100%;
   overflow: hidden;
+  clip-path: polygon(0 2%, 100% 0, 75% 100%, 0% 100%);
+  min-height: 0; /* Previene que la relación de aspecto de la imagen estire la fila */
 }
-.reservation__img,
-.reservation-image__img {
+
+.reservation__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
-  background: var(--accent);
-  clip-path: polygon(0 2%, 100% 0, 75% 100%, 0% 100%);
-  overflow: hidden;
 }
 
 #Luciernaga {
@@ -365,12 +371,13 @@
 }
 
 .reservation-info {
-  margin: 10px;
   width: 100%;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: space-between;
+  display: grid;
+  grid-template-areas:
+    "header actions"
+    "details details";
+  gap: 12px;
+  padding: 10px;
 }
 
 
@@ -379,6 +386,48 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 15px;
+  grid-area: header;
+  color: var(--accent);
+}
+
+.reservation-actions {
+  display: flex;
+  gap: 10px;
+  grid-area: actions;
+  justify-self: end;
+  margin-right: 30px;
+}
+
+.reservation-details {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 25px;
+  grid-area: details;
+  align-items: flex-start; /* Evita que los recuadros grises se alarguen verticalmente */
+}
+
+
+.btn--alert:hover {
+  background: red;
+  border: 1px solid rgb(255, 255, 255);
+  color: rgb(255, 255, 255);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 2px 0px 10px;
+  border-radius: 6px;
+  width: 30%;
+  font-size: 0.9rem;
+}
+
+.detail-item i {
+  color: var(--orange);
 }
 
 .reservation-park {
@@ -416,29 +465,11 @@
   color: var(--text-dim);
 }
 
-.reservation-details {
-  display: flex;
-  gap: 25px;
-  margin-bottom: 15px;
-}
 
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--text-dim);
-}
 
-.detail-item i {
-  color: var(--accent);
-  font-size: 0.9rem;
-}
 
-.reservation-actions {
-  display: flex;
-  gap: 10px;
-}
+
+
 
 /* Sin reservas */
 .no-reservations {
@@ -544,26 +575,48 @@
 
   .reservation-card {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
-    gap: 16px;
-    align-items: center;
+    grid-template-columns: 1fr;
+    grid-template-rows: 180px auto;
+    gap: 12px;
+    align-items: stretch;
+    max-height: none;
+  }
+
+  .reservation-image {
+    height: 100%;
+    clip-path: none;
+    border-right: 0;
+    border-bottom: 1px solid white;
   }
 
   .reservation-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 0;
+  }
+
+  .reservation-info {
+    display: grid;
+    grid-template-areas:
+      "header"
+      "actions"
+      "details";
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
   }
 
   .reservation-details {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-bottom: 0;
+    gap: 12px;
   }
 
   .detail-item {
     justify-content: space-between;
+    width: 100%;
   }
 
   .detail-item span {
@@ -577,6 +630,10 @@
     flex-direction: row;
     align-items: flex-start;
     border: 1px solid var(--border);
+    justify-self: start;
+    margin-right: 0;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .reservation-header,
@@ -662,9 +719,12 @@
     gap: 10px;
   }
 
+  .reservation-image {
+    height: 150px;
+  }
+
   .reservation-card {
-    grid-template-columns: 1fr;
-    align-items: start;
+    grid-template-rows: 150px auto;
   }
 
   .reservation-header {
@@ -704,6 +764,15 @@
   .profile-actions .btn {
     width: 100%;
     max-width: 300px;
+  }
+
+  .detail-item {
+    padding-right: 30px;
+  }
+
+  .detail-item span {
+    width: 50%;
+    text-align: left;
   }
 }
 

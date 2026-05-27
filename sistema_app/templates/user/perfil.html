@@ -17,7 +17,19 @@
     <span class="ff" style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%;"></span>
   </div>
 
-  <div class="profile-container">
+    <div class="profile-container"
+      data-forest-images="
+        {% static 'img/forests/forest_1.jpg' %}|
+        {% static 'img/forests/forest_2.jpg' %}|
+        {% static 'img/forests/forest_3.jpg' %}|
+        {% static 'img/forests/forest_4.jpg' %}|
+        {% static 'img/forests/forest_5.jpg' %}|
+        {% static 'img/forests/forest_6.jpg' %}|
+        {% static 'img/forests/forest_7.jpg' %}|
+        {% static 'img/forests/forest_8.jpg' %}|
+        {% static 'img/forests/forest_9.jpg' %}|
+        {% static 'img/forests/forest_10.jpg' %}|
+        {% static 'img/forests/forest_12.jpg' %}">
 
     <div class="profile-content">
 
@@ -130,6 +142,17 @@
                 <div class="reservation-header">
                   <h3 class="reservation-park">{{ reserva.park.name }}</h3>
                 </div>
+                <div class="reservation-actions">
+                  {% if reserva.is_cancellable %}
+                    <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
+                          onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn--outline btn--sm btn--alert">
+                        <i class="fa-solid fa-xmark"></i> Cancelar reserva
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
 
                 <div class="reservation-details">
                   <div class="detail-item">
@@ -146,17 +169,7 @@
                   </div>
                 </div>
 
-                <div class="reservation-actions">
-                  {% if reserva.is_cancellable %}
-                    <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
-                          onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn--outline btn--sm">
-                        <i class="fa-solid fa-xmark"></i> Cancelar reserva
-                      </button>
-                    </form>
-                  {% endif %}
-                </div>
+                
               </div>
 
               
@@ -186,24 +199,6 @@
 {% endblock %}
 
 {% block extra_js %}
-  
-  <script>
-    var usuarioName = "{{ user.username|escapejs }}";
-    window.forestImages = [
-      "{% static 'img/forests/forest_1.jpg' %}",
-      "{% static 'img/forests/forest_2.jpg' %}",
-      "{% static 'img/forests/forest_3.jpg' %}",
-      "{% static 'img/forests/forest_4.jpg' %}",
-      "{% static 'img/forests/forest_5.jpg' %}",
-      "{% static 'img/forests/forest_6.jpg' %}",
-      "{% static 'img/forests/forest_7.jpg' %}",
-      "{% static 'img/forests/forest_8.jpg' %}",
-      "{% static 'img/forests/forest_9.jpg' %}",
-      "{% static 'img/forests/forest_10.jpg' %}",
-      "{% static 'img/forests/forest_11.jpg' %}",
-      "{% static 'img/forests/forest_12.jpg' %}"
-    ];
-  </script>
   <script src="{% static 'script/perfil.js' %}"></script>
   <script src="{% static 'script/luciernagas.js' %}"></script>
 {% endblock %}

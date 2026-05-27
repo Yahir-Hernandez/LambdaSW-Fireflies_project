@@ -1,4 +1,46 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/user/festival.css' %}" />
+{% endblock %}
 
 {% block content %}
+<div class="festival-page container">
+  <!-- Encabezado Principal -->
+  <header class="festival-header">
+    <img src="{% static 'img/logo_text.png' %}" alt="Festival Internacional de la Luciérnaga 2026" class="festival-main-logo">
+    <p>Un espectáculo natural único en el mundo donde la oscuridad del bosque cobra vida con miles de luces destellantes. Conoce más sobre este mágico fenómeno ecológico.</p>
+  </header>
+
+  <!-- Sección 1: ¿Qué es una luciérnaga? -->
+  <section class="festival-section">
+    <div class="festival-image-wrapper">
+      <img src="{% static 'img/festival/fireflies.jpg' %}" alt="Mágico destello de luciérnagas en el bosque">
+    </div>
+    <div class="festival-content">
+      <h2>¿Qué es una luciérnaga?</h2>
+      <p>Las luciérnagas son insectos fascinantes pertenecientes a la familia de los coleópteros (escarabajos). Su característica más notable es su capacidad de producir luz a través de un proceso llamado <strong>bioluminiscencia</strong>, un fenómeno natural generado por una reacción química en su abdomen, sumamente eficiente y sin emitir calor.</p>
+      <p>Este parpadeo de luz no es aleatorio: consiste en un sofisticado lenguaje visual de apareamiento. Cada especie tiene un patrón único de destellos que les permite encontrar pareja en la espesura del bosque de manera precisa y asombrosa.</p>
+    </div>
+  </section>
+
+  <!-- Sección 2: El Festival -->
+  <section class="festival-section festival-section--reverse">
+    <div class="festival-image-wrapper">
+      <img src="{% static 'img/home/fireflies.jpg' %}" alt="El mágico festival de las luciérnagas">
+    </div>
+    <div class="festival-content">
+      <h2>El Festival en 2026</h2>
+      <p>El <strong>Festival Internacional de la Luciérnaga</strong> es un evento de ecoturismo anual que celebra la temporada de avistamiento. Durante los húmedos meses de verano, los bosques y santuarios de la región ofrecen el ecosistema perfecto para presenciar este milagro nocturno en su máximo esplendor.</p>
+      <p>Nuestro objetivo principal es promover un turismo respetuoso y sostenible. Por esa razón, se establecen reglas estrictas que prohíben el uso de linternas, celulares y ruidos fuertes, para no alterar el delicado ciclo de reproducción y asegurar que las futuras generaciones sigan maravillándose con este majestuoso universo.</p>
+      
+      <div style="margin-top: 32px;">
+        <a href="{% url 'sistema_app:mapa' %}" class="btn btn--primary">
+          <i class="fa-solid fa-map-location-dot"></i> Explorar santuarios
+        </a>
+      </div>
+    </div>
+  </section>
+</div>
 {% endblock %}

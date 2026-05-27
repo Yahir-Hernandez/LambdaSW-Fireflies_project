@@ -61,7 +61,7 @@
         <a href="{% url 'sistema_app:mapa' %}" class="link-arrow">Ver todos en el mapa </a>
       </div>
       <div class="parques-highlight">
-        <div class="parques-highlight__media" aria-hidden="true">
+        <div class="parques-highlight__media" aria-hidden="true" style="background: url('{% static 'img/home/oficial.jpg' %}') center/cover no-repeat;">
           <div class="parques-highlight__media-inner">
             <span class="parques-highlight__badge">Parques oficiales</span> 
           </div>
@@ -102,8 +102,8 @@
             <a href="{% url 'sistema_app:festival' %}" class="btn btn--outline btn--sm">El festival</a>
           </div>
         </div>
-        <div class="festival-card__media" aria-hidden="true">
-          <div class="festival-card__media-inner">
+        <div class="festival-card__media" aria-hidden="true" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url('{% static 'img/home/fireflies.jpg' %}') center/cover no-repeat;">
+          <div class="festival-card__media-inner" style="background: transparent; border: none; align-items: flex-end; display: flex; padding: 16px;">
             <span class="festival-card__media-caption">La noche cobra vida</span>
           </div>
         </div>

@@ -10,7 +10,7 @@
   --orange: #e8603a;
   --text: #d4e8e0;
   --text-dim: #7a9e94;
-  --border: rgba(13, 27, 42, 1);
+  --border: rgba(255, 255, 255, 0.08)
   --glow: rgba(8, 16, 28, 1);
   --glow-sm: rgba(8, 16, 28, 1);
   --font-display: 'Cinzel', serif;
@@ -275,7 +275,8 @@ ul { list-style: none; }
   width: 100%;
 }
 .nav-sidebar .nav__links a {
-  font-size: .95rem;
+  font-size: 1.1rem;
+  font-weight: bolder;
 }
 .nav-sidebar__auth {
   display: flex;
