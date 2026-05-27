@@ -524,6 +524,7 @@ ul { list-style: none; }
   margin-bottom: 48px;
 }
 
+
 .hero__stats {
   display: flex;
   gap: 48px;
@@ -698,22 +699,6 @@ ul { list-style: none; }
   background: rgba(255, 255, 255, .06);
   color: #fff;
   border-color: rgba(255, 255, 255, .3);
-}
-
-.auth-dialog--error {
-  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(244,67,54,.35);
-}
-.auth-dialog--error::backdrop {
-  background: rgba(35, 8, 8, .7);
-  backdrop-filter: blur(4px);
-}
-.auth-dialog--error .auth-dialog__icon {
-  background: rgba(244, 67, 54, .12);
-  border-color: rgba(244, 67, 54, .45);
-  color: #ff7466;
-}
-.auth-dialog--error .auth-dialog__title {
-  color: #ff8a80;
 }
 
 .auth-dialog--success .auth-dialog__icon {

@@ -113,7 +113,16 @@ class ReservationAdmin(admin.ModelAdmin):
     list_filter = ("status", "lodging__kind", "park")
     search_fields = ("user__username", "user__email", "park__name", "lodging__name")
     actions = ["cancel_reservations", "export_as_pdf", "export_as_xlsx"]
-    readonly_fields = ("created_at", "checkin_token")
+    fieldsets = (
+        ("Reservación", {
+            "fields": (
+                "user", "park", "lodging",
+                "start_date", "end_date", "people",
+                "status",
+                "created_at", "checkin_token",
+            ),
+        }),
+    )
     change_list_template = "admin/sistema_app/reservation/change_list.html"
 
     def has_add_permission(self, request):
@@ -121,6 +130,15 @@ class ReservationAdmin(admin.ModelAdmin):
         # Bloqueamos la creación manual desde admin para evitar saltar las
         # validaciones de RNB y cupos que viven en ReservationService.
         return False
+
+    def get_readonly_fields(self, request, obj=None):
+        # Solo `status` es editable; el resto se muestra como texto plano
+        # para preservar la integridad de las reglas de negocio.
+        return (
+            "user", "park", "lodging",
+            "start_date", "end_date", "people",
+            "created_at", "checkin_token",
+        )
 
     # ------------------------------------------------------------------
     # URLs custom para el flujo de check-in por QR

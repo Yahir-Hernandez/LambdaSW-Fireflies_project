@@ -383,8 +383,9 @@
 
 .reservation-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px;
   margin-bottom: 15px;
   grid-area: header;
   color: var(--accent);
@@ -439,14 +440,14 @@
 
 .reservation-status {
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: 0px;
   font-size: 0.8rem;
   font-weight: 600;
 }
 
 .reservation-status.confirmada,
 .reservation-status.activa {
-  background: rgba(76, 175, 80, 0.15);
+  background: rgba(49, 104, 51, 0.15);
   color: #4caf50;
 }
 

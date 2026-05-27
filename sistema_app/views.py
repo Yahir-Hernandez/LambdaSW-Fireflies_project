@@ -262,14 +262,23 @@ def mapa(request):
 
 @login_required
 def perfil(request):
+    today = timezone.localdate()
+    Reservation.objects.filter(
+        user=request.user,
+        status=Reservation.Status.ACTIVE,
+        end_date__lte=today,
+    ).update(status=Reservation.Status.PAST)
+
     show_past = request.GET.get("show") == "past"
     reservas = ReservationService.get_user_reservations(request.user)
 
-    # Por default: actuales (ACTIVE + USED). Con ?show=past sólo PAST.
+    reservas = reservas.exclude(status=Reservation.Status.CANCELLED)
     if show_past:
-        reservas = reservas.filter(status=Reservation.Status.PAST)
+        reservas = reservas.filter(
+            status__in=[Reservation.Status.PAST, Reservation.Status.USED]
+        )
     else:
-        reservas = reservas.exclude(status=Reservation.Status.PAST)
+        reservas = reservas.filter(status=Reservation.Status.ACTIVE)
 
     q = (request.GET.get("q") or "").strip()
     date_from = (request.GET.get("from") or "").strip()

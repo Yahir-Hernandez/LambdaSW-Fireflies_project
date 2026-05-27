@@ -58,7 +58,7 @@
           <h2 class="section-title section-title--left section-title--system">Parques destacados</h2>
           <p class="section-sub section-sub--left">Disponibilidad en tiempo real y acceso directo al mapa</p>
         </div>
-        <a href="{% url 'sistema_app:mapa' %}" class="link-arrow">Ver todos en el mapa </a>
+        <a href="{% url 'sistema_app:mapa' %}" class="link-arrow">Consultalo en el mapa</a>
       </div>
       <div class="parques-highlight">
         <div class="parques-highlight__media" aria-hidden="true" style="background: url('{% static 'img/home/oficial.jpg' %}') center/cover no-repeat;">
@@ -72,7 +72,7 @@
             <h3 class="parques-highlight__title">{{ featured_park.name }}</h3>
             <p class="parques-highlight__desc">{{ featured_park.address }}</p>
             <p class="parques-highlight__desc">
-              Los {{ lodging_parks }} parques oficiales cuentan con hospedaje. Disponibilidad actual:
+              Los {{ lodging_parks }} parques oficiales cuentan con zonas de camping. Disponibilidad actual:
               <strong>{{ featured_park.disponibilidad_actual }} lugares</strong>.
             </p>
           {% else %}
@@ -94,12 +94,14 @@
       <div class="festival-card">
         <div class="festival-card__content">
           <p class="festival-card__eyebrow">El festival</p>
-          <h3 class="festival-card__title">El festival lleva mas de 100 años de trayectoria</h3>
+          <h3 class="festival-card__title">El festival de luciérnagas más grande del centro de México</h3>
           <p class="festival-card__desc">
-            Vive la noche donde la luz de las luciernagas transforma los bosques y las historias cobran vida.
+            Una experiencia nocturna entre bosques, música, naturaleza y miles de luces vivas que transforman el bosque en un espectáculo único.
           </p>
           <div class="festival-card__actions">
-            <a href="{% url 'sistema_app:festival' %}" class="btn btn--outline btn--sm">El festival</a>
+            <a href="{% url 'sistema_app:festival' %}" class="btn btn--accent btn--sm">
+              <i class="fa-solid fa-tree"></i> Conoce más
+            </a>
           </div>
         </div>
         <div class="festival-card__media" aria-hidden="true" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url('{% static 'img/home/fireflies.jpg' %}') center/cover no-repeat;">

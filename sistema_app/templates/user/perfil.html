@@ -59,10 +59,15 @@
               <span class="profile-info-row__value">{{ user.username }}</span>
             </div>
           </div>
-          <div class="profile-info-card__actions" style="margin-top:16px;display:flex;justify-content:flex-end;">
+          <div class="profile-info-card__actions" style="margin-top:16px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+            {% if user.is_staff %}
+              <a href="{% url 'admin:index' %}" class="btn btn--primary btn--sm" style="min-width:200px;text-align:center;">
+                Panel de administración
+              </a>
+            {% endif %}
             <form method="post" action="{% url 'sistema_app:logout' %}">
               {% csrf_token %}
-              <button type="submit" class="btn btn--outline btn--sm">
+              <button type="submit" class="btn btn--outline btn--sm" style="min-width:200px;">
                 <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
               </button>
             </form>
@@ -141,6 +146,9 @@
               <div class="reservation-info">
                 <div class="reservation-header">
                   <h3 class="reservation-park">{{ reserva.park.name }}</h3>
+                  <span class="reservation-status {% if reserva.status == 'ACTIVE' %}activa{% elif reserva.status == 'USED' %}pasada{% elif reserva.status == 'PAST' %}pasada{% elif reserva.status == 'CANCELLED' %}cancelada{% endif %}">
+                    {{ reserva.get_status_display }}
+                  </span>
                 </div>
                 <div class="reservation-actions">
                   {% if reserva.is_cancellable %}

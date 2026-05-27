@@ -107,6 +107,11 @@ class Lodging(models.Model):
     def __str__(self):
         return f"{self.park.name} · {self.get_kind_display()}: {self.name}"
 
+    def clean(self):
+        super().clean()
+        from .services.lodging_validation import LodgingCapacityValidator
+        LodgingCapacityValidator.validate_capacity_reduction(self, self.capacity)
+
 
 class Reservation(models.Model):
     """

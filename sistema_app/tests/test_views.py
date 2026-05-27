@@ -312,16 +312,16 @@ class TestPerfilView:
         assert active_reservation in response.context["reservas"]
 
     def test_perfil_default_excludes_past_reservations(self, auth_client, active_reservation, cancelled_reservation, past_reservation):
-        """Por default, /perfil/ muestra ACTIVE+USED (incluye CANCELLED si
-        existiera, aunque el flujo normal lo borra). PAST queda excluido."""
+        """Por default /perfil/ muestra sólo ACTIVE. PAST/USED/CANCELLED se excluyen."""
         response = auth_client.get(url("perfil"))
         assert response.status_code == 200
         reservas = response.context["reservas"]
         assert active_reservation in reservas
         assert past_reservation not in reservas
+        assert cancelled_reservation not in reservas
 
     def test_perfil_show_past_only_includes_past(self, auth_client, active_reservation, past_reservation):
-        """Con ?show=past sólo aparecen las PAST."""
+        """Con ?show=past sólo aparecen las PAST (y USED)."""
         response = auth_client.get(url("perfil") + "?show=past")
         assert response.status_code == 200
         reservas = response.context["reservas"]
@@ -337,6 +337,63 @@ class TestPerfilView:
         )
         response = auth_client.get(url("perfil"))
         assert other_res not in response.context["reservas"]
+
+    def test_perfil_auto_promotes_expired_active_to_past(
+        self, auth_client, user, db, park, cabin
+    ):
+        from datetime import date
+        expired = Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=date(2026, 5, 20), end_date=date(2026, 5, 22),
+            people=2, status=Reservation.Status.ACTIVE,
+        )
+        auth_client.get(url("perfil"))
+        expired.refresh_from_db()
+        assert expired.status == Reservation.Status.PAST
+
+    def test_perfil_excludes_cancelled_from_current_panel(
+        self, auth_client, active_reservation, cancelled_reservation
+    ):
+        response = auth_client.get(url("perfil"))
+        assert cancelled_reservation not in response.context["reservas"]
+
+    def test_perfil_excludes_cancelled_from_past_panel(
+        self, auth_client, cancelled_reservation
+    ):
+        response = auth_client.get(url("perfil") + "?show=past")
+        assert cancelled_reservation not in response.context["reservas"]
+
+    def test_perfil_current_panel_excludes_used(
+        self, auth_client, user, db, park, cabin, season_start, season_end_date
+    ):
+        used = Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=season_start, end_date=season_end_date,
+            people=2, status=Reservation.Status.USED,
+        )
+        response = auth_client.get(url("perfil"))
+        assert used not in response.context["reservas"]
+
+    def test_perfil_past_panel_includes_used_and_past(
+        self, auth_client, user, db, park, cabin, season_start, season_end_date,
+        past_reservation,
+    ):
+        used = Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=season_start, end_date=season_end_date,
+            people=2, status=Reservation.Status.USED,
+        )
+        response = auth_client.get(url("perfil") + "?show=past")
+        reservas = response.context["reservas"]
+        assert past_reservation in reservas
+        assert used in reservas
+
+    def test_perfil_renders_status_badge_class(
+        self, auth_client, active_reservation
+    ):
+        response = auth_client.get(url("perfil"))
+        assert b'reservation-status' in response.content
+        assert b'activa' in response.content
 
 
 # ===========================================================================
