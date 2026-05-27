@@ -18,7 +18,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .forms import CustomUserCreationForm
-from .models import Lodging, Park, PendingRegistration, Reservation
+from .models import Lodging, LoginAttempt, Park, PendingRegistration, Reservation
 from .services import (
     AvailabilityService,
     NotificationService,
@@ -29,7 +29,38 @@ from .services import (
 
 
 def home(request):
-    return render(request, "home.html")
+    parques = list(Park.objects.active().prefetch_related("lodgings"))
+    today = date.today()
+    for parque in parques:
+        camping_lodgings = parque.lodgings.filter(kind=Lodging.Kind.CAMPING)
+        total = camping_lodgings.aggregate(total=Sum("capacity"))["total"] or 0
+        used = (
+            Reservation.objects.filter(
+                lodging__in=camping_lodgings,
+                status=Reservation.Status.ACTIVE,
+                end_date__gte=today,
+            ).aggregate(total=Sum("people"))["total"]
+            or 0
+        )
+        parque.disponibilidad_actual = max(total - used, 0)
+    featured_parks = parques[:3]
+    featured_park = featured_parks[0] if featured_parks else None
+    total_parks = len(parques)
+    lodging_parks = sum(1 for parque in parques if parque.lodgings.all())
+    return render(
+        request,
+        "home.html",
+        {
+            "featured_parks": featured_parks,
+            "featured_park": featured_park,
+            "total_parks": total_parks,
+            "lodging_parks": lodging_parks,
+        },
+    )
+
+
+def festival(request):
+    return render(request, "festival.html")
 
 
 def _safe_next(request, fallback="sistema_app:home"):
@@ -58,10 +89,17 @@ def register(request):
         formulario = CustomUserCreationForm(data=request.POST)
         if formulario.is_valid():
             cleaned = formulario.cleaned_data
-            # Cualquier registro pendiente con el mismo username o email se
-            # reemplaza por el nuevo intento. Esto no afecta cuentas reales.
+            # Sólo limpiamos registros pendientes ya EXPIRADOS — los activos
+            # los rechaza el formulario (ver CustomUserCreationForm.clean_*).
+            # Esto permite que un usuario que perdió su código reintente tras
+            # los 5 min de expiración.
+            from datetime import timedelta
+            cutoff = timezone.now() - timedelta(
+                seconds=PendingRegistration.EXPIRY_SECONDS
+            )
             PendingRegistration.objects.filter(
-                Q(username=cleaned["username"]) | Q(email=cleaned["email"])
+                Q(username=cleaned["username"]) | Q(email=cleaned["email"]),
+                created_at__lt=cutoff,
             ).delete()
             pending = PendingRegistration.objects.create(
                 username=cleaned["username"],
@@ -168,16 +206,31 @@ def resend_verification_code_api(request):
 
 
 def login(request):
-    data = {"form": AuthenticationForm(), "next": request.GET.get("next", "")}
+    data = {
+        "form": AuthenticationForm(),
+        "next": request.GET.get("next", ""),
+        "lockout": False,
+    }
     if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        if LoginAttempt.is_locked_out(username):
+            data["lockout"] = True
+            data["form"] = AuthenticationForm(data=request.POST)
+            return render(request, "registration/login.html", data)
+
         formulario = AuthenticationForm(data=request.POST)
         if formulario.is_valid():
-            username = formulario.cleaned_data["username"]
-            password = formulario.cleaned_data["password"]
-            user = authenticate(username=username, password=password)
+            user = authenticate(
+                username=formulario.cleaned_data["username"],
+                password=formulario.cleaned_data["password"],
+            )
             if user is not None:
+                LoginAttempt.register(username, success=True)
                 auth_login(request, user)
                 return redirect(_safe_next(request))
+            LoginAttempt.register(username, success=False)
+        elif username:
+            LoginAttempt.register(username, success=False)
         data["form"] = formulario
     return render(request, "registration/login.html", data)
 
@@ -209,8 +262,64 @@ def mapa(request):
 
 @login_required
 def perfil(request):
+    today = timezone.localdate()
+    Reservation.objects.filter(
+        user=request.user,
+        status=Reservation.Status.ACTIVE,
+        end_date__lte=today,
+    ).update(status=Reservation.Status.PAST)
+
+    show_past = request.GET.get("show") == "past"
     reservas = ReservationService.get_user_reservations(request.user)
-    return render(request, "user/perfil.html", {"reservas": reservas})
+
+    reservas = reservas.exclude(status=Reservation.Status.CANCELLED)
+    if show_past:
+        reservas = reservas.filter(
+            status__in=[Reservation.Status.PAST, Reservation.Status.USED]
+        )
+    else:
+        reservas = reservas.filter(status=Reservation.Status.ACTIVE)
+
+    q = (request.GET.get("q") or "").strip()
+    date_from = (request.GET.get("from") or "").strip()
+    date_to = (request.GET.get("to") or "").strip()
+    sort = (request.GET.get("sort") or "recent").strip().lower()
+
+    if q:
+        reservas = reservas.filter(
+            Q(park__name__icontains=q) | Q(lodging__name__icontains=q)
+        )
+
+    if date_from:
+        try:
+            reservas = reservas.filter(start_date__gte=date.fromisoformat(date_from))
+        except ValueError:
+            date_from = ""
+
+    if date_to:
+        try:
+            reservas = reservas.filter(end_date__lte=date.fromisoformat(date_to))
+        except ValueError:
+            date_to = ""
+
+    sort_map = {
+        "recent": ("-start_date", "-created_at"),
+        "oldest": ("start_date", "created_at"),
+        "park": ("park__name", "start_date"),
+    }
+    reservas = reservas.order_by(*sort_map.get(sort, ("-start_date", "-created_at")))
+
+    filters = {
+        "q": q,
+        "from": date_from,
+        "to": date_to,
+        "sort": sort,
+    }
+    return render(request, "user/perfil.html", {
+        "reservas": reservas,
+        "filters": filters,
+        "show_past": show_past,
+    })
 
 
 @login_required

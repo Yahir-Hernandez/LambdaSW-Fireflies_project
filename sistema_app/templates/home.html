@@ -2,8 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/home.css' %}" />
-  <script src="https://kit.fontawesome.com/db1b884b1e.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="{% static 'css/user/home.css' %}" />
 {% endblock %}
 
 {% block content %}
@@ -19,36 +18,24 @@
     </div>
 
     <div class="hero__content">
-      <div class="hero__badge"><i class="fa-solid fa-calendar"></i> Junio - Agosto 2026</div>
-
-      <!--div class="hero__firefly-icon hero__firefly-icon--placeholder" aria-hidden="true"></-div>
-
-      <h1 class="hero__title">
-        <span class="hero__title--thin">Festival Internacional</span>
-        <span class="hero__title--sub">de las</span>
-        <span class="hero__title--main">Luciérnagas</span>
-      </h1>-->
+      
       <img src="{% static 'img/logo_b.png' %}" alt="Logo del Festival" class="logo"/>
-
-      <p class="hero__desc">
-        Vive el espectaculo natural mas magico de Mexico. Miles de luciernagas
-        iluminan los bosques de oyamel creando una sinfonia de luz que solo ocurre
-        durante el verano.
-      </p>
-
-      <div class="hero__actions">
-        <a href="{% url 'sistema_app:mapa' %}" class="btn btn--accent">
-          <span><i class="fa-solid fa-location-dot"></i> Explorar Parques</span>
+      <div class="hero__cta">
+        <p class="hero__calendar"><i class="fa-solid fa-calendar"></i> del 1 de junio al 31 de agosto de 2026</p>
+        <div class="hero__actions">
+          {% if user.is_authenticated %}
+            <a href="{% url 'sistema_app:reservation_create' %}" class="btn btn--primary">
+              Reservar ahora <i class="fa-solid fa-right-long"></i>
+            </a>
+          {% else %}
+            <button type="button" class="btn btn--primary" id="reservar-ahora-btn">
+              Reservar ahora <i class="fa-solid fa-right-long"></i>
+            </button>
+          {% endif %}
+        </div>
+        <a class="hero__scroll" href="#parques-destacados">
+          Descubre más <i class="fa-solid fa-angles-down"></i>
         </a>
-        {% if user.is_authenticated %}
-          <a href="{% url 'sistema_app:reservation_create' %}" class="btn btn--outline">
-            Reservar ahora <i class="fa-solid fa-right-long"></i>
-          </a>
-        {% else %}
-          <button type="button" class="btn btn--outline" id="reservar-ahora-btn">
-            Reservar ahora <i class="fa-solid fa-right-long"></i>
-          </button>
-        {% endif %}
       </div>
 
       {% if not user.is_authenticated %}
@@ -62,132 +49,69 @@
           })();
         </script>
       {% endif %}
-
-      <!--<div class="hero__stats">
-        <div class="stat">
-          <span class="stat__num">5</span>
-          <span class="stat__label">Parques Oficiales</span>
-        </div>
-        <div class="stat">
-          <span class="stat__num">3</span>
-          <span class="stat__label">Meses del Festival</span>
-        </div>
-        <div class="stat">
-          <span class="stat__num">+200</span>
-          <span class="stat__label">Visitantes diarios</span>
-        </div>
-      </-div> -->
-    </div>
-    <!--
-    <a href="#why" class="hero__scroll" aria-label="Descubre mas">
-      <span class="hero__scroll-label">Descubre mas</span>
-      <span class="hero__scroll-box"><span class="scroll-dot"></span></span>
-    </a>
-    -->
-  </section>
-  <!--
-  <section class="why" id="why">
-    <div class="container">
-      <h2 class="section-title">¿Por que visitarnos?</h2>
-      <p class="section-sub">Una experiencia unica e irrepetible en los bosques mas magicos de Mexico</p>
-
-      <div class="why__grid">
-        <div class="why__card">
-          <div class="why__icon"><span class="icon-placeholder" aria-hidden="true"></span></div>
-          <h3>Fenomeno Natural Unico</h3>
-          <p>Miles de <em>Photinus sp.</em> iluminan el bosque con destellos sincronizados, un espectaculo que solo ocurre en estas regiones de Mexico.</p>
-        </div>
-        <div class="why__card">
-          <div class="why__icon"><span class="icon-placeholder" aria-hidden="true"></span></div>
-          <h3>Bosques Protegidos</h3>
-          <p>Todos los parques son reservas naturales certificadas con guias especializados que garantizan una experiencia responsable y segura.</p>
-        </div>
-        <div class="why__card">
-          <div class="why__icon"><span class="icon-placeholder" aria-hidden="true"></span></div>
-          <h3>Reservacion Sencilla</h3>
-          <p>Reserva tu lugar en cabañas o zona de camping directamente desde nuestra plataforma, sin complicaciones ni intermediarios.</p>
-        </div>
-      </div>
     </div>
   </section>
-
-  <section class="parques" id="parques">
+  <section class="parques" id="parques-destacados">
     <div class="container">
       <div class="parques__header">
         <div>
-          <h2 class="section-title section-title--left">Parques Oficiales 2026</h2>
-          <p class="section-sub section-sub--left">Selecciona tu destino y vive la magia</p>
+          <h2 class="section-title section-title--left section-title--system">Parques destacados</h2>
+          <p class="section-sub section-sub--left">Disponibilidad en tiempo real y acceso directo al mapa</p>
         </div>
-        <a href="#" class="link-arrow">Ver todos en el mapa →</a>
+        <a href="{% url 'sistema_app:mapa' %}" class="link-arrow">Consultalo en el mapa</a>
       </div>
-
-      <div class="parques__grid">
-        <div class="parque-card">
-          <div class="parque-card__img parque-card__img--1">
-            <span class="tag">Cabañas</span>
-            <span class="tag tag--green">Camping</span>
-          </div>
-          <div class="parque-card__body">
-            <h3>Reserva de Nanacamilpa</h3>
-            <p class="parque-card__loc">Nanacamilpa de Mariano Arista, Tlaxcala</p>
-            <p class="parque-card__hours">Martes a Domingo, 19:00 - 23:00 hrs (Jun - Ago)</p>
-            <div class="parque-card__footer">
-              <span class="parque-card__avail">45 lugares disponibles</span>
-              <a href="#" class="link-arrow link-arrow--sm">Ver detalles →</a>
-            </div>
+      <div class="parques-highlight">
+        <div class="parques-highlight__media" aria-hidden="true" style="background: url('{% static 'img/home/oficial.jpg' %}') center/cover no-repeat;">
+          <div class="parques-highlight__media-inner">
+            <span class="parques-highlight__badge">Parques oficiales</span> 
           </div>
         </div>
-
-        <div class="parque-card parque-card--featured">
-          <div class="parque-card__img parque-card__img--2">
-            <span class="tag tag--green">Camping</span>
-          </div>
-          <div class="parque-card__body">
-            <h3>Bosque de San Felipe Hidalgo</h3>
-            <p class="parque-card__loc">San Felipe Hidalgo, Tlaxcala</p>
-            <p class="parque-card__hours">Martes a Domingo, 19:00 - 22:00 hrs (Jun - Ago)</p>
-            <div class="parque-card__footer">
-              <span class="parque-card__avail">28 lugares disponibles</span>
-              <a href="#" class="link-arrow link-arrow--sm">Ver detalles →</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="parque-card">
-          <div class="parque-card__img parque-card__img--3">
-            <span class="tag">Cabañas</span>
-            <span class="tag tag--green">Camping</span>
-          </div>
-          <div class="parque-card__body">
-            <h3>Parque Ecoturistico La Malinche</h3>
-            <p class="parque-card__loc">Huamantla, Tlaxcala</p>
-            <p class="parque-card__hours">Martes a Domingo, 18:30 - 22:30 hrs (Jun - Ago)</p>
-            <div class="parque-card__footer">
-              <span class="parque-card__avail">62 lugares disponibles</span>
-              <a href="#" class="link-arrow link-arrow--sm">Ver detalles →</a>
-            </div>
+        <div class="parques-highlight__content">
+          <p class="parques-highlight__eyebrow">Hospedaje en parques oficiales</p>
+          {% if featured_park %}
+            <h3 class="parques-highlight__title">{{ featured_park.name }}</h3>
+            <p class="parques-highlight__desc">{{ featured_park.address }}</p>
+            <p class="parques-highlight__desc">
+              Los {{ lodging_parks }} parques oficiales cuentan con zonas de camping. Disponibilidad actual:
+              <strong>{{ featured_park.disponibilidad_actual }} lugares</strong>.
+            </p>
+          {% else %}
+            <h3 class="parques-highlight__title">Los parques oficiales</h3>
+            <p class="parques-highlight__desc">Estamos actualizando la disponibilidad en este momento.</p>
+          {% endif %}
+          <div class="parques-highlight__actions">
+            <a href="{% url 'sistema_app:mapa' %}" class="btn btn--accent btn--sm">
+              <i class="fa-solid fa-location-dot"></i> Consultar parques
+            </a>
           </div>
         </div>
-      </div>
-
-      <div class="parques__cta">
-        <a href="#" class="btn btn--outline btn--map">Ver todos los parques en el mapa</a>
       </div>
     </div>
   </section>
 
-  <section class="cta-reserva" id="reservar">
-    <div class="cta-reserva__inner">
-      <div class="cta-reserva__icon"><span class="icon-placeholder" aria-hidden="true"></span></div>
-      <h2>Reserva tu lugar hoy</h2>
-      <p>Los lugares son limitados. Asegura tu experiencia en los bosques mas magicos de Mexico durante el Festival Internacional de las Luciernagas 2026.</p>
-      <div class="cta-reserva__actions">
-        <a href="#" class="btn btn--primary">Crear cuenta gratis →</a>
-        <a href="#parques" class="btn btn--ghost">Ver parques</a>
+  <section class="festival-highlight" id="festival-highlight">
+    <div class="container">
+      <div class="festival-card">
+        <div class="festival-card__content">
+          <p class="festival-card__eyebrow">El festival</p>
+          <h3 class="festival-card__title">El festival de luciérnagas más grande del centro de México</h3>
+          <p class="festival-card__desc">
+            Una experiencia nocturna entre bosques, música, naturaleza y miles de luces vivas que transforman el bosque en un espectáculo único.
+          </p>
+          <div class="festival-card__actions">
+            <a href="{% url 'sistema_app:festival' %}" class="btn btn--accent btn--sm">
+              <i class="fa-solid fa-tree"></i> Conoce más
+            </a>
+          </div>
+        </div>
+        <div class="festival-card__media" aria-hidden="true" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url('{% static 'img/home/fireflies.jpg' %}') center/cover no-repeat;">
+          <div class="festival-card__media-inner" style="background: transparent; border: none; align-items: flex-end; display: flex; padding: 16px;">
+            <span class="festival-card__media-caption">La noche cobra vida</span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
-    -->
 {% endblock %}
 
 {% block extra_js %}

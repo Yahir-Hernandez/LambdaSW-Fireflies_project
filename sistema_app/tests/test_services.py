@@ -22,6 +22,7 @@ from django.core.exceptions import ValidationError
 from sistema_app.models import Lodging, Reservation
 from sistema_app.services import (
     AvailabilityService,
+    LodgingCapacityValidator,
     NotificationService,
     ReservationService,
     ReservationValidator,
@@ -432,13 +433,16 @@ class TestReservationServiceCreate:
 class TestReservationServiceCancel:
     def test_owner_can_cancel(self, user, active_reservation, settings):
         settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
-        result = ReservationService.cancel_reservation(user, active_reservation)
-        assert result.status == Reservation.Status.CANCELLED
+        pk = active_reservation.pk
+        ReservationService.cancel_reservation(user, active_reservation)
+        # Cancelar ahora elimina la fila (no la marca como CANCELLED).
+        assert not Reservation.objects.filter(pk=pk).exists()
 
     def test_staff_can_cancel_other_user_reservation(self, staff_user, active_reservation, settings):
         settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
-        result = ReservationService.cancel_reservation(staff_user, active_reservation)
-        assert result.status == Reservation.Status.CANCELLED
+        pk = active_reservation.pk
+        ReservationService.cancel_reservation(staff_user, active_reservation)
+        assert not Reservation.objects.filter(pk=pk).exists()
 
     def test_other_user_cannot_cancel(self, other_user, active_reservation):
         with pytest.raises(ValidationError, match="permisos"):
@@ -457,3 +461,147 @@ class TestReservationServiceCancel:
         qs = ReservationService.get_user_reservations(user, only_active=True)
         assert active_reservation in qs
         assert cancelled_reservation not in qs
+
+
+# ===========================================================================
+# LodgingCapacityValidator
+# ===========================================================================
+
+@pytest.mark.django_db
+class TestLodgingCapacityValidator:
+    """Valida reducciones de capacidad sobre Lodgings con reservas existentes."""
+
+    def test_creation_skipped(self, park):
+        # Aún no persistido: el validator no consulta nada.
+        lodging = Lodging(park=park, kind=Lodging.Kind.CABIN, name="X", capacity=5)
+        LodgingCapacityValidator.validate_capacity_reduction(lodging, 1)
+
+    def test_capacity_unchanged_skipped(self, cabin, active_reservation):
+        LodgingCapacityValidator.validate_capacity_reduction(cabin, cabin.capacity)
+
+    def test_capacity_increased_skipped(self, cabin, active_reservation):
+        LodgingCapacityValidator.validate_capacity_reduction(cabin, cabin.capacity + 10)
+
+    def test_cabin_blocks_when_future_reservation_exceeds(
+        self, user, park, cabin, season_start, season_end_date
+    ):
+        Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=season_start, end_date=season_end_date,
+            people=4, status=Reservation.Status.ACTIVE,
+        )
+        with pytest.raises(ValidationError, match="cabaña"):
+            LodgingCapacityValidator.validate_capacity_reduction(cabin, 3)
+
+    def test_cabin_allows_when_within_new_capacity(
+        self, user, park, cabin, season_start, season_end_date
+    ):
+        Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=season_start, end_date=season_end_date,
+            people=2, status=Reservation.Status.ACTIVE,
+        )
+        LodgingCapacityValidator.validate_capacity_reduction(cabin, 3)
+
+    def test_cabin_ignores_past_used_cancelled(
+        self, user, park, cabin, season_start, season_end_date
+    ):
+        # Reserva pasada (end_date <= today=2026-05-27).
+        Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=date(2026, 5, 20), end_date=date(2026, 5, 22),
+            people=4, status=Reservation.Status.ACTIVE,
+        )
+        # Reserva USED (futura pero ya consumida).
+        Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=season_start, end_date=season_end_date,
+            people=4, status=Reservation.Status.USED,
+        )
+        # Reserva PAST.
+        Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=date(2026, 4, 5), end_date=date(2026, 4, 8),
+            people=4, status=Reservation.Status.PAST,
+        )
+        LodgingCapacityValidator.validate_capacity_reduction(cabin, 1)
+
+    def test_camping_sweep_blocks_when_peak_exceeds(
+        self, user, park, camping_spot, season_start
+    ):
+        # Dos reservas overlapping de 5 + 3 personas → pico 8.
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=season_start, end_date=season_start + timedelta(days=4),
+            people=5, status=Reservation.Status.ACTIVE,
+        )
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=season_start + timedelta(days=1),
+            end_date=season_start + timedelta(days=3),
+            people=3, status=Reservation.Status.ACTIVE,
+        )
+        with pytest.raises(ValidationError, match="camping"):
+            LodgingCapacityValidator.validate_capacity_reduction(camping_spot, 7)
+
+    def test_camping_sweep_allows_when_non_overlapping_fit(
+        self, user, park, camping_spot, season_start
+    ):
+        # Dos reservas no overlapping de 5 personas cada una → pico 5.
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=season_start, end_date=season_start + timedelta(days=2),
+            people=5, status=Reservation.Status.ACTIVE,
+        )
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=season_start + timedelta(days=3),
+            end_date=season_start + timedelta(days=5),
+            people=5, status=Reservation.Status.ACTIVE,
+        )
+        LodgingCapacityValidator.validate_capacity_reduction(camping_spot, 5)
+
+    def test_camping_checkout_equals_checkin_does_not_sum(
+        self, user, park, camping_spot, season_start
+    ):
+        # A termina el mismo día X en que B inicia → no se traslapan.
+        x = season_start + timedelta(days=2)
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=season_start, end_date=x,
+            people=6, status=Reservation.Status.ACTIVE,
+        )
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=x, end_date=season_start + timedelta(days=5),
+            people=6, status=Reservation.Status.ACTIVE,
+        )
+        # Pico real = 6 (no 12), reducir a 6 debe pasar.
+        LodgingCapacityValidator.validate_capacity_reduction(camping_spot, 6)
+
+    def test_camping_three_overlapping_peak_in_middle(
+        self, user, park, camping_spot, season_start
+    ):
+        # Tres reservas con overlap parcial; el pico está en el medio.
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=season_start, end_date=season_start + timedelta(days=5),
+            people=2, status=Reservation.Status.ACTIVE,
+        )
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=season_start + timedelta(days=1),
+            end_date=season_start + timedelta(days=4),
+            people=3, status=Reservation.Status.ACTIVE,
+        )
+        Reservation.objects.create(
+            user=user, park=park, lodging=camping_spot,
+            start_date=season_start + timedelta(days=2),
+            end_date=season_start + timedelta(days=3),
+            people=4, status=Reservation.Status.ACTIVE,
+        )
+        # Pico = 2+3+4 = 9.
+        with pytest.raises(ValidationError, match="9"):
+            LodgingCapacityValidator.validate_capacity_reduction(camping_spot, 8)
+        # Reducir a 9 debe pasar.
+        LodgingCapacityValidator.validate_capacity_reduction(camping_spot, 9)

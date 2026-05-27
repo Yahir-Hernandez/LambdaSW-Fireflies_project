@@ -27,6 +27,8 @@
 
 	const seasonStart = '2026-06-01';
 	const seasonEnd = '2026-08-31';
+	// El backend acepta fecha de término hasta SEASON_END + 1 día (services.py).
+	const seasonEndBoundary = '2026-09-01';
 
 	if (fechaInicioInput) {
 		fechaInicioInput.min = seasonStart;
@@ -34,8 +36,30 @@
 	}
 	if (fechaTerminoInput) {
 		fechaTerminoInput.min = seasonStart;
-		fechaTerminoInput.max = seasonEnd;
+		fechaTerminoInput.max = seasonEndBoundary;
 	}
+
+	const isTuesday = (value) => new Date(`${value}T00:00:00`).getDay() === 2;
+
+	// Validación cliente de RNB-01..02 (fechas en temporada, sin martes).
+	// Devuelve string con el error, o null si las fechas son válidas.
+	// Si alguna fecha está vacía devuelve null (estado neutro: aún sin datos).
+	const validateDateRange = (start, end) => {
+		if (!start || !end) return null;
+		if (start < seasonStart || start > seasonEnd) {
+			return 'La fecha de inicio debe estar entre Junio y Agosto de 2026.';
+		}
+		if (end < seasonStart || end > seasonEndBoundary) {
+			return 'La fecha de término no puede exceder el cierre del festival.';
+		}
+		if (new Date(end) <= new Date(start)) {
+			return 'La fecha de término debe ser posterior a la fecha de inicio.';
+		}
+		if (isTuesday(start)) {
+			return 'No se permiten reservas con inicio en martes.';
+		}
+		return null;
+	};
 
 	let currentPark = null;
 	let availableLodgings = [];
@@ -88,12 +112,15 @@
 	const renderLodgings = (lodgings, status) => {
 		if (!lodgingOptionsEl) return;
 		lodgingOptionsEl.innerHTML = '';
+		// Limpieza segura: sin importar el status, la selección previa
+		// queda invalidada al re-renderizar (sólo se restablece más abajo
+		// si renderizamos cards reales).
+		selectedLodgingId = null;
+		if (lodgingIdInput) lodgingIdInput.value = '';
 
 		if (status === 'hint') {
 			lodgingOptionsEl.innerHTML =
 				'<p class="lodging-options__hint">Selecciona fechas y tipo de visita para ver opciones disponibles.</p>';
-			selectedLodgingId = null;
-			if (lodgingIdInput) lodgingIdInput.value = '';
 			return;
 		}
 		if (status === 'loading') {
@@ -101,11 +128,14 @@
 				'<p class="lodging-options__hint">Buscando opciones disponibles…</p>';
 			return;
 		}
+		if (status === 'invalid') {
+			// Fechas fuera de temporada / martes — el mensaje específico
+			// ya está en #reservaMessage; aquí no mostramos nada.
+			return;
+		}
 		if (!lodgings || lodgings.length === 0) {
 			lodgingOptionsEl.innerHTML =
 				'<p class="lodging-options__empty">No hay opciones disponibles para esas fechas.</p>';
-			selectedLodgingId = null;
-			if (lodgingIdInput) lodgingIdInput.value = '';
 			return;
 		}
 
@@ -147,13 +177,20 @@
 		const end = fechaTerminoInput?.value;
 		const kind = getSelectedKind();
 		if (!start || !end) {
+			setMessage('');
 			renderLodgings(null, 'hint');
 			return;
 		}
-		if (new Date(end) <= new Date(start)) {
-			renderLodgings([], 'empty');
+		// Validación cliente: si las fechas están fuera de temporada o el
+		// inicio cae en martes, no consultamos al backend ni mostramos
+		// opciones — el formulario quedaría inutilizable de todos modos.
+		const dateError = validateDateRange(start, end);
+		if (dateError) {
+			setMessage(dateError, 'is-error');
+			renderLodgings(null, 'invalid');
 			return;
 		}
+		setMessage('');
 		const seq = ++fetchSeq;
 		renderLodgings(null, 'loading');
 
@@ -210,14 +247,16 @@
 	};
 
 	// Refrescar la lista cuando cambien fechas o tipo de visita.
+	// Escuchamos 'change' Y 'input' para cubrir pickers móviles donde
+	// 'change' a veces no se dispara hasta perder foco.
 	[fechaInicioInput, fechaTerminoInput].forEach((el) => {
-		el?.addEventListener('change', fetchAvailability);
+		if (!el) return;
+		el.addEventListener('change', fetchAvailability);
+		el.addEventListener('input', fetchAvailability);
 	});
 	tipoVisitaGroup?.addEventListener('change', (e) => {
 		if (e.target?.name === 'tipo_visita') fetchAvailability();
 	});
-
-	const isTuesday = (value) => new Date(`${value}T00:00:00`).getDay() === 2;
 
 	form.addEventListener('submit', (event) => {
 		setMessage('');
@@ -233,14 +272,10 @@
 			setMessage('Completa las fechas de inicio y término.', 'is-error');
 			return;
 		}
-		if (isTuesday(start)) {
+		const dateError = validateDateRange(start, end);
+		if (dateError) {
 			event.preventDefault();
-			setMessage('No se permiten reservas con inicio en martes.', 'is-error');
-			return;
-		}
-		if (new Date(end) <= new Date(start)) {
-			event.preventDefault();
-			setMessage('La fecha de término debe ser posterior a la fecha de inicio.', 'is-error');
+			setMessage(dateError, 'is-error');
 			return;
 		}
 		const numPersonas = parseInt(numPersonasInput?.value, 10) || 0;

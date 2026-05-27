@@ -1,0 +1,98 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .qr-scan-wrapper { max-width: 720px; margin: 16px 0; }
+    #qr-scanner {
+      max-width: 480px;
+      margin: 16px 0;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #qr-details {
+      margin-top: 16px;
+      padding: 18px 20px;
+      background: #f8f8f8;
+      border-left: 4px solid #79aec8;
+      border-radius: 4px;
+      min-height: 40px;
+      color: #000;
+    }
+    /* Fuerza el negro también en h2, ul, li, strong dentro del bloque —
+       evita que el tema dark del admin haga el texto invisible. */
+    #qr-details, #qr-details * { color: #000; }
+    #qr-details:empty { display: none; }
+    #qr-details ul { list-style: none; padding: 0; margin: 12px 0; }
+    #qr-details ul li { padding: 4px 0; }
+    .qr-message {
+      padding: 10px 14px;
+      margin: 12px 0;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .qr-message:empty { display: none; }
+    .qr-message--error   { background: #fdd; color: #900; border-left: 4px solid #c00; }
+    .qr-message--success { background: #dfd; color: #060; border-left: 4px solid #080; }
+    .qr-message--info    { background: #def; color: #036; border-left: 4px solid #069; }
+    .qr-actions { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .qr-actions .button {
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      cursor: pointer;
+      border: none;
+    }
+    .qr-actions .button--primary { background: #79aec8; color: #fff; }
+    .qr-actions .button--primary:hover { background: #609ab6; }
+    .qr-actions .button--secondary { background: #f8f8f8; color: #333; border: 1px solid #ccc; }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="qr-scan-wrapper">
+    <h1>Escanear QR de check-in</h1>
+    <p>Apunta la cámara hacia el QR del correo de confirmación. Al detectarlo se cargarán los datos abajo.</p>
+
+    <form style="display:none">{% csrf_token %}</form>
+    <div id="qr-scanner"></div>
+
+    <details style="margin:12px 0;">
+      <summary style="cursor:pointer;color:#79aec8;font-weight:500;">
+        ¿Sin cámara? Ingresar UUID manualmente
+      </summary>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" id="manual-token-input"
+               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+               style="flex:1;min-width:300px;padding:6px 8px;font-family:monospace;border:1px solid #ccc;border-radius:4px;">
+        <button type="button" id="manual-token-btn" class="button button--primary"
+                style="padding:8px 16px;background:#79aec8;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+          Cargar
+        </button>
+      </div>
+      <p style="margin-top:8px;color:#666;font-size:13px;">
+        Tip: el UUID está visible en el listado de reservaciones (columna o detalle).
+      </p>
+    </details>
+
+    <div id="qr-message" class="qr-message"></div>
+    <div id="qr-details"></div>
+  </div>
+
+  {# URLs absolutas inyectadas desde Django para evitar problemas con paths #}
+  {# relativos. El JS sustituye __TOKEN__ por el UUID real al hacer fetch. #}
+  <script>
+    window.QR_CHECKIN_URLS = {
+      data: "{% url 'admin:sistema_app_reservation_checkin_data' '00000000-0000-0000-0000-000000000000' %}".replace("00000000-0000-0000-0000-000000000000", "__TOKEN__"),
+      confirm: "{% url 'admin:sistema_app_reservation_checkin_confirm' '00000000-0000-0000-0000-000000000000' %}".replace("00000000-0000-0000-0000-000000000000", "__TOKEN__")
+    };
+  </script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="{% static 'script/admin_qr_scanner.js' %}"></script>
+{% endblock %}

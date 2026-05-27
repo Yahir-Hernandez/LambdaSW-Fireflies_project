@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/perfil.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/user/perfil.css' %}" />
 {% endblock %}
 
 {% block content %}
@@ -17,114 +17,170 @@
     <span class="ff" style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%;"></span>
   </div>
 
-  <div class="profile-container">
-    <!--  <div class="profile-header">
-       futura implementación ¿?
-      <div class="profile-avatar">
-        
-        <div class="avatar-placeholder">
-          <i class="fa-solid fa-circle-user"></i>
-        </div>
-        
-        <div class="profile-avatar-actions">
-          <button class="btn btn--outline btn--sm">
-            <i class="fa-solid fa-camera"></i> Cambiar foto
-          </button>
-        </div>
-      </div>
-      
-      
-      <div class="profile-info">
-        <h1 class="profile-name">{{ user.get_full_name|default:user.username }}</h1>
-        <p class="profile-username">@{{ user.username }}</p>
-        
-        <div class="profile-stats">
-          <div class="stat-item">
-            <span class="stat-value">{{ user.date_joined|date:"d/m/Y" }}</span>
-            <span class="stat-label">Miembro desde</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ user.last_login|date:"d/m/Y"|default:"Nunca" }}</span>
-            <span class="stat-label">Último acceso</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    -->
+    <div class="profile-container"
+      data-forest-images="
+        {% static 'img/forests/forest_1.jpg' %}|
+        {% static 'img/forests/forest_2.jpg' %}|
+        {% static 'img/forests/forest_3.jpg' %}|
+        {% static 'img/forests/forest_4.jpg' %}|
+        {% static 'img/forests/forest_5.jpg' %}|
+        {% static 'img/forests/forest_6.jpg' %}|
+        {% static 'img/forests/forest_7.jpg' %}|
+        {% static 'img/forests/forest_8.jpg' %}|
+        {% static 'img/forests/forest_9.jpg' %}|
+        {% static 'img/forests/forest_10.jpg' %}|
+        {% static 'img/forests/forest_12.jpg' %}">
 
     <div class="profile-content">
-      <div class="profile-section">
-        <h2 class="section-title">
-          <i class="fa-solid fa-circle-info"></i> Información Personal
-        </h2>
-        
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">Nombre completo</span>
-            <span class="info-value">{{ user.get_full_name|default:"No especificado" }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="info-label">Correo electrónico</span>
-            <span class="info-value">{{ user.email|default:"No especificado" }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="info-label">Nombre de usuario</span>
-            <span class="info-value">{{ user.username }}</span>
-          </div>
-          
-          <div class="info-item">
-            <span class="info-label">Estado de la cuenta</span>
-            <span class="info-value status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
-              {% if user.is_active %}Activa{% else %}Inactiva{% endif %}
+
+      <div class="profile-section profile-section--info">
+        <div class="profile-info-card">
+          <div class="profile-info-card__avatar" aria-hidden="true">
+            <span class="profile-info-card__initials">
+              {{ user.first_name|default:user.username|slice:":1" }}
             </span>
+          </div>
+          <div class="profile-info-card__text">
+            <p class="profile-info-card__eyebrow">Tu perfil</p>
+            <h2 class="profile-info-card__title">Hola {{ user.first_name|default:user.username }}</h2>
+            <p class="profile-info-card__subtitle">Resumen de tu cuenta</p>
+          </div>
+          <div class="profile-info-card__details">
+            <div class="profile-info-row">
+              <span class="profile-info-row__label">Nombre completo</span>
+              <span class="profile-info-row__value">{{ user.get_full_name|default:"No especificado" }}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-info-row__label">Correo electronico</span>
+              <span class="profile-info-row__value">{{ user.email|default:"No especificado" }}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-info-row__label">Nombre de usuario</span>
+              <span class="profile-info-row__value">{{ user.username }}</span>
+            </div>
+          </div>
+          <div class="profile-info-card__actions" style="margin-top:16px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+            {% if user.is_staff %}
+              <a href="{% url 'admin:index' %}" class="btn btn--primary btn--sm" style="min-width:200px;text-align:center;">
+                Panel de administración
+              </a>
+            {% endif %}
+            <form method="post" action="{% url 'sistema_app:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--outline btn--sm" style="min-width:200px;">
+                <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+              </button>
+            </form>
           </div>
         </div>
       </div>
+      
 
       <div class="profile-section">
         <h2 class="section-title">
-          <i class="fa-solid fa-calendar-check"></i> Reservas Recientes
+          <i class="fa-solid fa-calendar-check"></i>
+          {% if show_past %}Reservas pasadas{% else %}Reservas actuales{% endif %}
         </h2>
-        
+
+        <div class="reservations-tabs" style="margin:8px 0 16px;display:flex;gap:8px;">
+          {% if show_past %}
+            <a class="btn btn--outline btn--sm" href="{% url 'sistema_app:perfil' %}">
+              <i class="fa-solid fa-arrow-left"></i> Ver reservas actuales
+            </a>
+          {% else %}
+            <a class="btn btn--outline btn--sm" href="{% url 'sistema_app:perfil' %}?show=past">
+              <i class="fa-solid fa-clock-rotate-left"></i> Ver reservas pasadas
+            </a>
+          {% endif %}
+        </div>
+
+        <div class="reservations-toolbar">
+          <form class="reservations-filters" method="get" action="">
+            {% if show_past %}<input type="hidden" name="show" value="past" />{% endif %}
+            <div class="filters-grid">
+              <label class="filter-field">
+                <span class="filter-label">Buscar</span>
+                <input
+                  type="search"
+                  name="q"
+                  class="filter-input"
+                  placeholder="Parque u hospedaje"
+                  value="{{ filters.q }}"
+                />
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">Desde</span>
+                <input type="date" name="from" class="filter-input" value="{{ filters.from }}" />
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">Hasta</span>
+                <input type="date" name="to" class="filter-input" value="{{ filters.to }}" />
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">Ordenar</span>
+                <select name="sort" class="filter-input">
+                  <option value="recent" {% if filters.sort == "recent" %}selected{% endif %}>Mas recientes</option>
+                  <option value="oldest" {% if filters.sort == "oldest" %}selected{% endif %}>Mas antiguas</option>
+                  <option value="park" {% if filters.sort == "park" %}selected{% endif %}>Parque</option>
+                </select>
+              </label>
+            </div>
+            <div class="filters-actions">
+              <button type="submit" class="btn btn--primary btn--sm">
+                Aplicar
+              </button>
+              <a class="btn btn--ghost btn--sm" href="{% if show_past %}{% url 'sistema_app:perfil' %}?show=past{% else %}{% url 'sistema_app:perfil' %}{% endif %}">
+                Limpiar
+              </a>
+            </div>
+          </form>
+        </div>
+
         <div class="reservations-list">
           {% if reservas %}
             {% for reserva in reservas %}
             <div class="reservation-card">
-              <div class="reservation-header">
-                <h3 class="reservation-park">{{ reserva.park.name }}</h3>
-                <span class="reservation-status {{ reserva.get_status_display|lower }}">
-                  {{ reserva.get_status_display }}
-                </span>
+              <div class="reservation-image">
+                <img src="{% static 'img/forests/forest_1.jpg' %}" class="reservation__img" alt="Bosque" loading="lazy" />
+              </div>
+              <div class="reservation-info">
+                <div class="reservation-header">
+                  <h3 class="reservation-park">{{ reserva.park.name }}</h3>
+                  <span class="reservation-status {% if reserva.status == 'ACTIVE' %}activa{% elif reserva.status == 'USED' %}pasada{% elif reserva.status == 'PAST' %}pasada{% elif reserva.status == 'CANCELLED' %}cancelada{% endif %}">
+                    {{ reserva.get_status_display }}
+                  </span>
+                </div>
+                <div class="reservation-actions">
+                  {% if reserva.is_cancellable %}
+                    <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
+                          onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn--outline btn--sm btn--alert">
+                        <i class="fa-solid fa-xmark"></i> Cancelar reserva
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+
+                <div class="reservation-details">
+                  <div class="detail-item">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>{{ reserva.start_date|date:"d/m/Y" }} — {{ reserva.end_date|date:"d/m/Y" }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>{{ reserva.people }} {{ reserva.people|pluralize:"persona,personas" }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="fa-solid {% if reserva.lodging.kind == 'CABIN' %}fa-house-chimney{% else %}fa-campground{% endif %}"></i>
+                    <span>{{ reserva.lodging.get_kind_display }} · {{ reserva.lodging.name }}</span>
+                  </div>
+                </div>
+
+                
               </div>
 
-              <div class="reservation-details">
-                <div class="detail-item">
-                  <i class="fa-solid fa-calendar-days"></i>
-                  <span>{{ reserva.start_date|date:"d/m/Y" }} — {{ reserva.end_date|date:"d/m/Y" }}</span>
-                </div>
-                <div class="detail-item">
-                  <i class="fa-solid fa-users"></i>
-                  <span>{{ reserva.people }} {{ reserva.people|pluralize:"persona,personas" }}</span>
-                </div>
-                <div class="detail-item">
-                  <i class="fa-solid {% if reserva.lodging.kind == 'CABIN' %}fa-house-chimney{% else %}fa-campground{% endif %}"></i>
-                  <span>{{ reserva.lodging.get_kind_display }} · {{ reserva.lodging.name }}</span>
-                </div>
-              </div>
-
-              <div class="reservation-actions">
-                {% if reserva.is_cancellable %}
-                  <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
-                        onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn--outline btn--sm">
-                      <i class="fa-solid fa-xmark"></i> Cancelar reserva
-                    </button>
-                  </form>
-                {% endif %}
-              </div>
+              
             </div>
             {% endfor %}
           {% else %}
@@ -139,63 +195,18 @@
           {% endif %}
         </div>
       </div>
-      <!-- Configuración de la Cuenta -->
-      <!-- Futura implementación ¿?
-      <div class="profile-section">
-        <h2 class="section-title">
-          <i class="fa-solid fa-gear"></i> Configuración de la Cuenta
-        </h2>
-        
-        <div class="settings-grid">
-          <div class="setting-item">
-            <i class="fa-solid fa-lock"></i>
-            <div class="setting-info">
-              <h3>Seguridad</h3>
-              <p>Cambia tu contraseña y configura la autenticación</p>
-            </div>
-            <a href="#" class="btn btn--outline btn--sm">Gestionar</a>
-          </div>
-          
-          <div class="setting-item">
-            <i class="fa-solid fa-bell"></i>
-            <div class="setting-info">
-              <h3>Notificaciones</h3>
-              <p>Configura cómo recibir notificaciones</p>
-            </div>
-            <a href="#" class="btn btn--outline btn--sm">Configurar</a>
-          </div>
-          
-          <div class="setting-item">
-            <i class="fa-solid fa-language"></i>
-            <div class="setting-info">
-              <h3>Preferencias</h3>
-              <p>Idioma y otras preferencias</p>
-            </div>
-            <a href="#" class="btn btn--outline btn--sm">Editar</a>
-          </div>
-        </div>
-      </div> -->
     </div>
 
     <div class="profile-actions">
       <a href="{% url 'sistema_app:home' %}" class="btn btn--outline">
         <i class="fa-solid fa-arrow-left"></i> Volver al inicio
       </a>
-      <!-- Futura implementación ¿?
-      <a href="#" class="btn btn--primary">
-        <i class="fa-solid fa-pen-to-square"></i> Editar perfil
-      </a>
-      -->
     </div>
   </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
-  
-  <script>
-    var usuarioName = "{{ user.username|escapejs }}";
-  </script>
   <script src="{% static 'script/perfil.js' %}"></script>
   <script src="{% static 'script/luciernagas.js' %}"></script>
 {% endblock %}

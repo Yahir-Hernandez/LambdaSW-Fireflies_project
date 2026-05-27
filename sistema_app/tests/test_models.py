@@ -142,6 +142,23 @@ class TestLodgingModel:
         Lodging.objects.create(park=p2, kind=Lodging.Kind.CAMPING, name="Lote 1", capacity=5)
         assert Lodging.objects.filter(name="Lote 1").count() == 2
 
+    def test_full_clean_raises_when_capacity_reduction_violates(
+        self, user, park, cabin, season_start, season_end_date
+    ):
+        from django.core.exceptions import ValidationError as DJValidationError
+        Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=season_start, end_date=season_end_date,
+            people=4, status=Reservation.Status.ACTIVE,
+        )
+        cabin.capacity = 2
+        with pytest.raises(DJValidationError):
+            cabin.full_clean()
+
+    def test_full_clean_passes_when_no_future_reservations(self, cabin):
+        cabin.capacity = 1
+        cabin.full_clean()
+
 
 # ===========================================================================
 # Reservation

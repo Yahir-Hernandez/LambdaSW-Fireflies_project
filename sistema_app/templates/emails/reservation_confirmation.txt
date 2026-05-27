@@ -1,0 +1,9 @@
+¡Tu reservación fue confirmada!
+
+Parque: {{ park_name }}
+Tipo: {{ kind_display }}
+Hospedaje: {{ lodging_name }}
+Fecha de inicio: {{ start_date }}
+Fecha de término: {{ end_date }}
+Personas: {{ people }}
+Código de reserva: #{{ reservation_id }}

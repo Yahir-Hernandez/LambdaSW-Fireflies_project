@@ -15,67 +15,59 @@
       crossorigin="anonymous"
     />
     <!-- Registro CSS -->
-
-    <link rel="stylesheet" href="{% static 'css/home.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/registro.css' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/user/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/user/registro.css' %}" />
   </head>
   <body>
     {%load crispy_forms_tags %}
-    <section class="hero">
-      <div class="hero__stars" aria-hidden="true"></div>
-      <div class="hero__fireflies" aria-hidden="true">
-        <span
-          class="ff"
-          style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%"
-        ></span>
-        <span
-          class="ff"
-          style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%"
-        ></span>
-        <span
-          class="ff"
-          style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%"
-        ></span>
-        <span
-          class="ff"
-          style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%"
-        ></span>
-        <span
-          class="ff"
-          style="--dx: 12px; --dy: -14px; --dur: 3.4s; left: 55%; top: 78%"
-        ></span>
-        <span
-          class="ff"
-          style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%"
-        ></span>
-      </div>
-      <div class="container">
-        <br />
-        <br />
-        <br />
-        <div class="row">
-          <div class="col-12 col-md-6 offset-md-3">
-            <div class="card">
-              <div class="card-body">
-                <h2  class="auth-dialog__title">Iniciar sesión</h2>
-                <hr />
-                <form action="" method="post">
-                  {% csrf_token %}
-                  <input type="hidden" name="next" value="{{ next }}" />
-                  {{form | crispy}}
-                  <br />
+    <section class="hero auth-hero">
+      <div class="auth-split">
+        <div class="auth-panel">
+          <div class="card">
+            <div class="card-body">
+              <h2 class="auth-dialog__title">Iniciar sesión</h2>
+              <hr />
+              {% if lockout %}
+                <div class="alert alert-danger" role="alert">
+                  Tu cuenta ha sido bloqueada temporalmente tras múltiples intentos fallidos. Intenta de nuevo más tarde.
+                </div>
+              {% endif %}
+              <form action="" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}" />
+                {{form | crispy}}
+                <br />
 
-                  <br />
+                <br />
 
+                <div class="auth-form__actions">
+                  <a class="btn btn--ghost btn--sm auth-form__back" href="{% url 'sistema_app:home' %}">
+                    <i class="fa-solid fa-arrow-left"></i> Volver al inicio
+                  </a>
                   <input
                     type="submit"
                     name="Ingresar"
                     class="btn btn-success float-right"
                   />
-                </form>
-              </div>
+                </div>
+              </form>
             </div>
           </div>
+        </div>
+        <div class="auth-visual" aria-hidden="true">
+          <div class="hero__stars"></div>
+          <div class="hero__fireflies">
+            <span class="ff" style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%"></span>
+            <span class="ff" style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%"></span>
+            <span class="ff" style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%"></span>
+            <span class="ff" style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%"></span>
+            <span class="ff" style="--dx: 12px; --dy: -14px; --dur: 3.4s; left: 55%; top: 78%"></span>
+            <span class="ff" style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%"></span>
+          </div>
+          <img src="{% static 'img/logo_b.png' %}" alt="Logo del Festival" class="logo"/>
         </div>
       </div>
     </section>

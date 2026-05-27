@@ -112,7 +112,17 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {'NAME': 'sistema_app.validators.UppercaseValidator'},
+    {'NAME': 'sistema_app.validators.LowercaseValidator'},
+    {'NAME': 'sistema_app.validators.NumberValidator'},
+    {'NAME': 'sistema_app.validators.SpecialCharValidator'},
 ]
+
+
+# Sesión: 30 minutos de inactividad. Cualquier request renueva el timeout
+# (ver SESSION_SAVE_EVERY_REQUEST).
+SESSION_COOKIE_AGE = 1800
+SESSION_SAVE_EVERY_REQUEST = True
 
 
 # Internationalization
@@ -145,6 +155,11 @@ EMAIL_PORT          = env.int('EMAIL_PORT',      default=587)
 EMAIL_USE_TLS       = env.bool('EMAIL_USE_TLS',  default=True)
 EMAIL_HOST_USER     = env('EMAIL_HOST_USER',     default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+
+# URL base usada para construir links absolutos desde código que no tiene
+# acceso a un ``request`` (ej. NotificationService al generar el QR de check-in).
+# En producción debe apuntar al dominio real con ``https://``.
+SITE_URL = env('SITE_URL', default='http://localhost:8000')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

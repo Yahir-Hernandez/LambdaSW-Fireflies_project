@@ -1,0 +1,98 @@
+/* Estilos para la página del Festival */
+.festival-page {
+  padding: 80px 20px;
+  color: var(--text-dim, #ccc);
+}
+
+.festival-header {
+  text-align: center;
+  margin-bottom: 60px;
+  padding: 60px 20px;
+  background: radial-gradient(ellipse at center, rgba(200, 255, 0, 0.08), transparent 70%);
+  border-radius: 16px;
+}
+
+.festival-main-logo {
+  max-width: 100%;
+  width: clamp(250px, 60vw, 550px);
+  height: auto;
+  margin-bottom: 24px;
+}
+
+.festival-header h1 {
+  font-family: var(--font-title, sans-serif);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+.festival-header p {
+  font-size: 1.1rem;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.festival-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: center;
+  margin-bottom: 80px;
+}
+
+@media (min-width: 900px) {
+  .festival-section {
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+  }
+  
+  .festival-section--reverse .festival-image-wrapper {
+    order: 2;
+  }
+  .festival-section--reverse .festival-content {
+    order: 1;
+  }
+}
+
+.festival-image-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+.festival-image-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.festival-image-wrapper img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 4/3;
+  transition: transform 0.5s ease;
+}
+
+.festival-image-wrapper:hover img {
+  transform: scale(1.04);
+}
+
+.festival-content h2 {
+  font-family: var(--font-title, sans-serif);
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+.festival-content p {
+  line-height: 1.7;
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
