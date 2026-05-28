@@ -6,41 +6,131 @@
 {% endblock %}
 
 {% block content %}
-<div class="festival-page container">
-  <!-- Encabezado Principal -->
-  <header class="festival-header">
-    <img src="{% static 'img/logo_text.png' %}" alt="Festival Internacional de la Luciérnaga 2026" class="festival-main-logo">
-    <p>Un espectáculo natural único en el mundo donde la oscuridad del bosque cobra vida con miles de luces destellantes. Conoce más sobre este mágico fenómeno ecológico.</p>
-  </header>
+<div class="festival-carousel-wrapper">
+  <!-- Controles Desktop -->
+  <button class="festival-nav btn-prev" aria-label="Anterior">
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+  <button class="festival-nav btn-next" aria-label="Siguiente">
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
 
-  <!-- Sección 1: ¿Qué es una luciérnaga? -->
-  <section class="festival-section">
-    <div class="festival-image-wrapper">
-      <img src="{% static 'img/festival/fireflies.jpg' %}" alt="Mágico destello de luciérnagas en el bosque">
-    </div>
-    <div class="festival-content">
-      <h2>¿Qué es una luciérnaga?</h2>
-      <p>Las luciérnagas son insectos fascinantes pertenecientes a la familia de los coleópteros (escarabajos). Su característica más notable es su capacidad de producir luz a través de un proceso llamado <strong>bioluminiscencia</strong>, un fenómeno natural generado por una reacción química en su abdomen, sumamente eficiente y sin emitir calor.</p>
-      <p>Este parpadeo de luz no es aleatorio: consiste en un sofisticado lenguaje visual de apareamiento. Cada especie tiene un patrón único de destellos que les permite encontrar pareja en la espesura del bosque de manera precisa y asombrosa.</p>
-    </div>
-  </section>
+  <!-- Puntos indicadores -->
+  <div class="festival-dots" id="festivalDots">
+    <span class="festival-dot active" data-index="0"></span>
+    <span class="festival-dot" data-index="1"></span>
+    <span class="festival-dot" data-index="2"></span>
+  </div>
 
-  <!-- Sección 2: El Festival -->
-  <section class="festival-section festival-section--reverse">
-    <div class="festival-image-wrapper">
-      <img src="{% static 'img/home/fireflies.jpg' %}" alt="El mágico festival de las luciérnagas">
-    </div>
-    <div class="festival-content">
-      <h2>El Festival en 2026</h2>
-      <p>El <strong>Festival Internacional de la Luciérnaga</strong> es un evento de ecoturismo anual que celebra la temporada de avistamiento. Durante los húmedos meses de verano, los bosques y santuarios de la región ofrecen el ecosistema perfecto para presenciar este milagro nocturno en su máximo esplendor.</p>
-      <p>Nuestro objetivo principal es promover un turismo respetuoso y sostenible. Por esa razón, se establecen reglas estrictas que prohíben el uso de linternas, celulares y ruidos fuertes, para no alterar el delicado ciclo de reproducción y asegurar que las futuras generaciones sigan maravillándose con este majestuoso universo.</p>
-      
-      <div style="margin-top: 32px;">
-        <a href="{% url 'sistema_app:mapa' %}" class="btn btn--primary">
-          <i class="fa-solid fa-map-location-dot"></i> Explorar santuarios
-        </a>
+  <div class="festival-scroll-container" id="festivalContainer">
+    <!-- Slide 1: Encabezado -->
+    <section class="festival-slide">
+      <div class="festival-header">
+        <img src="{% static 'img/logo_text.png' %}" alt="Festival Internacional de la Luciérnaga 2026" class="festival-main-logo">
+        <p>Un espectáculo natural único en el mundo donde la oscuridad del bosque cobra vida con miles de luces destellantes. Conoce más sobre este mágico fenómeno ecológico.</p>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <!-- Slide 2: ¿Qué es una luciérnaga? -->
+    <section class="festival-slide">
+      <div class="festival-section">
+        <div class="festival-image-wrapper">
+          <img src="{% static 'img/festival/fireflies.jpg' %}" alt="Mágico destello de luciérnagas en el bosque">
+        </div>
+        <div class="festival-content">
+          <h2>¿Qué es una luciérnaga?</h2>
+          <p>Las luciérnagas son insectos fascinantes pertenecientes a la familia de los coleópteros (escarabajos). Su característica más notable es su capacidad de producir luz a través de un proceso llamado <strong>bioluminiscencia</strong>, un fenómeno natural generado por una reacción química en su abdomen, sumamente eficiente y sin emitir calor.</p>
+          <p>Este parpadeo de luz no es aleatorio: consiste en un sofisticado lenguaje visual de apareamiento. Cada especie tiene un patrón único de destellos que les permite encontrar pareja en la espesura del bosque de manera precisa y asombrosa.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 3: El Festival -->
+    <section class="festival-slide">
+      <div class="festival-section festival-section--reverse">
+        <div class="festival-image-wrapper">
+          <img src="{% static 'img/home/fireflies.jpg' %}" alt="El mágico festival de las luciérnagas">
+        </div>
+        <div class="festival-content">
+          <h2>El Festival en 2026</h2>
+          <p>El <strong>Festival Internacional de la Luciérnaga</strong> es un evento de ecoturismo anual que celebra la temporada de avistamiento. Durante los húmedos meses de verano, los bosques y santuarios de la región ofrecen el ecosistema perfecto para presenciar este milagro nocturno en su máximo esplendor.</p>
+          <p>Nuestro objetivo principal es promover un turismo respetuoso y sostenible. Por esa razón, se establecen reglas estrictas que prohíben el uso de linternas, celulares y ruidos fuertes, para no alterar el delicado ciclo de reproducción y asegurar que las futuras generaciones sigan maravillándose con este majestuoso universo.</p>
+          
+          <div style="margin-top: 32px;">
+            <a href="{% url 'sistema_app:mapa' %}" class="btn btn--primary">
+              <i class="fa-solid fa-map-location-dot"></i> Explorar santuarios
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('festivalContainer');
+    const prevBtn = document.querySelector('.btn-prev');
+    const nextBtn = document.querySelector('.btn-next');
+    const dots = document.querySelectorAll('.festival-dot');
+    const slides = document.querySelectorAll('.festival-slide');
+    
+    // Total slides
+    const totalSlides = slides.length;
+    
+    // Función para obtener el slide actual basado en scroll
+    function getCurrentSlide() {
+      const scrollLeft = container.scrollLeft;
+      const slideWidth = container.clientWidth;
+      return Math.round(scrollLeft / slideWidth);
+    }
+    
+    // Función para actualizar dots
+    function updateDots() {
+      const current = getCurrentSlide();
+      dots.forEach((dot, index) => {
+        if(index === current) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    // Scroll al hacer scroll táctil / trackpad
+    container.addEventListener('scroll', () => {
+      window.requestAnimationFrame(updateDots);
+    });
+
+    // Función para mover el scroll al slide N de manera circular
+    function goToSlide(n) {
+      if(n >= totalSlides) n = 0;
+      if(n < 0) n = totalSlides - 1;
+      const slideWidth = container.clientWidth;
+      container.scrollTo({
+        left: n * slideWidth,
+        behavior: 'smooth'
+      });
+    }
+
+    // Eventos a botones Prev/Next
+    nextBtn.addEventListener('click', () => {
+      goToSlide(getCurrentSlide() + 1);
+    });
+    
+    prevBtn.addEventListener('click', () => {
+      goToSlide(getCurrentSlide() - 1);
+    });
+
+    // Eventos a los dots
+    dots.forEach((dot) => {
+      dot.addEventListener('click', (e) => {
+        const index = parseInt(e.target.getAttribute('data-index'));
+        goToSlide(index);
+      });
+    });
+  });
+</script>
 {% endblock %}

@@ -55,6 +55,26 @@
     }
   }
 
+  // Desvanecer notificaciones automáticas (como reservas exitosas o cancelaciones)
+  const autoHideToasts = document.querySelectorAll(
+    '.flash-messages__item:not(.flash-messages__item--error)'
+  );
+  
+  autoHideToasts.forEach((toast) => {
+    // Retrasar 4 segundos y comenzar la animación de fade-out
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      
+      // Removerlo del DOM completamente después de que termine la animación
+      setTimeout(() => {
+        toast.remove();
+        // Si la lista queda vacía, la eliminamos también
+        const list = document.querySelector('.flash-messages');
+        if (list && list.children.length === 0) list.remove();
+      }, 400); // 400ms empata con el tiempo en CSS (transition: opacity 0.4s)
+    }, 4000);
+  });
+
   const authDialog = document.getElementById('auth-required-dialog');
   if (authDialog) {
     const close = document.getElementById('auth-required-close');

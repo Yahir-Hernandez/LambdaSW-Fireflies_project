@@ -13,7 +13,7 @@
   --border: rgba(255, 255, 255, 0.08)
   --glow: rgba(8, 16, 28, 1);
   --glow-sm: rgba(8, 16, 28, 1);
-  --font-display: 'Cinzel', serif;
+  --font-display: 'Sora', serif;
   --font-title: 'Sora', sans-serif;
   --font-body: 'Inter', sans-serif;
   --radius: 12px;
@@ -100,11 +100,30 @@ ul { list-style: none; }
   display: flex;
   gap: 50px;
 }
+
+.nav__links li {
+  display: block; /* Quitamos flex del ul para que 'a' ocupe todo el li */
+  border-radius: 20px;
+  transition: background 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+}
+
+.nav__links li:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .nav__links a {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Separar texto de icono */
+  padding: 8px 16px;
+  width: 100%;
+  box-sizing: border-box;
   font-size: .85rem;
   color: var(--text-dim);
   transition: color .2s;
   font-weight: 500;
+  text-decoration: none;
 }
 
 .nav__links i {
@@ -130,23 +149,16 @@ ul { list-style: none; }
 
 .nav__links li.active a,
 .nav__links li.active i {
-  color: var(--accent) !important;
+  color: var(--bg-deep) !important;
 }
 
 .nav__links li.active {
   position: relative;
+  background: var(--accent);
+  box-shadow: 0 4px 15px rgba(200, 255, 0, 0.2);
+  transform: translateY(-1px);
 }
 
-.nav__links li.active::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: var(--accent);
-  border-radius: 1px;
-}
 .nav__auth { display: flex; gap: 10px; }
 .nav__dock {
   flex: 1;
@@ -268,20 +280,27 @@ ul { list-style: none; }
 }
 .nav-sidebar .nav__links {
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   align-items: flex-start;
 }
 .nav-sidebar .nav__links li {
   width: 100%;
+  padding: 0; /* Padding movido al tag <a> */
+  border-radius: 12px;
 }
 .nav-sidebar .nav__links a {
+  padding: 12px 20px; /* Padding trasladado de li */
   font-size: 1.1rem;
   font-weight: bolder;
+  margin-left: 0; /* Elimina separación extra, el gap se encarga */
 }
 .nav-sidebar__auth {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  margin-top: auto; /* Lo empuja hacia abajo si hay espacio */
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .user-welcome {
@@ -894,7 +913,14 @@ ul { list-style: none; }
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
+
+.flash-messages__item.fade-out {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
 .flash-messages__item--success {
   border-color: rgba(76, 175, 80, 0.45);
   color: #b6e7b9;

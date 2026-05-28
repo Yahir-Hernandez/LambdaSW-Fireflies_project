@@ -171,9 +171,15 @@
 			</div>
 			<div class="nav-sidebar__links">
 				<ul class="nav__links">
-					<li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" ><i class="fa-solid fa-house"></i> <a href="{% url 'sistema_app:home' %}"  >Inicio</a></li>
-					<li class="park_link {% if request.resolver_match.url_name == 'mapa' %}active{% endif %}"><i class="fa-solid fa-location-dot"></i> <a href="{% url 'sistema_app:mapa' %}" >Mapa de parques</a></li>
-					<li class="party_link {% if request.resolver_match.url_name == 'festival' %}active{% endif %}"><i class="fa-solid fa-circle-info"></i>  <a href="{{ festival_url }}" >El Festival</a></li>
+					<li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" >
+						<a href="{% url 'sistema_app:home' %}"><i class="fa-solid fa-house"></i> <span>Inicio</span></a>
+					</li>
+					<li class="park_link {% if request.resolver_match.url_name == 'mapa' %}active{% endif %}">
+						<a href="{% url 'sistema_app:mapa' %}"><i class="fa-solid fa-location-dot"></i> <span>Mapa de parques</span></a>
+					</li>
+					<li class="party_link {% if request.resolver_match.url_name == 'festival' %}active{% endif %}">
+						<a href="{{ festival_url }}"><i class="fa-solid fa-circle-info"></i> <span>El Festival</span></a>
+					</li>
 				</ul>
 			</div>
 			<div class="nav-sidebar__auth">
@@ -263,9 +269,9 @@
 			<div class="footer__contact">
 				<h4>Contacto</h4>
 				<ul>
-					<li>correo</li>
-					<li>número</li>
-					<li>ubicacion</li>
+					<li>lambdasoftworks@gmail.com</li>
+					<li>+52 55 1234 5678</li>
+					<li>Av. Universidad, Ciudad de México, México</li>
 				</ul>
 			</div>
 		</div>

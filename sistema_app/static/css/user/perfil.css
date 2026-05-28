@@ -6,6 +6,7 @@
   display: block;
   padding-top: 0;
   background: var(--bg-deep);
+  overflow: hidden; /* Evita que haya scroll global en pantallas grandes */
 }
 
 .hero.profile-page .hero__stars,
@@ -16,12 +17,12 @@
 /* Contenedor principal del perfil */
 .profile-container {
   width: 90%;
-  /*max-width: 1400px;*/
-  margin: 100px auto 40px;
+  margin: 90px auto 20px;
   padding: 0 16px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) ;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: calc(100vh - 110px);
 }
 
 /* Header del perfil */
@@ -97,29 +98,33 @@
 
 /* Contenido del perfil */
 .profile-content {
-  margin-bottom: 40px;
   display: grid;
   grid-template-columns: minmax(0, 0.35fr) minmax(0, 1.55fr);
-  gap: 10px;
+  gap: 20px;
   align-items: stretch;
-  
+  flex: 1; /* Ocupa el espacio restante del container */
+  min-height: 0; /* Crucial para permitir scrolls internos y no empujar su papá flex */
 }
 
 .profile-section {
-  margin-bottom: 40px;
   padding: 25px;
   background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border);
-  height: 95%;
   min-width: 0;
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Scroll interno en caso de tarjetas muy largas o pantallas no tan altas */
+  margin-bottom: 0;
 }
 
 .profile-section--info {
   max-width: 420px;
   justify-self: start;
   padding: 28px 22px;
+  height: auto; /* Se acomoda a sí misma */
 }
 
 .profile-info-card {
@@ -328,9 +333,10 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: min(60vh, 520px);
+  flex: 1; /* Ocupa todo el espacio de la .profile-section en desktop */
   overflow-y: auto;
   padding-right: 6px;
+  max-height: none;
 }
 
 .reservation-card {
@@ -552,21 +558,38 @@
   display: flex;
   justify-content: center;
   gap: 20px;
-  padding-top: 30px;
-  border-top: 1px solid var(--border);
-  grid-column: 1 / -1;
+  padding-top: 10px;
 }
 
 /* Responsive */
 @media (max-width: 1024px) {
+  .hero.profile-page {
+    overflow: auto; /* Permite scroll global en pantallas menores */
+  }
+
   .profile-container {
     width: min(98vw, 1200px);
+    height: auto;
+    min-height: calc(100vh - 140px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 20px;
   }
 
   .profile-content {
     grid-template-columns: 1fr 2fr;
     gap: 20px;
+    flex: none;
+    height: auto;
+  }
+
+  .profile-section {
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .reservations-list {
+    max-height: min(60vh, 520px);
   }
 
   .profile-section--info {

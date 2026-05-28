@@ -26,7 +26,7 @@ function initMap() {
     
     map = L.map('map').setView([centerLat, centerLng], zoom);
     
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(map);
     
@@ -140,8 +140,13 @@ function showParkInfo(parque) {
     // Calcular porcentaje de disponibilidad
     const availabilityPercent = (parque.disponibilidad_actual / parque.maximo_visitantes) * 100;
     
+    // Obtener imagen aleatoria 1 a 12
+    const randomImgNumber = Math.floor(Math.random() * 12) + 1;
+    const headerImageUrl = parkIconUrl.replace('luciernaga.png', `forests/forest_${randomImgNumber}.jpg`);
+    
     parkInfo.innerHTML = `
         <div class="park-details">
+            <div class="park-header-img" style="background-image: url('${headerImageUrl}');"></div>
             <div class="park-header">
                 <h3>${parque.nombre}</h3>
                 <div class="park-availability">

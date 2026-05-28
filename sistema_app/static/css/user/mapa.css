@@ -54,76 +54,81 @@
 
 /* Responsive styles */
 @media (max-width: 1024px) {
+  .hero.map-page {
+    overflow: auto; /* Permite scroll global en toda la página para el móvil */
+  }
+
   .map-container {
     flex-direction: column;
-    height: calc(100vh - 80px);
+    height: auto; /* Cambia de altura fija a adaptable */
+    min-height: calc(100vh - 80px);
     gap: 8px;
     padding: 0 8px;
-  }
-  
-  .park-list,
-  .park-info,
-  #map {
-    width: 100%;
-    height: 33.33%;
-    min-height: 200px;
+    padding-bottom: 20px; /* Margen inferior para que no quede pegado al final */
   }
   
   .park-list {
-    border-radius: 10px 10px 0 0;
-    order: 1;
+    display: none; /* Oculta la lista de parques en móviles */
   }
-  
+
   .park-info {
-    border-radius: 0;
-    order: 3;
+    width: 100%;
+    height: auto; /* Se expande por completo para mostrar todo su contenido */
+    overflow-y: visible; /* Elimina la necesidad de hacer scroll interno */
+    border-radius: 0 0 10px 10px;
+    order: 2; /* Info del parque abajo del mapa */
   }
   
   #map {
-    border-radius: 0 0 10px 10px;
-    order: 2;
+    width: 100%;
+    height: 55vh; /* El mapa ocupa poco más de la mitad de la pantalla visible */
+    min-height: 350px;
+    border-radius: 10px 10px 0 0;
+    order: 1; /* Mapa en la parte superior */
   }
 }
 
 @media (max-width: 768px) {
   .map-container {
-    height: calc(100vh - 100px);
     margin-top: 100px;
     gap: 6px;
     padding: 0 6px;
+    padding-bottom: 20px;
   }
   
   .park-list,
   .park-info {
-    padding: 8px;
-    font-size: 0.9rem;
+    padding: 15px;
+    font-size: 0.95rem;
   }
   
-  .park-list,
-  .park-info,
   #map {
-    min-height: 180px;
+    min-height: 300px;
+    height: 50vh;
   }
 }
 
 @media (max-width: 480px) {
   .map-container {
-    height: calc(100vh - 120px);
     margin-top: 120px;
     gap: 4px;
     padding: 0 4px;
+    padding-bottom: 20px;
   }
   
+  .park-header-img {
+    height: 130px; /* Imagen un poco más compacta en celulares muy pequeños */
+  }
+
   .park-list,
   .park-info {
-    padding: 6px;
-    font-size: 0.85rem;
+    padding: 15px;
+    font-size: 0.9rem;
   }
   
-  .park-list,
-  .park-info,
   #map {
-    min-height: 150px;
+    min-height: 250px;
+    height: 45vh;
   }
 }
 
@@ -616,6 +621,17 @@
 /* Estilos para información detallada del parque */
 .park-details {
     padding: 16px;
+    padding-top: 5px; /* Reducimos el padding superior para acercar la imagen al borde */
+}
+
+.park-header-img {
+    width: 100%;
+    height: 180px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .park-header {

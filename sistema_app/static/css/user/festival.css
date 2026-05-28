@@ -1,15 +1,112 @@
 /* Estilos para la página del Festival */
-.festival-page {
-  padding: 80px 20px;
+.festival-carousel-wrapper {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 80px); /* 80px asumiendo un navbar aproximado */
+  min-height: 600px;
+  overflow: hidden;
   color: var(--text-dim, #ccc);
+}
+
+.festival-scroll-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.festival-scroll-container::-webkit-scrollbar {
+  display: none; /* Safari/Chrome */
+}
+
+.festival-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 60px 20px; /* Más padding arriba y abajo para pantallas chicas */
+  overflow-y: auto; /* Permite scroll vertical interno si el contenido es muy alto */
+}
+
+/* Opcional: ajustar padding en escritorio si es necesario, pero centrado vertical suele bastar */
+@media (min-width: 900px) {
+  .festival-slide {
+    padding: 20px;
+  }
+}
+
+.festival-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.festival-nav:hover {
+  background: var(--accentHover); /* usando var(--accent) con alfa */
+  transform: translateY(-50%) scale(1.05);
+}
+
+.btn-prev { left: 20px; }
+.btn-next { right: 20px; }
+
+.festival-dots {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+
+.festival-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.festival-dot.active {
+  background: var(--accent, #c8ff00);
+}
+
+/* Ocultar las flechas en móviles / dar prioridad a táctil */
+@media (max-width: 900px) {
+  .festival-nav {
+    display: none;
+  }
 }
 
 .festival-header {
   text-align: center;
-  margin-bottom: 60px;
-  padding: 60px 20px;
+  padding: 40px 20px;
   background: radial-gradient(ellipse at center, rgba(200, 255, 0, 0.08), transparent 70%);
   border-radius: 16px;
+  max-width: 800px;
+  width: 100%;
 }
 
 .festival-main-logo {
@@ -17,13 +114,6 @@
   width: clamp(250px, 60vw, 550px);
   height: auto;
   margin-bottom: 24px;
-}
-
-.festival-header h1 {
-  font-family: var(--font-title, sans-serif);
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  color: #fff;
-  margin-bottom: 16px;
 }
 
 .festival-header p {
@@ -36,9 +126,10 @@
 .festival-section {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 32px;
+  gap: 20px;
   align-items: center;
-  margin-bottom: 80px;
+  max-width: 1100px;
+  width: 100%;
 }
 
 @media (min-width: 900px) {
@@ -76,8 +167,14 @@
   height: auto;
   display: block;
   object-fit: cover;
-  aspect-ratio: 4/3;
+  aspect-ratio: 16/9; /* Un poco menos alta para dar más espacio al texto en móvil */
   transition: transform 0.5s ease;
+}
+
+@media (min-width: 900px) {
+  .festival-image-wrapper img {
+    aspect-ratio: 4/3;
+  }
 }
 
 .festival-image-wrapper:hover img {
