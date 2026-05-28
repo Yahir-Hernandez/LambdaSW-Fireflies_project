@@ -1,4 +1,4 @@
-"""Validación de capacidad al editar un Lodging existente."""
+"""Valida la capacidad de un hospedaje cuando el administrador lo edita."""
 from __future__ import annotations
 
 from django.core.exceptions import ValidationError
@@ -8,13 +8,29 @@ from ..models import Lodging, Reservation
 
 
 class LodgingCapacityValidator:
-    """Verifica que reducir la capacidad de un Lodging no viole reservas
-    ACTIVE futuras existentes. Las reservas PAST/USED/CANCELLED se ignoran
-    porque ya no pueden verse afectadas por el cambio.
+    """Protege las reservas activas cuando un administrador reduce la capacidad.
+
+    Solo se consideran reservas activas con fecha futura. Las reservas
+    pasadas, usadas y canceladas se ignoran porque ya no pueden verse
+    afectadas por el cambio de capacidad.
     """
 
     @classmethod
     def validate_capacity_reduction(cls, lodging: Lodging, new_capacity: int) -> None:
+        """
+        Bloquea reducciones de capacidad incompatibles con reservas existentes.
+
+        Args:
+            lodging: Hospedaje que se está editando. Debe estar guardado.
+            new_capacity: Nuevo valor de capacidad que el administrador
+                intenta aplicar.
+
+        Raises:
+            ValidationError: Si al bajar a la nueva capacidad alguna
+                reserva activa futura quedara con más personas de las
+                permitidas (en cabañas) o si el pico de personas
+                concurrentes superara la nueva capacidad (en parcelas).
+        """
         if lodging.pk is None:
             return
         try:
@@ -39,6 +55,7 @@ class LodgingCapacityValidator:
 
     @staticmethod
     def _validate_cabin(qs, new_capacity: int) -> None:
+        """Falla si alguna reserva de la cabaña tiene más personas que la nueva capacidad."""
         offending = (
             qs.filter(people__gt=new_capacity).order_by("start_date").first()
         )
@@ -54,13 +71,14 @@ class LodgingCapacityValidator:
 
     @staticmethod
     def _validate_camping(qs, new_capacity: int) -> None:
-        # Sweep-line. end_date es exclusivo (el día de check-out libera la
-        # plaza), así que los eventos "end" se procesan ANTES que los "start"
-        # del mismo día para no contar doble.
+        """Falla si el pico de personas concurrentes en la parcela supera la nueva capacidad."""
+        # Algoritmo de barrido. La fecha de término es exclusiva, así que
+        # los eventos de salida del día se procesan antes que los de
+        # entrada para no contar doble.
         events: list[tuple] = []
         for r in qs.values("start_date", "end_date", "people"):
-            events.append((r["start_date"], 1, r["people"]))   # start
-            events.append((r["end_date"], 0, -r["people"]))    # end (orden 0 va antes)
+            events.append((r["start_date"], 1, r["people"]))
+            events.append((r["end_date"], 0, -r["people"]))
         events.sort(key=lambda e: (e[0], e[1]))
 
         current = peak = 0

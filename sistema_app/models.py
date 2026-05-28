@@ -1,3 +1,5 @@
+"""Modelos del dominio del festival: parques, hospedajes, reservas y seguridad."""
+
 import uuid
 from datetime import timedelta
 
@@ -8,8 +10,11 @@ from django.utils import timezone
 
 
 class Service(models.Model):
-    """Catálogo global cuyos elementos pueden
-     ser asociados a un parque con una relación n:m"""
+    """Servicio del catálogo que puede asociarse a varios parques.
+
+    Cada servicio existe una sola vez y los parques lo enlazan mediante
+    una relación de muchos a muchos.
+    """
 
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
@@ -24,17 +29,20 @@ class Service(models.Model):
 
 
 class ParkQuerySet(models.QuerySet):
-    """
-    Retorna todos los parques activos actualmente.
-    """
+    """Conjunto de consultas personalizadas para el modelo Park."""
+
     def active(self):
+        """Devuelve únicamente los parques que no han sido eliminados."""
         return self.filter(is_deleted=False)
 
 
 class Park(models.Model):
+    """Parque del festival con su ubicación, contacto y servicios disponibles.
+
+    Los parques se borran de forma lógica con soft_delete para no romper
+    la integridad de las reservas asociadas.
     """
-    Modelo que representa a un parque con todos sus atributos.
-    """
+
     name = models.CharField(max_length=200, unique=True)
     address = models.CharField(max_length=300)
     description = models.TextField(blank=True)
@@ -57,6 +65,12 @@ class Park(models.Model):
         verbose_name_plural = "Parques"
 
     def soft_delete(self):
+        """
+        Marca el parque como eliminado sin borrarlo de la base de datos.
+
+        Raises:
+            ValidationError: Si el parque tiene reservaciones activas.
+        """
         if self.reservations.filter(status=Reservation.Status.ACTIVE).exists():
             raise ValidationError(
                 "No se puede eliminar un parque con reservaciones activas."
@@ -66,16 +80,19 @@ class Park(models.Model):
             self.save(update_fields=["is_deleted"])
 
     def restore(self):
+        """Reactiva un parque previamente marcado como eliminado."""
         if self.is_deleted:
             self.is_deleted = False
             self.save(update_fields=["is_deleted"])
 
     @property
     def has_cabins(self) -> bool:
+        """Indica si el parque tiene al menos una cabaña registrada."""
         return self.lodgings.filter(kind=Lodging.Kind.CABIN).exists()
 
     @property
     def camping_capacity(self) -> int:
+        """Devuelve la suma de la capacidad de todas las parcelas de camping del parque."""
         total = self.lodgings.filter(kind=Lodging.Kind.CAMPING).aggregate(
             total=models.Sum("capacity")
         )["total"]
@@ -86,7 +103,12 @@ class Park(models.Model):
 
 
 class Lodging(models.Model):
-    """Unidad de hospedaje reservable. Una cabaña o una parcela de camping."""
+    """Unidad de hospedaje reservable dentro de un parque.
+
+    Puede ser una cabaña, que es de uso exclusivo, o una parcela de
+    camping, que se comparte entre varias reservas mientras la suma de
+    personas no supere su capacidad.
+    """
 
     class Kind(models.TextChoices):
         CABIN = "CABIN", "Cabaña"
@@ -108,15 +130,15 @@ class Lodging(models.Model):
         return f"{self.park.name} · {self.get_kind_display()}: {self.name}"
 
     def clean(self):
+        """Valida que la capacidad no se reduzca por debajo de las reservas existentes."""
         super().clean()
         from .services.lodging_validation import LodgingCapacityValidator
         LodgingCapacityValidator.validate_capacity_reduction(self, self.capacity)
 
 
 class Reservation(models.Model):
-    """
-    Modelo que representa a una reservación de un cliente.
-    """
+    """Reservación realizada por un usuario sobre un hospedaje en un rango de fechas."""
+
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "Activa"
         CANCELLED = "CANCELLED", "Cancelada"
@@ -146,8 +168,8 @@ class Reservation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Token único usado para construir el QR de check-in.
-    # Se genera automáticamente y nunca cambia tras la creación.
+    # Identificador único usado para construir el código QR de check-in.
+    # Se genera al crear la reserva y no vuelve a cambiar.
     checkin_token = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
@@ -165,18 +187,19 @@ class Reservation(models.Model):
         ]
 
     def is_cancellable(self) -> bool:
+        """Indica si la reservación puede cancelarse desde el perfil del usuario."""
         return (
             self.status == self.Status.ACTIVE
             and self.start_date > timezone.localdate()
         )
 
     def mark_as_used(self) -> None:
-        """Marca la reserva como consumida tras un check-in exitoso.
+        """
+        Marca la reservación como consumida tras un check-in exitoso.
 
-        Raises
-        ------
-        ValidationError
-            Si la reserva no está ACTIVE (ya usada, cancelada o pasada).
+        Raises:
+            ValidationError: Si la reservación no está en estado activa
+                porque ya fue usada, cancelada o pasada.
         """
         if self.status != self.Status.ACTIVE:
             raise ValidationError(
@@ -191,21 +214,23 @@ class Reservation(models.Model):
 
 
 class PendingRegistration(models.Model):
-    """Registro de un usuario que aún NO ha verificado su correo.
+    """Registro temporal de un usuario que todavía no ha verificado su correo.
 
-    No existe en la tabla User hasta que el código se valida con éxito.
-    Esto evita squatting de usernames y polución de la BD con cuentas
-    inactivas.
+    El usuario real recién se crea en la tabla de usuarios cuando el
+    código de verificación se valida con éxito. Esto evita que alguien
+    reserve nombres de usuario sin completar el alta y mantiene la tabla
+    de usuarios libre de cuentas inactivas.
     """
 
-    EXPIRY_SECONDS = 300       # 5 minutos
-    RESEND_COOLDOWN_SECONDS = 120  # 2 minutos
+    EXPIRY_SECONDS = 300  # cinco minutos
+    RESEND_COOLDOWN_SECONDS = 120  # dos minutos
 
     username = models.CharField(max_length=150)
     email = models.EmailField()
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
-    password = models.CharField(max_length=128)  # ya hasheada
+    # Ya viene en formato hash, no en texto plano.
+    password = models.CharField(max_length=128)
     code = models.CharField(max_length=5)
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -214,21 +239,23 @@ class PendingRegistration(models.Model):
         verbose_name_plural = "Registros pendientes"
 
     def seconds_elapsed(self) -> int:
+        """Devuelve los segundos transcurridos desde que se inició el registro."""
         return int((timezone.now() - self.created_at).total_seconds())
 
     def is_expired(self) -> bool:
+        """Indica si el registro ya superó el tiempo máximo permitido."""
         return self.seconds_elapsed() > self.EXPIRY_SECONDS
 
     def seconds_until_resend(self) -> int:
+        """Devuelve cuántos segundos faltan para poder reenviar el código."""
         return max(0, self.RESEND_COOLDOWN_SECONDS - self.seconds_elapsed())
 
 
 class LoginAttempt(models.Model):
-    """Registro de intentos de login para implementar bloqueo tras N fallos.
-    """
+    """Bitácora de intentos de inicio de sesión para bloquear cuentas tras varios fallos."""
 
     MAX_FAILED_ATTEMPTS = 6
-    LOCKOUT_WINDOW_SECONDS = 900  # 15 minutos
+    LOCKOUT_WINDOW_SECONDS = 900  # quince minutos
 
     username = models.CharField(max_length=150, db_index=True)
     attempted_at = models.DateTimeField(default=timezone.now, db_index=True)
@@ -244,6 +271,16 @@ class LoginAttempt(models.Model):
 
     @classmethod
     def is_locked_out(cls, username: str) -> bool:
+        """
+        Indica si el usuario quedó bloqueado por demasiados intentos fallidos.
+
+        Args:
+            username: Nombre de usuario a consultar.
+
+        Returns:
+            True si el usuario acumuló al menos MAX_FAILED_ATTEMPTS
+            intentos fallidos dentro de la ventana de tiempo configurada.
+        """
         if not username:
             return False
         since = timezone.now() - timedelta(seconds=cls.LOCKOUT_WINDOW_SECONDS)
@@ -258,6 +295,7 @@ class LoginAttempt(models.Model):
 
     @classmethod
     def register(cls, username: str, success: bool) -> None:
+        """Guarda un intento de inicio de sesión asociado al nombre de usuario dado."""
         if username:
             cls.objects.create(username=username, success=success)
 

@@ -1,14 +1,13 @@
-"""Envío de correos transaccionales (HTML + texto plano).
+"""Envío de correos transaccionales del festival, en HTML y texto plano.
 
-El cuerpo de los correos vive en sistema_app/templates/emails/
-PARA EDITAR EL CUERPO DE LOS CORREOS EDITA LAS PLANTILLAS,
-NO ESTE ARCHIVO!!!!!
-Cualquier error de envío se loguea y se ignora.
+El cuerpo de los correos vive en sistema_app/templates/emails/. Para
+editar el texto que recibe el usuario hay que editar las plantillas, no
+este archivo. Cualquier error de envío se ignora silenciosamente y el
+método devuelve False.
 """
 
 from __future__ import annotations
 
-import logging
 from email.mime.image import MIMEImage
 from pathlib import Path
 
@@ -20,36 +19,36 @@ from django.urls import reverse
 from ..models import Reservation
 from ..utils import generate_qr_png
 
-logger = logging.getLogger(__name__)
 
-
-# Logo embebido en todos los correos.
+# Ruta del logo embebido en todos los correos.
 _LOGO_PATH = Path(__file__).resolve().parent.parent / "static" / "img" / "logo_b.png"
 
 
 def _read_logo_bytes() -> bytes:
-    """Lee el logo de luciérnaga del directorio static. Cached por proceso."""
+    """Devuelve los bytes del logo. El resultado queda en caché por proceso."""
     if not hasattr(_read_logo_bytes, "_cache"):
         try:
             _read_logo_bytes._cache = _LOGO_PATH.read_bytes()
         except OSError:
-            logger.warning("No se pudo leer el logo en %s.", _LOGO_PATH)
             _read_logo_bytes._cache = b""
     return _read_logo_bytes._cache
 
 
 class NotificationService:
-    """Envío de correos."""
+    """Servicio que envía los correos transaccionales del festival.
+
+    Cada método público devuelve True si el correo se entregó al servidor
+    de correo y False si hubo cualquier problema, incluyendo destinatario
+    vacío.
+    """
 
     DEFAULT_FROM = getattr(
         settings, "DEFAULT_FROM_EMAIL", "noreply@luciernagas2026.mx"
     )
 
-    # Helpers privados
-
     @classmethod
     def _build_reservation_context(cls, reservation: Reservation) -> dict:
-        """Contexto que las plantillas de reserva esperan."""
+        """Devuelve el diccionario de variables que usan las plantillas de reserva."""
         lodging = reservation.lodging
         return {
             "user_name": (
@@ -66,11 +65,12 @@ class NotificationService:
 
     @staticmethod
     def _build_inline_image(cid: str, png_bytes: bytes) -> MIMEImage:
-        """Construye un MIMEImage inline con Content-ID dado, sin filename.
+        """
+        Construye una imagen inline con el identificador de contenido indicado.
 
-        El filename intencionalmente se omite — con filename presente,
-        varios clientes (Gmail entre ellos) muestran la imagen como
-        descarga aunque el Content-Disposition diga inline.
+        El nombre de archivo se omite a propósito. Cuando está presente,
+        clientes como Gmail muestran la imagen como descarga aunque la
+        cabecera Content-Disposition diga que es inline.
         """
         img = MIMEImage(png_bytes, _subtype="png")
         img.add_header("Content-ID", f"<{cid}>")
@@ -86,20 +86,12 @@ class NotificationService:
         recipient: str,
         inline_images: list[tuple[str, bytes]] | None = None,
     ) -> bool:
-        """Construye y envía un email. Retorna False ante errores.
+        """
+        Construye y envía el correo. Devuelve False ante cualquier fallo.
 
-        Cuando hay HTML + imágenes inline, la estructura MIME resultante es::
-
-            multipart/related
-            ├── multipart/alternative
-            │   ├── text/plain
-            │   └── text/html
-            ├── image/png  Content-ID: <cid>  Content-Disposition: inline
-            └── ...
-
-        Esta jerarquía hace que Gmail/Outlook/Apple Mail rendericen las
-        imágenes dentro del cuerpo en vez de mostrarlas como descargas
-        al pie del correo.
+        Cuando hay versión HTML acompañada de imágenes inline, la
+        estructura del mensaje se cambia para que los clientes resuelvan
+        las imágenes dentro del cuerpo y no como adjuntos al pie.
         """
         if not recipient:
             return False
@@ -114,8 +106,6 @@ class NotificationService:
         if html_body:
             msg.attach_alternative(html_body, "text/html")
             if inline_images:
-                # Cambia el root multipart de "mixed" a "related" para que
-                # los CID resuelvan contra las imágenes adjuntadas abajo.
                 msg.mixed_subtype = "related"
                 for cid, png_bytes in inline_images:
                     if not png_bytes:
@@ -126,12 +116,11 @@ class NotificationService:
             msg.send(fail_silently=False)
             return True
         except Exception:
-            logger.exception("Fallo enviando correo a %s.", recipient)
             return False
 
     @classmethod
     def _send_to(cls, subject: str, body: str, recipient: str) -> bool:
-        """Backward-compat: envía un texto plano a un destinatario libre."""
+        """Envía un correo de solo texto plano a un destinatario arbitrario."""
         return cls._deliver(
             subject=subject,
             text_body=body,
@@ -139,20 +128,17 @@ class NotificationService:
             recipient=recipient,
         )
 
-    
+
     @classmethod
     def send_confirmation_email(cls, reservation: Reservation) -> bool:
-        """Confirma una reservación e incluye QR de check-in."""
+        """Envía la confirmación de una reservación junto con su código QR de entrada."""
         recipient = getattr(reservation.user, "email", "") or ""
         if not recipient:
-            logger.info(
-                "Reserva #%s sin email de destino; correo omitido.", reservation.pk
-            )
             return False
 
         ctx = cls._build_reservation_context(reservation)
 
-        # URL absoluta del endpoint de check-in 
+        # URL absoluta del endpoint de check-in.
         checkin_path = reverse(
             "admin:sistema_app_reservation_checkin_data",
             args=[reservation.checkin_token],
@@ -177,12 +163,9 @@ class NotificationService:
 
     @classmethod
     def send_cancellation_email(cls, reservation: Reservation) -> bool:
-        """Notifica la cancelación de una reservación."""
+        """Envía el aviso de cancelación de la reservación al usuario."""
         recipient = getattr(reservation.user, "email", "") or ""
         if not recipient:
-            logger.info(
-                "Reserva #%s sin email de destino; correo omitido.", reservation.pk
-            )
             return False
 
         ctx = cls._build_reservation_context(reservation)
@@ -202,7 +185,7 @@ class NotificationService:
     def send_verification_email(
         cls, recipient_email: str, code: str, recipient_name: str = ""
     ) -> bool:
-        """Envía el código de 5 dígitos durante el alta de cuenta."""
+        """Envía el código de cinco dígitos para verificar la cuenta del usuario."""
         ctx = {"code": code, "name": recipient_name}
         ctx_html = {**ctx, "logo_cid": "logo"}
         text_body = render_to_string("emails/verification_code.txt", ctx)

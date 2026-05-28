@@ -1,3 +1,5 @@
+"""Vistas HTTP del sitio: páginas para el usuario y endpoints en JSON."""
+
 from datetime import date
 
 from django.contrib import messages
@@ -29,6 +31,7 @@ from .services import (
 
 
 def home(request):
+    """Renderiza la portada con los parques destacados y su disponibilidad actual."""
     parques = list(Park.objects.active().prefetch_related("lodgings"))
     today = date.today()
     for parque in parques:
@@ -60,10 +63,12 @@ def home(request):
 
 
 def festival(request):
+    """Renderiza la página informativa del festival."""
     return render(request, "festival.html")
 
 
 def _safe_next(request, fallback="sistema_app:home"):
+    """Devuelve una URL de redirección segura tomada de los parámetros de la solicitud."""
     next_url = request.POST.get("next") or request.GET.get("next")
     if next_url and url_has_allowed_host_and_scheme(
         next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
@@ -76,6 +81,7 @@ PENDING_REGISTRATION_KEY = "pending_registration_id"
 
 
 def _send_pending_code(pending: PendingRegistration) -> None:
+    """Envía por correo el código de verificación al usuario en proceso de registro."""
     NotificationService.send_verification_email(
         recipient_email=pending.email,
         code=pending.code,
@@ -84,15 +90,15 @@ def _send_pending_code(pending: PendingRegistration) -> None:
 
 
 def register(request):
+    """Procesa el formulario de registro y dispara el envío del código de verificación."""
     data = {"form": CustomUserCreationForm(), "next": request.GET.get("next", "")}
     if request.method == "POST":
         formulario = CustomUserCreationForm(data=request.POST)
         if formulario.is_valid():
             cleaned = formulario.cleaned_data
-            # Sólo limpiamos registros pendientes ya EXPIRADOS — los activos
-            # los rechaza el formulario (ver CustomUserCreationForm.clean_*).
-            # Esto permite que un usuario que perdió su código reintente tras
-            # los 5 min de expiración.
+            # Solo se eliminan los registros pendientes ya expirados. Los
+            # activos los rechaza el propio formulario, lo que permite a
+            # un usuario reintentar después de cinco minutos.
             from datetime import timedelta
             cutoff = timezone.now() - timedelta(
                 seconds=PendingRegistration.EXPIRY_SECONDS
@@ -117,6 +123,7 @@ def register(request):
 
 
 def _get_pending(request):
+    """Recupera el registro pendiente asociado a la sesión actual del usuario."""
     pending_id = request.session.get(PENDING_REGISTRATION_KEY)
     if not pending_id:
         return None
@@ -127,6 +134,7 @@ def _get_pending(request):
 
 
 def verify_email_page(request):
+    """Muestra la pantalla donde el usuario ingresa el código que recibió por correo."""
     pending = _get_pending(request)
     if not pending:
         return redirect("sistema_app:register")
@@ -142,6 +150,12 @@ def verify_email_page(request):
 
 @require_POST
 def verify_email_api(request):
+    """
+    Valida el código de verificación enviado por correo y crea la cuenta del usuario.
+
+    Devuelve un JSON con el resultado. Cuando el código es correcto, la
+    cuenta queda creada y el usuario inicia sesión automáticamente.
+    """
     pending = _get_pending(request)
     if not pending:
         return JsonResponse(
@@ -159,8 +173,8 @@ def verify_email_api(request):
     if pending.code != code:
         return JsonResponse({"error": "Código incorrecto."}, status=400)
 
-    # Defensa contra carreras: alguien pudo haber tomado el username/email
-    # entre el signup y la verificación.
+    # Defensa contra carreras: alguien pudo haber tomado el nombre de
+    # usuario o el correo entre el alta y la verificación.
     with transaction.atomic():
         if User.objects.filter(username__iexact=pending.username).exists():
             return JsonResponse({"error": "El nombre de usuario ya está tomado."}, status=409)
@@ -173,7 +187,8 @@ def verify_email_api(request):
             last_name=pending.last_name,
             is_active=True,
         )
-        user.password = pending.password  # ya hasheada
+        # La contraseña ya viene en formato hash desde el registro.
+        user.password = pending.password
         user.save()
         pending.delete()
 
@@ -184,6 +199,7 @@ def verify_email_api(request):
 
 @require_POST
 def resend_verification_code_api(request):
+    """Reenvía el código de verificación respetando el tiempo mínimo entre solicitudes."""
     pending = _get_pending(request)
     if not pending:
         return JsonResponse(
@@ -206,6 +222,7 @@ def resend_verification_code_api(request):
 
 
 def login(request):
+    """Procesa el inicio de sesión y aplica el bloqueo tras varios intentos fallidos."""
     data = {
         "form": AuthenticationForm(),
         "next": request.GET.get("next", ""),
@@ -236,11 +253,13 @@ def login(request):
 
 
 def logout_view(request):
+    """Cierra la sesión y devuelve al usuario a la portada."""
     logout(request)
     return redirect(to="sistema_app:home")
 
 
 def mapa(request):
+    """Renderiza el mapa con los parques activos y su disponibilidad actual."""
     parques = list(
         Park.objects.active().prefetch_related("services", "lodgings")
     )
@@ -262,6 +281,14 @@ def mapa(request):
 
 @login_required
 def perfil(request):
+    """
+    Muestra el perfil del usuario con sus reservas filtradas y ordenadas.
+
+    Antes de listar, marca como pasadas las reservas activas cuya fecha
+    de término ya quedó atrás. Las reservas canceladas no se muestran.
+    El panel principal muestra solo las activas y la pestaña de pasadas
+    muestra las usadas o vencidas.
+    """
     today = timezone.localdate()
     Reservation.objects.filter(
         user=request.user,
@@ -324,11 +351,13 @@ def perfil(request):
 
 @login_required
 def reservation_list(request):
+    """Redirige al perfil del usuario, que es el listado real de reservas."""
     return redirect("sistema_app:perfil")
 
 
 @login_required
 def reservation_create(request):
+    """Redirige al mapa con el parque preseleccionado para iniciar una reserva."""
     park_id = request.GET.get("park")
     target = resolve_url("sistema_app:mapa")
     if park_id and park_id.isdigit():
@@ -339,6 +368,7 @@ def reservation_create(request):
 @login_required
 @require_POST
 def crear_reserva(request):
+    """Crea una reservación tomando los datos del formulario del mapa."""
     lodging_id = request.POST.get("lodging_id")
     fecha_inicio = request.POST.get("fecha_inicio")
     fecha_termino = request.POST.get("fecha_termino")
@@ -372,6 +402,7 @@ def crear_reserva(request):
 @login_required
 @require_POST
 def reservation_cancel(request, pk):
+    """Cancela una reservación del usuario y muestra el resultado como mensaje flash."""
     reservation = get_object_or_404(Reservation, pk=pk)
     try:
         ReservationService.cancel_reservation(request.user, reservation)
@@ -382,7 +413,7 @@ def reservation_cancel(request, pk):
 
 
 def disponibilidad_api(request):
-    """Devuelve los Lodgings disponibles para un parque, tipo y rango de fechas."""
+    """Devuelve los hospedajes disponibles para un parque, tipo y rango de fechas."""
     park_id = request.GET.get("park_id")
     kind = (request.GET.get("kind") or "").upper()
     start = request.GET.get("start_date")

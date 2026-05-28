@@ -1,7 +1,4 @@
-"""Utilidades sin estado y sin dependencias de modelos.
-
-Helpers reutilizables desde cualquier capa.
-"""
+"""Funciones auxiliares sin estado que pueden usarse desde cualquier capa."""
 
 from __future__ import annotations
 
@@ -9,13 +6,20 @@ import secrets
 
 
 def generate_verification_code() -> str:
-    """Código numérico de 5 dígitos
-    """
+    """Devuelve un código numérico de cinco dígitos rellenado con ceros a la izquierda."""
     return f"{secrets.randbelow(100000):05d}"
 
 
 def mask_email(email: str) -> str:
-    """Censura la parte local de un email para mostrarla en UI.
+    """
+    Oculta la parte local del correo para mostrarlo en la interfaz.
+
+    Args:
+        email: Dirección de correo completa.
+
+    Returns:
+        Correo con la parte local enmascarada. Si el correo es muy corto
+        o no contiene arroba, se devuelve tal cual.
     """
     if not email or "@" not in email:
         return email or ""
@@ -26,7 +30,17 @@ def mask_email(email: str) -> str:
 
 
 def generate_qr_png(data: str, box_size: int = 10, border: int = 2) -> bytes:
-    """Genera un código QR como PNG en bytes en memoria."""
+    """
+    Devuelve un código QR con el contenido indicado, ya renderizado como PNG.
+
+    Args:
+        data: Texto o URL que se va a codificar.
+        box_size: Tamaño en píxeles de cada módulo del QR.
+        border: Cantidad de módulos en blanco alrededor del QR.
+
+    Returns:
+        Bytes del archivo PNG listos para guardar o enviar por correo.
+    """
     import io
     import qrcode
 

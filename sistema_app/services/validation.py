@@ -1,5 +1,4 @@
-"""Validación de reglas de negocio (RNB-01..04) sobre una posible reservación.
-"""
+"""Valida las reglas de negocio sobre los datos de una posible reservación."""
 
 from __future__ import annotations
 
@@ -8,29 +7,35 @@ from datetime import date, timedelta
 from django.core.exceptions import ValidationError
 from ..models import Lodging, Park
 
-# Constantes de las reglas de negocios
+# Constantes que definen la temporada del festival y los límites por reserva.
 SEASON_START: date = date(2026, 6, 1)
 SEASON_END: date = date(2026, 8, 31)
 MIN_PEOPLE: int = 1
 MAX_PEOPLE: int = 20
 TUESDAY: int = 1
 
-class ReservationValidator:
-    """Reglas RNB-01..04 sobre los datos de una posible reservación.
 
-    Sus métodos pueden invocarse individualmente
-    para chequeos parciales o en conjunto vía 'validate()'.
+class ReservationValidator:
+    """Aplica las cuatro reglas de negocio sobre una posible reservación.
+
+    Cada regla puede ejecutarse por separado o todas en bloque mediante el
+    método validate.
     """
 
     @classmethod
     def validate_date(cls, start_date: date, end_date: date) -> None:
-        """RNB-01: rango dentro de temporada y validación de end > start.
+        """
+        Valida que las fechas caigan dentro de la temporada del festival.
 
-        Raises
-        ------
-        ValidationError
-            Fechas faltantes, end <= start, start fuera de
-            temporada, o end excede el cierre + 1 día.
+        Args:
+            start_date: Día en que comienza la estancia.
+            end_date: Día en que termina la estancia.
+
+        Raises:
+            ValidationError: Si faltan fechas, si la fecha de término no es
+                posterior a la de inicio, si la fecha de inicio queda fuera
+                de la temporada, o si la fecha de término supera el cierre
+                del festival.
         """
         if start_date is None or end_date is None:
             raise ValidationError("Fechas faltantes.")
@@ -52,7 +57,7 @@ class ReservationValidator:
 
     @classmethod
     def validate_tuesday(cls, start_date: date) -> None:
-        """RNB-02: rechaza inicio en martes."""
+        """Rechaza una estancia que comienza un martes."""
         if start_date.weekday() == TUESDAY:
             raise ValidationError(
                 "No es posible iniciar una estancia un día martes."
@@ -60,7 +65,7 @@ class ReservationValidator:
 
     @classmethod
     def validate_people(cls, n_people: int) -> None:
-        """RNB-03: n personas deben de estar entre [MIN_PEOPLE, MAX_PEOPLE]."""
+        """Verifica que el número de personas esté dentro de los límites permitidos."""
         if n_people is None or n_people < MIN_PEOPLE:
             raise ValidationError(
                 f"Debe registrarse al menos {MIN_PEOPLE} persona."
@@ -72,7 +77,7 @@ class ReservationValidator:
 
     @classmethod
     def validate_lodging(cls, lodging: Lodging, park: Park, n_people: int) -> None:
-        """RNB-04: el hospedaje pertenece al parque y caben n personas."""
+        """Comprueba que el hospedaje pertenece al parque y que tiene capacidad suficiente."""
         if lodging.park_id != park.id:
             raise ValidationError("La opción seleccionada no pertenece a este parque.")
         if n_people > lodging.capacity:
@@ -89,7 +94,12 @@ class ReservationValidator:
         end_date: date,
         n_people: int,
     ) -> None:
-        """Aplica RNB-01..04 en orden"""
+        """
+        Aplica en orden las cuatro validaciones.
+
+        Raises:
+            ValidationError: Si alguna de las validaciones individuales falla.
+        """
         cls.validate_date(start_date, end_date)
         cls.validate_tuesday(start_date)
         cls.validate_people(n_people)

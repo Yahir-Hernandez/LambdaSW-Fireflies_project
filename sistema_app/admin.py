@@ -1,3 +1,5 @@
+"""Configuración del panel de administración de Django para el festival."""
+
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -24,6 +26,8 @@ from .utils import generate_qr_png
 
 
 class LodgingInline(admin.TabularInline):
+    """Permite editar los hospedajes de un parque desde la pantalla del propio parque."""
+
     model = Lodging
     extra = 0
     fields = ("kind", "name", "capacity", "description")
@@ -31,7 +35,7 @@ class LodgingInline(admin.TabularInline):
 
 @admin.register(Park)
 class ParkAdmin(admin.ModelAdmin):
-    """Gestión de parques con eliminación lógica (RF-09)."""
+    """Administración de parques con borrado lógico para preservar reservas."""
 
     list_display = (
         "name",
@@ -46,22 +50,26 @@ class ParkAdmin(admin.ModelAdmin):
     actions = ["soft_delete_selected", "restore_selected"]
 
     def get_queryset(self, request):
-        # Mostrar también los eliminados en el admin para poder restaurarlos.
+        """Incluye también los parques eliminados para poder restaurarlos."""
         return Park.objects.all()
 
     def delete_model(self, request, obj):
+        """Aplica borrado lógico cuando el administrador elimina un parque desde el detalle."""
         obj.soft_delete()
 
     def delete_queryset(self, request, queryset):
+        """Aplica borrado lógico a varios parques seleccionados desde el listado."""
         for park in queryset:
             park.soft_delete()
 
     @admin.display(description="Tiene cabañas", boolean=True)
     def has_cabins_display(self, obj):
+        """Columna del listado que indica si el parque tiene al menos una cabaña."""
         return obj.has_cabins
 
     @admin.action(description="Eliminar lógicamente los parques seleccionados")
     def soft_delete_selected(self, request, queryset):
+        """Acción masiva que marca como eliminados los parques seleccionados."""
         for park in queryset:
             park.soft_delete()
         self.message_user(
@@ -72,6 +80,7 @@ class ParkAdmin(admin.ModelAdmin):
 
     @admin.action(description="Restaurar los parques seleccionados")
     def restore_selected(self, request, queryset):
+        """Acción masiva que vuelve a habilitar los parques previamente eliminados."""
         for park in queryset:
             park.restore()
         self.message_user(
@@ -83,12 +92,16 @@ class ParkAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
+    """Administración del catálogo de servicios que se asocian a los parques."""
+
     list_display = ("name",)
     search_fields = ("name",)
 
 
 @admin.register(Lodging)
 class LodgingAdmin(admin.ModelAdmin):
+    """Administración de cabañas y parcelas de camping."""
+
     list_display = ("name", "park", "kind", "capacity")
     list_filter = ("kind", "park")
     search_fields = ("name", "park__name")
@@ -96,7 +109,13 @@ class LodgingAdmin(admin.ModelAdmin):
 
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
-    """Vista administrativa de reservaciones (RF-10)."""
+    """Administración de reservaciones.
+
+    Las reservaciones se crean siempre desde el frontend de los usuarios.
+    El panel solo permite cancelarlas, cambiar su estado y validarlas en
+    la entrada mediante el escaneo del QR. Los demás campos se muestran
+    como solo lectura para preservar las reglas de negocio.
+    """
 
     list_display = (
         "id",
@@ -126,25 +145,21 @@ class ReservationAdmin(admin.ModelAdmin):
     change_list_template = "admin/sistema_app/reservation/change_list.html"
 
     def has_add_permission(self, request):
-        # Las reservaciones se crean desde el frontend de los usuarios.
-        # Bloqueamos la creación manual desde admin para evitar saltar las
-        # validaciones de RNB y cupos que viven en ReservationService.
+        """Bloquea la creación manual desde el panel para no saltarse las validaciones."""
         return False
 
     def get_readonly_fields(self, request, obj=None):
-        # Solo `status` es editable; el resto se muestra como texto plano
-        # para preservar la integridad de las reglas de negocio.
+        """Solo deja editable el estado; el resto se muestra como texto plano."""
         return (
             "user", "park", "lodging",
             "start_date", "end_date", "people",
             "created_at", "checkin_token",
         )
 
-    # ------------------------------------------------------------------
-    # URLs custom para el flujo de check-in por QR
-    # ------------------------------------------------------------------
+    # URLs personalizadas para el flujo de check-in por código QR.
 
     def get_urls(self):
+        """Registra las rutas adicionales del scanner y del check-in por QR."""
         urls = super().get_urls()
         custom = [
             path(
@@ -172,14 +187,14 @@ class ReservationAdmin(admin.ModelAdmin):
 
     @admin.display(description="QR")
     def qr_link(self, obj):
-        """Link a ``qr.png`` para visualizar/imprimir el QR de la reserva."""
+        """Columna del listado con un enlace para ver o imprimir el QR de la reserva."""
         url = url_reverse(
             "admin:sistema_app_reservation_qr_png", args=[obj.pk]
         )
         return format_html('<a href="{}" target="_blank">Ver QR</a>', url)
 
     def scan_view(self, request):
-        """Página HTML con el scanner JS."""
+        """Muestra la página HTML con el scanner de códigos QR."""
         context = {
             **self.admin_site.each_context(request),
             "title": "Escanear QR de check-in",
@@ -188,7 +203,12 @@ class ReservationAdmin(admin.ModelAdmin):
 
     @method_decorator(require_GET)
     def checkin_data_view(self, request, token):
-        """JSON con los datos de una reserva. Consumido por admin_qr_scanner.js."""
+        """
+        Devuelve los datos de la reserva identificada por el token en formato JSON.
+
+        Lo consume el scanner del panel para mostrar el resumen de la
+        reservación antes de confirmar la entrada del visitante.
+        """
         try:
             reservation = (
                 Reservation.objects.select_related("user", "park", "lodging")
@@ -215,7 +235,7 @@ class ReservationAdmin(admin.ModelAdmin):
 
     @method_decorator(require_POST)
     def checkin_confirm_view(self, request, token):
-        """POST que transita la reserva a USED. Responde JSON."""
+        """Confirma el check-in y deja la reservación en estado usada."""
         try:
             reservation = Reservation.objects.get(checkin_token=token)
         except Reservation.DoesNotExist:
@@ -232,11 +252,12 @@ class ReservationAdmin(admin.ModelAdmin):
 
     @method_decorator(require_GET)
     def qr_png_view(self, request, pk):
-        """Devuelve el PNG del QR de check-in de una reservación.
+        """
+        Devuelve el código QR de la reservación como imagen PNG.
 
-        Útil para:
-        - Testing local sin tener que extraer el QR del correo en consola.
-        - Reimprimir el QR si el usuario perdió el correo.
+        Sirve para pruebas locales sin tener que extraer la imagen del
+        correo y también para reimprimir el QR si el usuario perdió el
+        correo original.
         """
         try:
             reservation = Reservation.objects.get(pk=pk)
@@ -253,14 +274,17 @@ class ReservationAdmin(admin.ModelAdmin):
 
     @admin.display(description="Correo")
     def user_email(self, obj):
+        """Columna del listado con el correo del usuario que hizo la reservación."""
         return obj.user.email
 
     @admin.display(description="Duración (días)")
     def duration_days(self, obj):
+        """Columna del listado con la cantidad de días que dura la reservación."""
         return (obj.end_date - obj.start_date).days
 
     @admin.action(description="Cancelar las reservaciones seleccionadas")
     def cancel_reservations(self, request, queryset):
+        """Acción masiva que cancela las reservaciones aplicando las reglas de negocio."""
         cancelled = 0
         errors = 0
         for reservation in queryset:
@@ -281,30 +305,30 @@ class ReservationAdmin(admin.ModelAdmin):
                 f"{errors} reservación(es) no pudieron cancelarse.",
                 level=messages.WARNING,
             )
-            
+
     @admin.action(description="Exportar reservaciones seleccionadas a PDF")
     def export_as_pdf(self, request, queryset):
-        """Generación de reporte en PDF con las reservaciones seleccionadas (CU-12)/1."""
+        """Genera un reporte en formato PDF con las reservaciones seleccionadas."""
 
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="reporte_reservaciones.pdf"'
-        
-        # Formato horizontal
+
+        # Documento en orientación horizontal.
         doc = SimpleDocTemplate(
-            response, 
+            response,
             pagesize=landscape(letter),
-            rightMargin=30, leftMargin=30, 
+            rightMargin=30, leftMargin=30,
             topMargin=30, bottomMargin=20
         )
         elements = []
 
-        # Definir estilos de texto
+        # Estilos del título y subtítulo del reporte.
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
             fontSize=18,
-            textColor=colors.HexColor("#2C3E50"), 
+            textColor=colors.HexColor("#2C3E50"),
             alignment=1,
             spaceAfter=10
         )
@@ -317,17 +341,16 @@ class ReservationAdmin(admin.ModelAdmin):
             spaceAfter=20
         )
 
-        # Agregar encabezados al documento
         elements.append(Paragraph("Reporte de Reservaciones", title_style))
         elements.append(Paragraph("Festival Internacional de las Luciérnagas 2026", subtitle_style))
 
-        # Preparar los datos de la tabla
+        # Datos de la tabla, con encabezado en la primera fila.
         data = [['ID', 'Cliente', 'Correo', 'Parque', 'Hospedaje', 'Inicio', 'Fin', 'Pax', 'Estado']]
 
         for obj in queryset:
             client = obj.user.get_full_name() or obj.user.username
             lodging = obj.lodging.name if obj.lodging else 'N/A'
-            
+
             data.append([
                 str(obj.id),
                 client,
@@ -341,8 +364,8 @@ class ReservationAdmin(admin.ModelAdmin):
             ])
 
         table = Table(data, repeatRows=1)
-        
-        # estilos visuales de la tabla
+
+        # Estilos visuales de la tabla.
         table_styles = TableStyle([
 
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#27AE60")),
@@ -351,65 +374,62 @@ class ReservationAdmin(admin.ModelAdmin):
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 11),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-            
+
             ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 9),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#BDC3C7")), 
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#BDC3C7")),
 
         ])
 
+        # Filas alternadas con color de fondo distinto.
         for i in range(1, len(data)):
             if i % 2 == 0:
-                table_styles.add('BACKGROUND', (0, i), (-1, i), colors.HexColor("#EAEDED")) 
+                table_styles.add('BACKGROUND', (0, i), (-1, i), colors.HexColor("#EAEDED"))
             else:
                 table_styles.add('BACKGROUND', (0, i), (-1, i), colors.white)
 
         table.setStyle(table_styles)
         elements.append(table)
-        
-        # Pie de página con la fecha de generación
+
+        # Pie de página con la fecha en que se generó el reporte.
         elements.append(Spacer(1, 0.2 * inch))
         date_style = ParagraphStyle('Date', parent=styles['Normal'], fontSize=8, textColor=colors.gray, alignment=2)
         fecha_actual = timezone.localtime(timezone.now()).strftime('%d/%m/%Y %H:%M')
         elements.append(Paragraph(f"Reporte generado el: {fecha_actual}", date_style))
 
-        # Construir el PDF
         doc.build(elements)
         return response
-        
-    
+
+
     @admin.action(description="Exportar reservaciones seleccionadas a Excel (XLSX)")
     def export_as_xlsx(self, request, queryset):
-        """Generación de archivo XLSX con las reservaciones seleccionadas (CU-12)/2."""
+        """Genera un archivo XLSX con las reservaciones seleccionadas."""
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename="reporte_reservaciones.xlsx"'
-        
-        # Crear el libro y la hoja de trabajo
+
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Reservaciones"
-        
-        # Eencabezados
+
         headers = ['ID', 'Cliente', 'Correo', 'Parque', 'Hospedaje', 'Inicio', 'Fin', 'Pax', 'Estado']
         ws.append(headers)
-        
-        # Estilo de los encabezados
+
+        # Estilo de los encabezados de la primera fila.
         fill = PatternFill(start_color="27AE60", end_color="27AE60", fill_type="solid")
         font = Font(color="FFFFFF", bold=True)
 
-        for celda in ws[1]: 
+        for celda in ws[1]:
             celda.fill = fill
             celda.font = font
             celda.alignment = Alignment(horizontal="center", vertical="center")
-            
-        # Agregar los datos
+
         for obj in queryset:
             client = obj.user.get_full_name() or obj.user.username
             lodging = obj.lodging.name if obj.lodging else 'N/A'
-            
+
             ws.append([
                 obj.id,
                 client,
@@ -421,12 +441,12 @@ class ReservationAdmin(admin.ModelAdmin):
                 obj.people,
                 obj.status
             ])
-            
-        # Ajustar el ancho de las columnas según el texto
+
+        # Ajustar el ancho de las columnas según el contenido más largo.
         for col in ws.columns:
             max_length = 0
-            columna_letra = col[0].column_letter 
-            
+            columna_letra = col[0].column_letter
+
             for celda in col:
                 try:
                     if len(str(celda.value)) > max_length:
@@ -435,7 +455,6 @@ class ReservationAdmin(admin.ModelAdmin):
                     pass
 
             ws.column_dimensions[columna_letra].width = max_length + 2
-            
-        # Guardar el archivo en la respuesta
+
         wb.save(response)
         return response
