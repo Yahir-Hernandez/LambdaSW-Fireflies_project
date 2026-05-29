@@ -1,0 +1,446 @@
+===========================================================================
+TUTORIAL: ARREGLAR LOS POPUPS Y ENLACES DE TERMINOS Y PRIVACIDAD
+===========================================================================
+
+Este documento explica, paso a paso y en lenguaje sencillo, que cambiar y
+como, para resolver los problemas reportados. Solo hay que abrir los archivos
+indicados, buscar el fragmento mencionado y reemplazarlo por el nuevo.
+
+
+PROBLEMAS QUE VAMOS A RESOLVER
+---------------------------------------------------------------------------
+1. Los popups (ventanas emergentes) de Terminos y Aviso de Privacidad no usan
+   la tipografia ni el estilo del resto del sitio.
+2. El boton "Entendido" no esta centrado dentro del popup.
+3. Los enlaces del footer "Aviso de privacidad" y "Terminos y condiciones" no
+   hacen nada al hacer clic, y los popups solo existen en la pagina de registro.
+4. Los correos que aparecen en los textos legales son ficticios; deben ser
+   lambdasoftworks@gmail.com.
+5. En el footer, los dos enlaces de abajo estan pegados; hay que separarlos.
+
+
+IDEA GENERAL DE LA SOLUCION
+---------------------------------------------------------------------------
+Hoy los popups y su codigo JavaScript viven "incrustados" dentro de la pagina
+de registro (sign_up.html), por eso solo funcionan ahi. La estrategia es:
+
+- Sacar el contenido de los popups a un archivo aparte (un "parcial") que se
+  pueda reutilizar en todas las paginas.
+- Sacar el JavaScript a un archivo aparte que se cargue en todo el sitio.
+- Incluir ese parcial y ese script tanto en la plantilla base (que comparten
+  todas las paginas) como en la de registro (que es independiente).
+- Conectar los enlaces del footer para que abran esos popups.
+- Mover y arreglar los estilos del popup para que usen la tipografia del sitio
+  y centren el boton.
+
+
+===========================================================================
+PASO 1 - CREAR EL PARCIAL CON LOS DOS POPUPS
+===========================================================================
+
+Archivo a crear: sistema_app/templates/partials/legal_modals.html
+(La carpeta "partials" no existe; hay que crearla dentro de "templates".)
+
+Este archivo contiene el HTML de los dos popups (Terminos y Privacidad), que
+hoy esta dentro de sign_up.html. Cambios respecto al original:
+
+- Los botones de cerrar usan el atributo "data-close-modal" (en vez de IDs como
+  close-terms-modal), para que un mismo codigo los maneje en cualquier pagina.
+- El correo del Aviso de Privacidad ahora es lambdasoftworks@gmail.com.
+- Se agrega una seccion de Contacto en Terminos, tambien con el correo correcto.
+
+Pegar exactamente este contenido en el archivo nuevo:
+
+---------------------------------------------------------------------------
+<!-- Modal Terminos y Condiciones -->
+<div class="tc-modal-overlay" id="terms-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-terms">
+	<div class="tc-modal">
+		<div class="tc-modal__header">
+			<h3 id="modal-title-terms">Terminos y Condiciones</h3>
+			<button class="tc-modal__close" data-close-modal aria-label="Cerrar">&times;</button>
+		</div>
+		<div class="tc-modal__body">
+			<p><strong>Ultima actualizacion:</strong> Mayo 2026</p>
+			<p>Bienvenido al sistema de reservaciones del <strong>Festival de Luciernagas</strong>. Al crear una cuenta aceptas los presentes Terminos y Condiciones.</p>
+			<h5>1. Datos personales</h5>
+			<p>Recopilamos tu nombre, correo electronico y contrasena para gestionar tu cuenta. Tus datos seran tratados conforme a la Ley Federal de Proteccion de Datos Personales en Posesion de los Particulares (LFPDPPP).</p>
+			<h5>2. Uso aceptable</h5>
+			<p>Te comprometes a no compartir tu cuenta, introducir informacion falsa ni utilizar el sistema para fines distintos a la reservacion de espacios en el festival.</p>
+			<h5>3. Reservaciones</h5>
+			<p>Cada reservacion queda sujeta a disponibilidad. El festival se reserva el derecho de cancelar reservaciones en caso de fuerza mayor o incumplimiento de estas condiciones.</p>
+			<h5>4. Cancelaciones</h5>
+			<p>Cancelaciones con mas de 72 horas de anticipacion seran procesadas segun la politica publicada en el sitio. Cancelaciones tardias pueden no ser elegibles para reembolso.</p>
+			<h5>5. Modificaciones</h5>
+			<p>Nos reservamos el derecho de actualizar estos Terminos en cualquier momento. Las modificaciones entraran en vigor al ser publicadas.</p>
+			<h5>6. Contacto</h5>
+			<p>Para dudas sobre estos Terminos escribe a: <em>lambdasoftworks@gmail.com</em></p>
+		</div>
+		<div class="tc-modal__footer">
+			<button class="btn btn-success tc-modal__accept">Entendido</button>
+		</div>
+	</div>
+</div>
+
+<!-- Modal Aviso de Privacidad -->
+<div class="tc-modal-overlay" id="privacy-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-privacy">
+	<div class="tc-modal">
+		<div class="tc-modal__header">
+			<h3 id="modal-title-privacy">Aviso de Privacidad</h3>
+			<button class="tc-modal__close" data-close-modal aria-label="Cerrar">&times;</button>
+		</div>
+		<div class="tc-modal__body">
+			<p><strong>Responsable:</strong> LambdaSW / Festival de Luciernagas</p>
+			<h5>Datos que recopilamos</h5>
+			<p>Nombre completo, nombre de usuario, correo electronico y contrasena (almacenada de forma cifrada).</p>
+			<h5>Finalidad</h5>
+			<p>Gestionar tu cuenta, procesar reservaciones y enviarte notificaciones relacionadas con el festival.</p>
+			<h5>Transferencia de datos</h5>
+			<p>No compartimos tus datos con terceros salvo obligacion legal o para prestar el servicio (p.ej. envio de correos de verificacion).</p>
+			<h5>Derechos ARCO</h5>
+			<p>Puedes ejercer tus derechos de Acceso, Rectificacion, Cancelacion u Oposicion escribiendo a: <em>lambdasoftworks@gmail.com</em></p>
+			<h5>Conservacion</h5>
+			<p>Conservamos tus datos mientras tu cuenta este activa y conforme lo exija la ley.</p>
+		</div>
+		<div class="tc-modal__footer">
+			<button class="btn btn-success tc-modal__accept">Entendido</button>
+		</div>
+	</div>
+</div>
+---------------------------------------------------------------------------
+
+Nota: si quieres conservar las 7 secciones mas detalladas del texto original,
+puedes copiarlas. Lo importante es que los popups vivan aqui y que los correos
+digan lambdasoftworks@gmail.com.
+
+
+===========================================================================
+PASO 2 - CREAR EL ARCHIVO JAVASCRIPT COMPARTIDO
+===========================================================================
+
+Archivo a crear: sistema_app/static/script/legal_modals.js
+
+Este codigo abre y cierra los popups en cualquier pagina. Funciona asi:
+
+- Cualquier boton o enlace con el atributo data-open-modal="terms-modal"
+  (o ="privacy-modal") abre ese popup.
+- Cualquier boton con data-close-modal cierra el popup que lo contiene.
+- El boton "Entendido" (.tc-modal__accept) cierra el popup y, SOLO si existe la
+  casilla de aceptar terminos (id_terms_accepted, que solo esta en el registro),
+  la marca como aceptada. Por eso no falla en otras paginas.
+- Tambien cierra al hacer clic fuera del popup o al presionar la tecla Escape.
+
+Pegar exactamente este contenido:
+
+---------------------------------------------------------------------------
+// Logica compartida de los modales legales (Terminos y Condiciones / Aviso de
+// Privacidad). Disponible en cualquier pagina que incluya partials/legal_modals.html
+// y enlaces/botones con [data-open-modal="<id-del-modal>"].
+(function () {
+	function openModal(id) {
+		const modal = document.getElementById(id);
+		if (modal) {
+			modal.classList.add('is-open');
+			document.body.style.overflow = 'hidden';
+		}
+	}
+
+	function closeModal(modal) {
+		if (modal) {
+			modal.classList.remove('is-open');
+			document.body.style.overflow = '';
+		}
+	}
+
+	// Abrir: cualquier elemento con data-open-modal
+	document.querySelectorAll('[data-open-modal]').forEach(function (trigger) {
+		trigger.addEventListener('click', function (e) {
+			e.preventDefault();
+			openModal(trigger.dataset.openModal);
+		});
+	});
+
+	// Cerrar: boton con data-close-modal
+	document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			closeModal(btn.closest('.tc-modal-overlay'));
+		});
+	});
+
+	// Aceptar ("Entendido"): marca la casilla de terminos si existe y cierra
+	document.querySelectorAll('.tc-modal__accept').forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			const checkbox = document.getElementById('id_terms_accepted');
+			if (checkbox) checkbox.checked = true;
+			closeModal(btn.closest('.tc-modal-overlay'));
+		});
+	});
+
+	// Cerrar al hacer click en el overlay
+	document.querySelectorAll('.tc-modal-overlay').forEach(function (overlay) {
+		overlay.addEventListener('click', function (e) {
+			if (e.target === overlay) closeModal(overlay);
+		});
+	});
+
+	// Cerrar con Escape
+	document.addEventListener('keydown', function (e) {
+		if (e.key === 'Escape') {
+			document.querySelectorAll('.tc-modal-overlay.is-open').forEach(closeModal);
+		}
+	});
+})();
+---------------------------------------------------------------------------
+
+
+===========================================================================
+PASO 3 - CONECTAR TODO EN LA PLANTILLA BASE (base.html)
+===========================================================================
+
+Archivo a editar: sistema_app/templates/base.html
+
+Esta plantilla la comparten home, mapa, festival y perfil, asi que aqui hacemos
+que los popups y los enlaces funcionen en todas esas paginas.
+
+Buscar, cerca del final del archivo (alrededor de las lineas 284-292):
+
+---------------------------------------------------------------------------
+			<div class="footer__bottom-links">
+				<a href="#">Aviso de privacidad</a>
+				<a href="#">Terminos y condiciones</a>
+			</div>
+		</div>
+	</footer>
+
+	<script src="{% static 'script/base.js' %}"></script>
+	{% block extra_js %}{% endblock %}
+---------------------------------------------------------------------------
+
+Reemplazar por (tres cambios: los enlaces ahora abren los popups, se INCLUYE el
+parcial y se CARGA el nuevo script):
+
+---------------------------------------------------------------------------
+			<div class="footer__bottom-links">
+				<a href="#" data-open-modal="privacy-modal">Aviso de privacidad</a>
+				<a href="#" data-open-modal="terms-modal">Terminos y condiciones</a>
+			</div>
+		</div>
+	</footer>
+
+	{% include "partials/legal_modals.html" %}
+
+	<script src="{% static 'script/base.js' %}"></script>
+	<script src="{% static 'script/legal_modals.js' %}"></script>
+	{% block extra_js %}{% endblock %}
+---------------------------------------------------------------------------
+
+
+===========================================================================
+PASO 4 - ACTUALIZAR LA PAGINA DE REGISTRO (sign_up.html)
+===========================================================================
+
+Archivo a editar: sistema_app/templates/registration/sign_up.html
+
+Esta pagina NO usa base.html (es independiente), por eso hay que ajustarla
+aparte. Son cuatro cambios.
+
+--- 4.1 Corregir el correo de la caja de texto (linea ~66) ---
+
+Buscar:
+   <p>Para dudas sobre estos Terminos escribe a: <em>soporte@festivalluciernagas.mx</em></p>
+
+Reemplazar por:
+   <p>Para dudas sobre estos Terminos escribe a: <em>lambdasoftworks@gmail.com</em></p>
+
+
+--- 4.2 Conectar los enlaces de la casilla con los popups (linea ~79) ---
+
+Buscar:
+   He leido y acepto los <button type="button" class="terms-link-btn" id="open-terms-modal">Terminos y Condiciones</button> y el <button type="button" class="terms-link-btn" id="open-privacy-modal">Aviso de Privacidad</button>
+
+Reemplazar por (cambiar los id="..." por data-open-modal="..."):
+   He leido y acepto los <button type="button" class="terms-link-btn" data-open-modal="terms-modal">Terminos y Condiciones</button> y el <button type="button" class="terms-link-btn" data-open-modal="privacy-modal">Aviso de Privacidad</button>
+
+
+--- 4.3 Quitar los popups incrustados y el JavaScript inline (lineas ~118 a ~236) ---
+
+Esta es la parte mas grande. Buscar el bloque que empieza con el comentario
+"<!-- Modal Terminos y Condiciones -->" (linea ~118) y que abarca los dos popups
+completos MAS todo el <script> inline que esta justo debajo, terminando justo
+antes de </body>. Es decir, todo esto:
+
+   - El <div class="tc-modal-overlay" id="terms-modal" ...> completo.
+   - El <div class="tc-modal-overlay" id="privacy-modal" ...> completo.
+   - El <script src="{% static 'script/luciernagas.js' %}"></script>.
+   - Todo el bloque <script> (function () { ... })(); </script> con la logica
+     de los modales.
+
+Borrar todo ese bloque y dejarlo asi (incluyendo el cierre </body> y </html>
+que ya estaban al final):
+
+---------------------------------------------------------------------------
+	{% include "partials/legal_modals.html" %}
+
+	<script src="{% static 'script/luciernagas.js' %}"></script>
+	<script src="{% static 'script/legal_modals.js' %}"></script>
+</body>
+</html>
+---------------------------------------------------------------------------
+
+En resumen: los popups ahora vienen del parcial ({% include %}) y la logica
+viene del archivo legal_modals.js. Ya no hay JavaScript de modales escrito a
+mano dentro de esta pagina.
+
+
+===========================================================================
+PASO 5 - ARREGLAR LOS ESTILOS DEL POPUP (TIPOGRAFIA Y BOTON CENTRADO)
+===========================================================================
+
+Archivos a editar:
+   sistema_app/static/css/user/registro.css
+   sistema_app/static/css/user/base.css
+
+POR QUE: los estilos del popup (.tc-modal...) estan hoy en registro.css, que
+SOLO se carga en la pagina de registro. Como ahora los popups aparecen en todo
+el sitio (y base.html solo carga base.css), hay que MOVER esos estilos a
+base.css. De paso, arreglamos la tipografia y el centrado.
+
+
+--- 5.1 Cortar los estilos de registro.css ---
+
+En registro.css, buscar el bloque que empieza con el comentario:
+   /* -- Modal T&C / Privacidad -- */
+
+y que abarca desde .tc-modal-overlay hasta .tc-modal__accept (incluye tambien
+@keyframes fadeIn). Va aproximadamente de la linea 334 a la 423. CORTAR todo ese
+bloque (se pega en base.css en el siguiente paso).
+
+IMPORTANTE: dejar en registro.css las reglas de .terms-scroll-box,
+.terms-check-row, .terms-checkbox, .terms-label, .terms-link-btn y .btn-success:
+esas son exclusivas del formulario de registro y se quedan.
+
+
+--- 5.2 Pegar y arreglar los estilos en base.css ---
+
+En base.css, pegar el bloque que se corto (un buen lugar es justo despues de las
+reglas de .auth-dialog, que son popups parecidos). Al pegarlo, aplicar TRES
+ajustes:
+
+1) Tipografia del titulo. Buscar dentro de lo pegado:
+
+   .tc-modal__header h3 {
+     font-family: 'DM Serif Display', serif;
+     ...
+   }
+
+   Cambiar la fuente por la del sitio:
+
+   .tc-modal__header h3 {
+     font-family: var(--font-title);
+     ...
+   }
+
+2) Tipografia del cuerpo. En la regla .tc-modal__body { ... }, agregar una linea
+   para usar la fuente de texto del sitio:
+
+   .tc-modal__body {
+     flex: 1;
+     overflow-y: auto;
+     padding: 20px 24px;
+     font-family: var(--font-body);   /* <- linea nueva */
+     font-size: 0.84rem;
+     color: var(--text-dim);
+     line-height: 1.7;
+   }
+
+3) Centrar el boton "Entendido". Buscar:
+
+   .tc-modal__footer {
+     padding: 16px 24px 20px;
+     border-top: 1px solid rgba(255,255,255,.1);
+     display: flex;
+     justify-content: flex-end;
+   }
+   .tc-modal__accept {
+     min-width: 130px;
+   }
+
+   Cambiarlo por (centra el contenido y deja el boton con ancho automatico para
+   que no se vea estirado):
+
+   .tc-modal__footer {
+     padding: 16px 24px 20px;
+     border-top: 1px solid rgba(255,255,255,.1);
+     display: flex;
+     justify-content: center;
+   }
+   .tc-modal__accept {
+     min-width: 130px;
+     width: auto;
+   }
+
+SOBRE LAS ANIMACIONES: el popup usa "animation: slideUp ..." y
+"animation: fadeIn ...". Asegurarse de que en base.css existan los
+@keyframes fadeIn y @keyframes slideUp. El @keyframes fadeIn viene incluido en
+el bloque que se movio. Si al moverlo base.css quedara con fadeIn duplicado,
+borrar uno de los dos (son identicos). Si NO existe @keyframes slideUp en
+base.css, agregarlo:
+
+   @keyframes slideUp {
+     from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+     to   { opacity: 1; transform: translateY(0) scale(1); }
+   }
+
+
+===========================================================================
+PASO 6 - SEPARAR LOS DOS ENLACES DEL FOOTER
+===========================================================================
+
+Archivo a editar: sistema_app/static/css/user/base.css
+
+Buscar esta regla (alrededor de la linea 877), donde los enlaces estan pegados
+porque el espacio entre ellos es 0px:
+
+   .footer__bottom-links {
+     display: flex;
+     gap: 0px;
+   }
+
+Reemplazarla dandole separacion:
+
+   .footer__bottom-links {
+     display: flex;
+     gap: 20px;
+   }
+
+
+===========================================================================
+COMO COMPROBAR QUE TODO QUEDO BIEN
+===========================================================================
+1. Arrancar el servidor: python manage.py runserver y abrir
+   http://localhost:8000/
+2. En el FOOTER (en home, mapa, festival, perfil): hacer clic en
+   "Aviso de privacidad" y en "Terminos y condiciones" -> deben abrirse los
+   popups, con la tipografia del sitio (Sora/Inter) y el boton "Entendido"
+   centrado.
+3. Cerrar los popups de varias formas: con la X, con "Entendido", haciendo clic
+   FUERA del popup y con la tecla Escape. Verificar que la pagina vuelve a poder
+   hacer scroll normal despues de cerrar.
+4. Ir a /register/: los enlaces de la casilla siguen abriendo los popups;
+   "Entendido" MARCA la casilla y cierra. Confirmar que aparece
+   lambdasoftworks@gmail.com (tanto en la caja de texto como en el popup de
+   privacidad).
+5. Revisar que los dos enlaces del footer TENGAN espacio entre ellos.
+6. (Opcional) Correr las pruebas que no usan navegador para confirmar que el
+   backend sigue intacto: pytest -m "not e2e". Estos cambios son solo de
+   frontend, asi que deberian seguir pasando.
+
+
+RESUMEN DE ARCHIVOS:
+- Nuevos:
+    sistema_app/templates/partials/legal_modals.html
+    sistema_app/static/script/legal_modals.js
+- Editados:
+    sistema_app/templates/base.html
+    sistema_app/templates/registration/sign_up.html
+    sistema_app/static/css/user/base.css
+    sistema_app/static/css/user/registro.css

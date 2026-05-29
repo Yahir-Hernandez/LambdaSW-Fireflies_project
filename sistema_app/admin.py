@@ -6,6 +6,8 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from django.conf import settings as dj_settings
 from django.http import HttpResponse, JsonResponse
 from django.contrib import admin, messages
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.shortcuts import render
 from django.urls import path, reverse as url_reverse
@@ -23,6 +25,26 @@ from django.utils import timezone
 from .models import Lodging, Park, Reservation, Service
 from .services import ReservationCheckinService, ReservationService
 from .utils import generate_qr_png
+
+
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    """Editar usuario: solo contraseña y permisos; el resto es solo-lectura.
+
+    El nombre de usuario, nombre, apellido, correo, último acceso y fecha de
+    alta se muestran como texto plano al editar. La contraseña sigue siendo
+    editable mediante el enlace estándar al formulario de cambio.
+    """
+
+    def get_readonly_fields(self, request, obj=None):
+        # En el alta (obj is None) no se bloquea nada para poder capturar el
+        # username y demás datos. La restricción aplica solo al editar.
+        if obj is None:
+            return ()
+        return ("username", "first_name", "last_name", "email", "last_login", "date_joined")
 
 
 class LodgingInline(admin.TabularInline):

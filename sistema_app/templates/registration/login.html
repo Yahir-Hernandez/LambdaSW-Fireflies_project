@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/user/base.css' %}" />
     <link rel="stylesheet" href="{% static 'css/user/registro.css' %}" />
   </head>
@@ -35,7 +36,7 @@
                   Tu cuenta ha sido bloqueada temporalmente tras múltiples intentos fallidos. Intenta de nuevo más tarde.
                 </div>
               {% endif %}
-              <form action="" method="post">
+              <form action="" method="post" data-loader>
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next }}" />
                 {{form | crispy}}
@@ -44,7 +45,7 @@
                 <br />
 
                 <div class="auth-form__actions">
-                  <a class="btn btn--ghost btn--sm auth-form__back" href="{% url 'sistema_app:home' %}">
+                  <a class="btn btn--ghost btn--sm auth-form__back" href="{% url 'sistema_app:home' %}" style="align-self: flex-start;">
                     <i class="fa-solid fa-arrow-left"></i> Volver al inicio
                   </a>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
@@ -77,5 +78,6 @@
       </div>
     </section>
     <script src="{% static 'script/luciernagas.js' %}"></script>
+    <script src="{% static 'script/loader.js' %}"></script>
   </body>
 </html>

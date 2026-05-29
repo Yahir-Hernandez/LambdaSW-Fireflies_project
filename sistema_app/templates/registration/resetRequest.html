@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{% static 'css/user/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/user/registro.css' %}">
 </head>
@@ -20,11 +21,11 @@
           <div class="card-body">
             <h2 class="auth-dialog__title">Recuperar contraseña</h2>
             <hr>
-            <p style="font-size:.9rem;color:var(--text-dim);margin-bottom:1.6rem;">
+            <p class="auth-form__intro">
               Ingresa el correo asociado a tu cuenta y te enviaremos un código de verificación.
             </p>
 
-            <form method="post" class="auth-form" style="display:flex;flex-direction:column;gap:18px;">
+            <form method="post" class="auth-form auth-form--stack" data-loader>
               {% csrf_token %}
               <div>
                 <label class="form-label" for="id_email">Correo electrónico</label>
@@ -50,20 +51,10 @@
         </div>
       </div>
 
-      <div class="auth-visual" aria-hidden="true">
-        <div class="hero__stars"></div>
-        <div class="hero__fireflies">
-          <span class="ff" style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%;"></span>
-          <span class="ff" style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%;"></span>
-          <span class="ff" style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%;"></span>
-          <span class="ff" style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%;"></span>
-          <span class="ff" style="--dx: 12px; --dy: -14px; --dur: 3.4s; left: 55%; top: 78%;"></span>
-          <span class="ff" style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%;"></span>
-        </div>
-        <img src="{% static 'img/logo_b.png' %}" alt="Logo del Festival" class="logo"/>
-      </div>
+      {% include "partials/auth_visual.html" %}
     </div>
   </section>
   <script src="{% static 'script/luciernagas.js' %}"></script>
+  <script src="{% static 'script/loader.js' %}"></script>
 </body>
 </html>

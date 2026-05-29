@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.utils import timezone
 
@@ -78,3 +78,24 @@ class CustomUserCreationForm(UserCreationForm):
                 "Verifica tu correo o espera unos minutos para reintentar."
             )
         return email
+
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    """Cambio de contraseña con sesión activa.
+
+    Hereda de ``PasswordChangeForm`` para reutilizar la verificación del
+    password actual, la coincidencia de las dos nuevas contraseñas y, sobre
+    todo, ``AUTH_PASSWORD_VALIDATORS`` (incluidos los validadores de
+    ``sistema_app.validators``). Solo añade la regla de que la nueva
+    contraseña debe ser distinta a la actual.
+    """
+
+    def clean_new_password1(self):
+        new_password1 = self.cleaned_data.get("new_password1")
+        old_password = self.cleaned_data.get("old_password")
+        if new_password1 and old_password and new_password1 == old_password:
+            raise forms.ValidationError(
+                "La nueva contraseña debe ser diferente a la actual.",
+                code="password_unchanged",
+            )
+        return new_password1

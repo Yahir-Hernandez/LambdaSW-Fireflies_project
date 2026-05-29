@@ -58,10 +58,10 @@
           <h2 class="section-title section-title--left section-title--system">Parques destacados</h2>
           <p class="section-sub section-sub--left">Disponibilidad en tiempo real y acceso directo al mapa</p>
         </div>
-        <a href="{% url 'sistema_app:mapa' %}" class="link-arrow">Consultalo en el mapa</a>
+        <a href="{% url 'sistema_app:mapa' %}" class="link-arrow">Ver todos en el mapa</a>
       </div>
       <div class="parques-highlight">
-        <div class="parques-highlight__media" aria-hidden="true" style="background: url('{% static 'img/home/oficial.jpg' %}') center/cover no-repeat;">
+        <div class="parques-highlight__media" aria-hidden="true" style="background: url('{% static 'img/forests/forest_4.jpg' %}') center/cover no-repeat;">
           <div class="parques-highlight__media-inner">
             <span class="parques-highlight__badge">Parques oficiales</span> 
           </div>
@@ -70,9 +70,11 @@
           <p class="parques-highlight__eyebrow">Hospedaje en parques oficiales</p>
           {% if featured_park %}
             <h3 class="parques-highlight__title">{{ featured_park.name }}</h3>
-            <p class="parques-highlight__desc">{{ featured_park.address }}</p>
+            <p class="parques-highlight__desc">  {{ featured_park.address }}</p>
             <p class="parques-highlight__desc">
-              Los {{ lodging_parks }} parques oficiales cuentan con zonas de camping. Disponibilidad actual:
+              Disfruta de la naturaleza en uno de nuestros parques oficiales.<br>
+
+              <i class="fa-solid fa-campground"></i> Disponibilidad actual:
               <strong>{{ featured_park.disponibilidad_actual }} lugares</strong>.
             </p>
           {% else %}
@@ -81,7 +83,7 @@
           {% endif %}
           <div class="parques-highlight__actions">
             <a href="{% url 'sistema_app:mapa' %}" class="btn btn--accent btn--sm">
-              <i class="fa-solid fa-location-dot"></i> Consultar parques
+              <i class="fa-solid fa-location-dot"></i> Consultar parque
             </a>
           </div>
         </div>
@@ -100,7 +102,7 @@
           </p>
           <div class="festival-card__actions">
             <a href="{% url 'sistema_app:festival' %}" class="btn btn--accent btn--sm">
-              <i class="fa-solid fa-tree"></i> Conoce más
+                <i class="fa-solid fa-seedling"></i> Conoce más
             </a>
           </div>
         </div>

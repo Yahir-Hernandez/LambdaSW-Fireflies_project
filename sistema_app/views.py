@@ -3,9 +3,14 @@
 from datetime import date
 
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login, logout
+from django.contrib.auth import (
+    authenticate,
+    login as auth_login,
+    logout,
+    update_session_auth_hash,
+)
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
@@ -19,7 +24,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from .forms import CustomUserCreationForm
+from .forms import CustomPasswordChangeForm, CustomUserCreationForm
 from .models import Lodging, LoginAttempt, Park, PendingRegistration, PasswordResetToken, Reservation
 from .services import (
     AvailabilityService,
@@ -478,7 +483,7 @@ def password_reset_request(request):
             request.session[PASSWORD_RESET_SESSION_KEY] = token.pk
         # Siempre redirigir para no revelar si el correo existe
         return redirect("sistema_app:password_reset_verify")
-    return render(request, "registration/password_reset_request.html")
+    return render(request, "registration/resetRequest.html")
 
 
 def password_reset_verify(request):
@@ -491,7 +496,7 @@ def password_reset_verify(request):
         request.session.pop(PASSWORD_RESET_SESSION_KEY, None)
         return redirect("sistema_app:password_reset_request")
     from .utils import mask_email
-    return render(request, "registration/password_reset_verify.html", {
+    return render(request, "registration/resetVerify.html", {
         "masked_email": mask_email(token.user.email),
         "resend_in": token.seconds_until_resend(),
     })
@@ -571,45 +576,32 @@ def password_reset_confirm(request):
         request.session.pop(PASSWORD_RESET_SESSION_KEY, None)
         return redirect("sistema_app:password_reset_request")
 
-    error = None
     if request.method == "POST":
-        p1 = request.POST.get("password1", "")
-        p2 = request.POST.get("password2", "")
+        form = SetPasswordForm(user=token.user, data=request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                form.save()  # set_password + save sobre token.user
 
-        if not p1:
-            error = "La contraseña no puede estar vacía."
-        elif p1 != p2:
-            error = "Las contraseñas no coinciden."
-        elif len(p1) < 8:
-            error = "La contraseña debe tener al menos 8 caracteres."
-        else:
-            try:
-                with transaction.atomic():
-                    user = token.user
-                    user.set_password(p1)          # ✅ forma correcta
-                    user.save(update_fields=["password"])
+                token.is_used = True
+                token.save(update_fields=["is_used"])
 
-                    token.is_used = True
-                    token.save(update_fields=["is_used"])
+                # Invalidar otros tokens pendientes del mismo usuario
+                PasswordResetToken.objects.filter(
+                    user=token.user, is_used=False
+                ).update(is_used=True)
 
-                    # Invalidar otros tokens pendientes del mismo usuario
-                    PasswordResetToken.objects.filter(
-                        user=user, is_used=False
-                    ).update(is_used=True)
+            # Limpiar sesión y redirigir
+            request.session.pop(PASSWORD_RESET_SESSION_KEY, None)
+            return redirect("sistema_app:password_reset_done")
+    else:
+        form = SetPasswordForm(user=token.user)
 
-                # Limpiar sesión y redirigir
-                request.session.pop(PASSWORD_RESET_SESSION_KEY, None)
-                return redirect("sistema_app:password_reset_done")
-            except Exception as e:
-                # Log del error para depuración (opcional)
-                error = "Ocurrió un error al cambiar la contraseña. Intenta de nuevo."
-
-    return render(request, "registration/password_reset_confirm.html", {"error": error})
+    return render(request, "registration/resetConfirm.html", {"form": form})
 
 
 def password_reset_done(request):
     """Pantalla de confirmación tras cambiar la contraseña exitosamente."""
-    return render(request, "registration/password_reset_done.html")
+    return render(request, "registration/resetDone.html")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -619,31 +611,15 @@ def password_reset_done(request):
 @login_required
 def password_change(request):
     """Permite al usuario autenticado cambiar su contraseña desde el perfil."""
-    error = None
-    success = False
     if request.method == "POST":
-        current = request.POST.get("current_password", "")
-        p1 = request.POST.get("password1", "")
-        p2 = request.POST.get("password2", "")
+        form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            # Mantiene la sesión activa tras el cambio de contraseña.
+            update_session_auth_hash(request, form.user)
+            messages.success(request, "Tu contraseña se actualizó correctamente.")
+            return redirect("sistema_app:perfil")
+    else:
+        form = CustomPasswordChangeForm(user=request.user)
 
-        if not request.user.check_password(current):
-            error = "La contraseña actual es incorrecta."
-        elif not p1:
-            error = "La nueva contraseña no puede estar vacía."
-        elif p1 != p2:
-            error = "Las contraseñas nuevas no coinciden."
-        elif len(p1) < 8:
-            error = "La contraseña debe tener al menos 8 caracteres."
-        elif p1 == current:
-            error = "La nueva contraseña debe ser diferente a la actual."
-        else:
-            from django.contrib.auth import update_session_auth_hash
-            request.user.set_password(p1)
-            request.user.save(update_fields=["password"])
-            update_session_auth_hash(request, request.user)  # mantiene sesión activa
-            success = True
-
-    return render(request, "registration/password_change.html", {
-        "error": error,
-        "success": success,
-    })
+    return render(request, "registration/passwordChange.html", {"form": form})

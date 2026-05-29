@@ -14,6 +14,7 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet" />
 	<link rel="stylesheet" href="{% static 'css/user/base.css' %}">
 	<link rel="stylesheet" href="{% static 'css/user/registro.css' %}">
 </head>
@@ -25,7 +26,7 @@
 					<div class="card-body">
 						<h2 class="auth-dialog__title">Registrarse</h2>
 						<hr>
-						<form action="" method="post" class="auth-form auth-form--signup" id="signup-form">
+						<form action="" method="post" class="auth-form auth-form--signup" id="signup-form" data-loader>
 							{% csrf_token %}
 							<input type="hidden" name="next" value="{{ next }}">
 
@@ -38,34 +39,6 @@
 
 							{# Bloque de Términos y Condiciones #}
 							<div class="terms-block" id="div_id_terms_accepted">
-								<div class="terms-scroll-box" id="terms-box" tabindex="0" aria-label="Términos y Condiciones">
-									<h5>Términos y Condiciones de Uso</h5>
-									<p><strong>Última actualización:</strong> Mayo 2026</p>
-
-									<p>Bienvenido al sistema de reservaciones del <strong>Festival de Luciernagas</strong>. Al crear una cuenta aceptas los presentes Términos y Condiciones. Léelos con atención antes de continuar.</p>
-
-									<h6>1. Datos personales</h6>
-									<p>Recopilamos tu nombre, correo electrónico y contraseña para gestionar tu cuenta. Tus datos serán tratados conforme a nuestra Política de Privacidad y la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).</p>
-
-									<h6>2. Uso aceptable</h6>
-									<p>Te comprometes a no compartir tu cuenta, introducir información falsa ni utilizar el sistema para fines distintos a la reservación de espacios en el festival. Cualquier uso indebido podrá resultar en la suspensión inmediata de tu cuenta.</p>
-
-									<h6>3. Reservaciones</h6>
-									<p>Cada reservación queda sujeta a disponibilidad. El festival se reserva el derecho de cancelar reservaciones en caso de fuerza mayor, cambios de programa o incumplimiento de estas condiciones, sin responsabilidad adicional.</p>
-
-									<h6>4. Cancelaciones y reembolsos</h6>
-									<p>Las cancelaciones realizadas con más de 72 horas de anticipación al inicio del evento serán procesadas según la política vigente publicada en el sitio. Cancelaciones tardías pueden no ser elegibles para reembolso.</p>
-
-									<h6>5. Propiedad intelectual</h6>
-									<p>Todo el contenido del sitio (imágenes, textos, logotipos) es propiedad de LambdaSW y del Festival de Luciernagas. Queda prohibida su reproducción sin autorización escrita.</p>
-
-									<h6>6. Modificaciones</h6>
-									<p>Nos reservamos el derecho de actualizar estos Términos en cualquier momento. Las modificaciones entrarán en vigor al ser publicadas en este sitio.</p>
-
-									<h6>7. Contacto</h6>
-									<p>Para dudas sobre estos Términos escribe a: <em>soporte@festivalluciernagas.mx</em></p>
-								</div>
-
 								<div class="terms-check-row {% if form.terms_accepted.errors %}terms-check-row--error{% endif %}">
 									<input
 										class="terms-checkbox"
@@ -124,17 +97,68 @@
 			</div>
 			<div class="tc-modal__body">
 				<p><strong>Última actualización:</strong> Mayo 2026</p>
-				<p>Bienvenido al sistema de reservaciones del <strong>Festival de Luciernagas</strong>. Al crear una cuenta aceptas los presentes Términos y Condiciones.</p>
-				<h5>1. Datos personales</h5>
-				<p>Recopilamos tu nombre, correo electrónico y contraseña para gestionar tu cuenta. Tus datos serán tratados conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).</p>
-				<h5>2. Uso aceptable</h5>
-				<p>Te comprometes a no compartir tu cuenta, introducir información falsa ni utilizar el sistema para fines distintos a la reservación de espacios en el festival.</p>
+				<p>
+					Bienvenido al sistema de reservaciones del
+					<strong>Festival Internacional de las Luciérnagas</strong>. Al registrarte, acceder o utilizar
+					esta plataforma, aceptas los presentes Términos y Condiciones.
+				</p>
+
+				<h5>1. Registro de usuario</h5>
+				<p>
+					Para utilizar el sistema es necesario proporcionar información veraz,
+					completa y actualizada. El usuario es responsable de mantener la
+					confidencialidad de sus credenciales de acceso y de todas las actividades
+					realizadas desde su cuenta.
+				</p>
+
+				<h5>2. Uso de la plataforma</h5>
+				<p>
+					La plataforma deberá utilizarse exclusivamente para actividades relacionadas
+					con el Festival de Luciérnagas. Queda prohibido proporcionar información
+					falsa, compartir cuentas, intentar acceder a información no autorizada o
+					realizar cualquier acción que afecte la seguridad o el funcionamiento del sistema.
+				</p>
+
 				<h5>3. Reservaciones</h5>
-				<p>Cada reservación queda sujeta a disponibilidad. El festival se reserva el derecho de cancelar reservaciones en caso de fuerza mayor o incumplimiento de estas condiciones.</p>
-				<h5>4. Cancelaciones</h5>
-				<p>Cancelaciones con más de 72 horas de anticipación serán procesadas según la política publicada en el sitio. Cancelaciones tardías pueden no ser elegibles para reembolso.</p>
-				<h5>5. Modificaciones</h5>
-				<p>Nos reservamos el derecho de actualizar estos Términos en cualquier momento. Las modificaciones entrarán en vigor al ser publicadas.</p>
+				<p>
+					Todas las reservaciones están sujetas a disponibilidad. La organización
+					podrá modificar, reprogramar o cancelar reservaciones por razones operativas,
+					de seguridad, fuerza mayor o incumplimiento de estos términos.
+				</p>
+
+				<h5>4. Disponibilidad del servicio</h5>
+				<p>
+					Aunque procuramos mantener la plataforma disponible de manera continua,
+					no garantizamos la ausencia de interrupciones, errores técnicos o periodos
+					de mantenimiento.
+				</p>
+
+				<h5>5. Suspensión de cuentas</h5>
+				<p>
+					Nos reservamos el derecho de suspender o cancelar cuentas que incumplan
+					estos términos, proporcionen información falsa o realicen actividades que
+					comprometan la integridad del sistema.
+				</p>
+
+				<h5>6. Limitación de responsabilidad</h5>
+				<p>
+					LambdaSW y el Festival de Luciérnagas no serán responsables por daños o
+					perjuicios derivados del uso indebido de la plataforma, interrupciones del
+					servicio o situaciones fuera de su control razonable.
+				</p>
+
+				<h5>7. Modificaciones</h5>
+				<p>
+					Nos reservamos el derecho de actualizar estos Términos y Condiciones en
+					cualquier momento. Las modificaciones entrarán en vigor desde su publicación
+					dentro de la plataforma.
+				</p>
+
+				<h5>8. Contacto</h5>
+				<p>
+					Para cualquier consulta relacionada con estos términos, puedes comunicarte
+					al correo: <strong>lambdasoftworks@gmail.com</strong>.
+				</p>
 			</div>
 			<div class="tc-modal__footer">
 				<button class="btn btn-success tc-modal__accept" id="accept-from-modal">Entendido</button>
@@ -150,17 +174,67 @@
 				<button class="tc-modal__close" id="close-privacy-modal" aria-label="Cerrar">&times;</button>
 			</div>
 			<div class="tc-modal__body">
-				<p><strong>Responsable:</strong> LambdaSW / Festival de Luciernagas</p>
-				<h5>Datos que recopilamos</h5>
-				<p>Nombre completo, nombre de usuario, correo electrónico y contraseña (almacenada de forma cifrada).</p>
-				<h5>Finalidad</h5>
-				<p>Gestionar tu cuenta, procesar reservaciones y enviarte notificaciones relacionadas con el festival.</p>
-				<h5>Transferencia de datos</h5>
-				<p>No compartimos tus datos con terceros salvo obligación legal o para prestar el servicio (p.ej. envío de correos de verificación).</p>
-				<h5>Derechos ARCO</h5>
-				<p>Puedes ejercer tus derechos de Acceso, Rectificación, Cancelación u Oposición escribiendo a: <em>privacidad@festivalluciernagas.mx</em></p>
-				<h5>Conservación</h5>
-				<p>Conservamos tus datos mientras tu cuenta esté activa y conforme lo exija la ley.</p>
+				<p><strong>Última actualización:</strong> Mayo 2026</p>
+
+				<h5>1. Responsable del tratamiento de datos</h5>
+				<p>
+					Lambda Softworks, operador del sistema de reservaciones del
+					<strong>Festival de las Luciérnagas</strong>, es responsable del tratamiento
+					y protección de los datos personales proporcionados por los usuarios.
+				</p>
+
+				<h5>2. Datos que recopilamos</h5>
+				<ul>
+					<li>Nombre completo.</li>
+					<li>Nombre de usuario.</li>
+					<li>Correo electrónico.</li>
+					<li>Contraseña (almacenada de forma cifrada y segura).</li>
+					<li>Información relacionada con reservaciones realizadas dentro de la plataforma.</li>
+				</ul>
+
+				<h5>3. Finalidad del tratamiento</h5>
+				<p>Los datos personales serán utilizados para:</p>
+				<ul>
+					<li>Crear y administrar cuentas de usuario.</li>
+					<li>Gestionar reservaciones y registros del festival.</li>
+					<li>Enviar correos de verificación, confirmación y notificaciones relacionadas con el servicio.</li>
+					<li>Proteger la seguridad e integridad de la plataforma.</li>
+					<li>Cumplir obligaciones legales aplicables.</li>
+				</ul>
+
+				<h5>4. Compartición de información</h5>
+				<p>
+					No vendemos ni comercializamos datos personales. La información únicamente
+					podrá compartirse con proveedores de servicios necesarios para la operación
+					de la plataforma o cuando exista una obligación legal que así lo requiera.
+				</p>
+
+				<h5>5. Conservación de datos</h5>
+				<p>
+					Los datos personales serán conservados mientras la cuenta permanezca activa
+					o durante el periodo necesario para cumplir con las finalidades descritas
+					y las obligaciones legales aplicables.
+				</p>
+
+				<h5>6. Seguridad de la información</h5>
+				<p>
+					Implementamos medidas razonables de seguridad para proteger la información
+					contra accesos no autorizados, alteraciones, pérdidas o divulgaciones indebidas.
+				</p>
+
+				<h5>7. Derechos ARCO</h5>
+				<p>
+					Los usuarios podrán ejercer sus derechos de Acceso, Rectificación,
+					Cancelación u Oposición (ARCO) mediante una solicitud enviada al correo
+					<strong>lambdasoftworks@gmail.com</strong>.
+				</p>
+
+				<h5>8. Cambios al aviso</h5>
+				<p>
+					Este Aviso de Privacidad podrá actualizarse para reflejar cambios legales,
+					técnicos u operativos. Las modificaciones serán publicadas dentro de la
+					plataforma y surtirán efecto desde su publicación.
+				</p>
 			</div>
 			<div class="tc-modal__footer">
 				<button class="btn btn-success tc-modal__accept" id="accept-from-privacy-modal">Entendido</button>
@@ -169,6 +243,7 @@
 	</div>
 
 	<script src="{% static 'script/luciernagas.js' %}"></script>
+	<script src="{% static 'script/loader.js' %}"></script>
 	<script>
 	(function () {
 		// ── Helpers ──────────────────────────────────────────────────────────

@@ -206,8 +206,8 @@
 
 	<dialog id="error-dialog" class="auth-dialog auth-dialog--error">
 		<div class="auth-dialog__body">
-			<div class="auth-dialog__icon" aria-hidden="true">
-				<i class="fa-solid fa-xmark"></i>
+			<div class="auth-dialog__icon auth-dialog__icon--danger" aria-hidden="true">
+				<i class="fa-solid fa-triangle-exclamation"></i>
 			</div>
 			<h3 class="auth-dialog__title">Algo salió mal</h3>
 			<p class="auth-dialog__desc" id="error-dialog-message"></p>
@@ -280,17 +280,23 @@
 		<div class="footer__bottom">
 			<div class="footer__bottom__lambda">
 				<img src="{% static 'img/lambda_logo.png' %}" alt="Logo de Lambda" class="lambda_logo"/>
-				<span>Desarrollado por Lambda Software © 2026 Festival Internacional de las Luciernagas. Todos los derechos reservados.</span>
+				<span>Desarrollado por Lambda Softworks © 2026 Festival Internacional de las Luciernagas. Todos los derechos reservados.</span>
 			</div>
       
 			<div class="footer__bottom-links">
-				<a href="#">Aviso de privacidad</a>
-				<a href="#">Terminos y condiciones</a>
+				<button type="button" class="footer__legal-link" data-open-modal="privacy-modal">Aviso de privacidad</button>
+				<button type="button" class="footer__legal-link" data-open-modal="terms-modal">Términos y condiciones</button>
 			</div>
 		</div>
 	</footer>
 
+	{% include "partials/legal_modals.html" %}
+
+	<div class="app-loader" aria-hidden="true"><div class="app-loader__spinner"></div></div>
+
 	<script src="{% static 'script/base.js' %}"></script>
+	<script src="{% static 'script/legal_modals.js' %}"></script>
+	<script src="{% static 'script/loader.js' %}"></script>
 	{% block extra_js %}{% endblock %}
 
 </body>

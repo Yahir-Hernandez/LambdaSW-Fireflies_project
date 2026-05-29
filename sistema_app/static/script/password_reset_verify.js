@@ -84,6 +84,7 @@
         if (code.length !== 6 || submitting) return;
         submitting = true;
         clearError();
+        if (window.AppLoader) window.AppLoader.show();
         try {
             const res  = await fetch(resetUrls.verify, {
                 method: 'POST',
@@ -104,6 +105,7 @@
         } catch (_) {
             setError('Error de red. Intenta de nuevo.');
         } finally {
+            if (window.AppLoader) window.AppLoader.hide();
             submitting = false;
         }
     };
@@ -148,6 +150,7 @@
 
     resendBtn.addEventListener('click', async () => {
         clearError();
+        if (window.AppLoader) window.AppLoader.show();
         try {
             const res  = await fetch(resetUrls.resend, {
                 method: 'POST',
@@ -158,6 +161,8 @@
             setError(data.error || 'No se pudo reenviar el código.');
         } catch (_) {
             setError('Error de red. Intenta de nuevo.');
+        } finally {
+            if (window.AppLoader) window.AppLoader.hide();
         }
     });
 })();
