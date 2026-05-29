@@ -1,8 +1,9 @@
-{% load static%}
+{% load static %}
+{% load crispy_forms_tags %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-	<title>iniciar sesión</title>
+	<title>Registrarse – Festival de Luciernagas</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -10,16 +11,13 @@
 	<!-- Bootstrap CSS -->
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-	
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 	<link rel="stylesheet" href="{% static 'css/user/base.css' %}">
 	<link rel="stylesheet" href="{% static 'css/user/registro.css' %}">
-
 </head>
 <body>
-	{%load crispy_forms_tags %}
 	<section class="hero auth-hero">
 		<div class="auth-split">
 			<div class="auth-panel">
@@ -27,20 +25,81 @@
 					<div class="card-body">
 						<h2 class="auth-dialog__title">Registrarse</h2>
 						<hr>
-						<form action="" method="post" class="auth-form auth-form--signup">
+						<form action="" method="post" class="auth-form auth-form--signup" id="signup-form">
 							{% csrf_token %}
 							<input type="hidden" name="next" value="{{ next }}">
-							{{form | crispy}}
+
+							{# Todos los campos excepto terms_accepted #}
+							{% for field in form %}
+								{% if field.name != 'terms_accepted' %}
+									{{ field | as_crispy_field }}
+								{% endif %}
+							{% endfor %}
+
+							{# Bloque de Términos y Condiciones #}
+							<div class="terms-block" id="div_id_terms_accepted">
+								<div class="terms-scroll-box" id="terms-box" tabindex="0" aria-label="Términos y Condiciones">
+									<h5>Términos y Condiciones de Uso</h5>
+									<p><strong>Última actualización:</strong> Mayo 2026</p>
+
+									<p>Bienvenido al sistema de reservaciones del <strong>Festival de Luciernagas</strong>. Al crear una cuenta aceptas los presentes Términos y Condiciones. Léelos con atención antes de continuar.</p>
+
+									<h6>1. Datos personales</h6>
+									<p>Recopilamos tu nombre, correo electrónico y contraseña para gestionar tu cuenta. Tus datos serán tratados conforme a nuestra Política de Privacidad y la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).</p>
+
+									<h6>2. Uso aceptable</h6>
+									<p>Te comprometes a no compartir tu cuenta, introducir información falsa ni utilizar el sistema para fines distintos a la reservación de espacios en el festival. Cualquier uso indebido podrá resultar en la suspensión inmediata de tu cuenta.</p>
+
+									<h6>3. Reservaciones</h6>
+									<p>Cada reservación queda sujeta a disponibilidad. El festival se reserva el derecho de cancelar reservaciones en caso de fuerza mayor, cambios de programa o incumplimiento de estas condiciones, sin responsabilidad adicional.</p>
+
+									<h6>4. Cancelaciones y reembolsos</h6>
+									<p>Las cancelaciones realizadas con más de 72 horas de anticipación al inicio del evento serán procesadas según la política vigente publicada en el sitio. Cancelaciones tardías pueden no ser elegibles para reembolso.</p>
+
+									<h6>5. Propiedad intelectual</h6>
+									<p>Todo el contenido del sitio (imágenes, textos, logotipos) es propiedad de LambdaSW y del Festival de Luciernagas. Queda prohibida su reproducción sin autorización escrita.</p>
+
+									<h6>6. Modificaciones</h6>
+									<p>Nos reservamos el derecho de actualizar estos Términos en cualquier momento. Las modificaciones entrarán en vigor al ser publicadas en este sitio.</p>
+
+									<h6>7. Contacto</h6>
+									<p>Para dudas sobre estos Términos escribe a: <em>soporte@festivalluciernagas.mx</em></p>
+								</div>
+
+								<div class="terms-check-row {% if form.terms_accepted.errors %}terms-check-row--error{% endif %}">
+									<input
+										class="terms-checkbox"
+										type="checkbox"
+										name="terms_accepted"
+										id="id_terms_accepted"
+										{% if form.terms_accepted.value %}checked{% endif %}
+										required
+									>
+									<label class="terms-label" for="id_terms_accepted">
+										He leído y acepto los <button type="button" class="terms-link-btn" id="open-terms-modal">Términos y Condiciones</button> y el <button type="button" class="terms-link-btn" id="open-privacy-modal">Aviso de Privacidad</button>
+									</label>
+								</div>
+
+								{% if form.terms_accepted.errors %}
+									<div class="terms-error">
+										{% for error in form.terms_accepted.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% endif %}
+							</div>
+
 							<div class="auth-form__actions">
 								<a class="btn btn--ghost btn--sm auth-form__back" href="{% url 'sistema_app:home' %}">
 									<i class="fa-solid fa-arrow-left"></i> Volver al inicio
 								</a>
-								<input type="submit" name="Ingresar" class="btn btn-success float-right" >
+								<input type="submit" name="Ingresar" value="Crear cuenta" class="btn btn-success float-right">
 							</div>
 						</form>
 					</div>
 				</div>
 			</div>
+
 			<div class="auth-visual" aria-hidden="true">
 				<div class="hero__stars"></div>
 				<div class="hero__fireflies">
@@ -55,6 +114,125 @@
 			</div>
 		</div>
 	</section>
+
+	<!-- Modal Términos y Condiciones -->
+	<div class="tc-modal-overlay" id="terms-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-terms">
+		<div class="tc-modal">
+			<div class="tc-modal__header">
+				<h3 id="modal-title-terms">Términos y Condiciones</h3>
+				<button class="tc-modal__close" id="close-terms-modal" aria-label="Cerrar">&times;</button>
+			</div>
+			<div class="tc-modal__body">
+				<p><strong>Última actualización:</strong> Mayo 2026</p>
+				<p>Bienvenido al sistema de reservaciones del <strong>Festival de Luciernagas</strong>. Al crear una cuenta aceptas los presentes Términos y Condiciones.</p>
+				<h5>1. Datos personales</h5>
+				<p>Recopilamos tu nombre, correo electrónico y contraseña para gestionar tu cuenta. Tus datos serán tratados conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).</p>
+				<h5>2. Uso aceptable</h5>
+				<p>Te comprometes a no compartir tu cuenta, introducir información falsa ni utilizar el sistema para fines distintos a la reservación de espacios en el festival.</p>
+				<h5>3. Reservaciones</h5>
+				<p>Cada reservación queda sujeta a disponibilidad. El festival se reserva el derecho de cancelar reservaciones en caso de fuerza mayor o incumplimiento de estas condiciones.</p>
+				<h5>4. Cancelaciones</h5>
+				<p>Cancelaciones con más de 72 horas de anticipación serán procesadas según la política publicada en el sitio. Cancelaciones tardías pueden no ser elegibles para reembolso.</p>
+				<h5>5. Modificaciones</h5>
+				<p>Nos reservamos el derecho de actualizar estos Términos en cualquier momento. Las modificaciones entrarán en vigor al ser publicadas.</p>
+			</div>
+			<div class="tc-modal__footer">
+				<button class="btn btn-success tc-modal__accept" id="accept-from-modal">Entendido</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal Aviso de Privacidad -->
+	<div class="tc-modal-overlay" id="privacy-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-privacy">
+		<div class="tc-modal">
+			<div class="tc-modal__header">
+				<h3 id="modal-title-privacy">Aviso de Privacidad</h3>
+				<button class="tc-modal__close" id="close-privacy-modal" aria-label="Cerrar">&times;</button>
+			</div>
+			<div class="tc-modal__body">
+				<p><strong>Responsable:</strong> LambdaSW / Festival de Luciernagas</p>
+				<h5>Datos que recopilamos</h5>
+				<p>Nombre completo, nombre de usuario, correo electrónico y contraseña (almacenada de forma cifrada).</p>
+				<h5>Finalidad</h5>
+				<p>Gestionar tu cuenta, procesar reservaciones y enviarte notificaciones relacionadas con el festival.</p>
+				<h5>Transferencia de datos</h5>
+				<p>No compartimos tus datos con terceros salvo obligación legal o para prestar el servicio (p.ej. envío de correos de verificación).</p>
+				<h5>Derechos ARCO</h5>
+				<p>Puedes ejercer tus derechos de Acceso, Rectificación, Cancelación u Oposición escribiendo a: <em>privacidad@festivalluciernagas.mx</em></p>
+				<h5>Conservación</h5>
+				<p>Conservamos tus datos mientras tu cuenta esté activa y conforme lo exija la ley.</p>
+			</div>
+			<div class="tc-modal__footer">
+				<button class="btn btn-success tc-modal__accept" id="accept-from-privacy-modal">Entendido</button>
+			</div>
+		</div>
+	</div>
+
 	<script src="{% static 'script/luciernagas.js' %}"></script>
+	<script>
+	(function () {
+		// ── Helpers ──────────────────────────────────────────────────────────
+		function openModal(id) {
+			const modal = document.getElementById(id);
+			if (modal) {
+				modal.classList.add('is-open');
+				document.body.style.overflow = 'hidden';
+			}
+		}
+		function closeModal(id) {
+			const modal = document.getElementById(id);
+			if (modal) {
+				modal.classList.remove('is-open');
+				document.body.style.overflow = '';
+			}
+		}
+
+		// ── Terms modal ───────────────────────────────────────────────────────
+		document.getElementById('open-terms-modal').addEventListener('click', function (e) {
+			e.preventDefault();
+			openModal('terms-modal');
+		});
+		document.getElementById('close-terms-modal').addEventListener('click', function () {
+			closeModal('terms-modal');
+		});
+		document.getElementById('accept-from-modal').addEventListener('click', function () {
+			document.getElementById('id_terms_accepted').checked = true;
+			closeModal('terms-modal');
+		});
+
+		// ── Privacy modal ─────────────────────────────────────────────────────
+		document.getElementById('open-privacy-modal').addEventListener('click', function (e) {
+			e.preventDefault();
+			openModal('privacy-modal');
+		});
+		document.getElementById('close-privacy-modal').addEventListener('click', function () {
+			closeModal('privacy-modal');
+		});
+		document.getElementById('accept-from-privacy-modal').addEventListener('click', function () {
+			document.getElementById('id_terms_accepted').checked = true;
+			closeModal('privacy-modal');
+		});
+
+		// ── Close on overlay click ────────────────────────────────────────────
+		document.querySelectorAll('.tc-modal-overlay').forEach(function (overlay) {
+			overlay.addEventListener('click', function (e) {
+				if (e.target === overlay) {
+					overlay.classList.remove('is-open');
+					document.body.style.overflow = '';
+				}
+			});
+		});
+
+		// ── Close on Escape ───────────────────────────────────────────────────
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape') {
+				document.querySelectorAll('.tc-modal-overlay.is-open').forEach(function (m) {
+					m.classList.remove('is-open');
+					document.body.style.overflow = '';
+				});
+			}
+		});
+	})();
+	</script>
 </body>
 </html>

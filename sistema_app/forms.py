@@ -13,6 +13,14 @@ class CustomUserCreationForm(UserCreationForm):
 
     email = forms.EmailField(required=True)
 
+    terms_accepted = forms.BooleanField(
+        required=True,
+        label="He leído y acepto los Términos y Condiciones y el Aviso de Privacidad",
+        error_messages={
+            "required": "Debes aceptar los Términos y Condiciones para crear tu cuenta."
+        },
+    )
+
     class Meta:
         model = User
         fields = [
@@ -22,6 +30,7 @@ class CustomUserCreationForm(UserCreationForm):
             "email",
             "password1",
             "password2",
+            "terms_accepted",
         ]
 
     def clean_username(self):

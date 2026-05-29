@@ -232,3 +232,216 @@ label {
     column-gap: 18px;
   }
 }
+
+/* ── Términos y Condiciones ──────────────────────────────────────────────── */
+
+/* Bloque contenedor dentro del form grid */
+#div_id_terms_accepted {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Caja desplazable con el texto de T&C */
+.terms-scroll-box {
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--text-dim);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+  scroll-behavior: smooth;
+  transition: border-color var(--transition);
+}
+.terms-scroll-box:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.terms-scroll-box h5 {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+.terms-scroll-box h6 {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 14px 0 4px;
+}
+.terms-scroll-box p {
+  margin: 0 0 8px;
+}
+
+/* Fila del checkbox */
+.terms-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.terms-checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.terms-label {
+  font-size: 0.82rem;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  cursor: pointer;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+/* Botones-link inline en la label */
+.terms-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.terms-link-btn:hover {
+  color: var(--accentHover);
+}
+
+/* Error del checkbox */
+.terms-check-row--error .terms-checkbox {
+  outline: 2px solid #e74c3c;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.terms-error {
+  font-size: 0.78rem;
+  color: #e74c3c;
+  margin-top: -4px;
+}
+
+/* ── Modal T&C / Privacidad ──────────────────────────────────────────────── */
+
+.tc-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+  animation: fadeIn .18s ease;
+}
+.tc-modal-overlay.is-open {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.tc-modal {
+  background: linear-gradient(160deg, #101a26 0%, #0b1218 100%);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: calc(var(--radius) * 2);
+  width: min(560px, 100%);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  animation: slideUp .22s ease;
+}
+
+.tc-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.tc-modal__header h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--text);
+  margin: 0;
+}
+.tc-modal__close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color var(--transition);
+}
+.tc-modal__close:hover {
+  color: var(--text);
+}
+
+.tc-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+.tc-modal__body h5 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 14px 0 6px;
+}
+.tc-modal__body p {
+  margin: 0 0 10px;
+}
+
+.tc-modal__footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  justify-content: flex-end;
+}
+.tc-modal__accept {
+  min-width: 130px;
+}
+
+
+/* ── Campos de contraseña con botón mostrar/ocultar ─────────────────────── */
+.pw-field-wrap {
+  position: relative;
+}
+.pw-field-wrap .form-control {
+  padding-right: 2.8rem !important;
+}
+.pw-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: .9rem;
+  padding: 4px;
+  transition: color var(--transition);
+  line-height: 1;
+}
+.pw-toggle:hover { color: var(--text); }
