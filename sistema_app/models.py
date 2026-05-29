@@ -302,3 +302,46 @@ class LoginAttempt(models.Model):
     def __str__(self) -> str:
         estado = "éxito" if self.success else "fallo"
         return f"{self.username} · {estado} · {self.attempted_at:%Y-%m-%d %H:%M}"
+
+
+class PasswordResetToken(models.Model):
+    """Token de un solo uso para restablecer la contraseña por correo.
+
+    El flujo es:
+    1. El usuario solicita el restablecimiento → se genera un token y se envía
+       por correo como código numérico de 6 dígitos.
+    2. El usuario ingresa el código en la página de verificación.
+    3. Una vez verificado se marca ``is_verified=True`` y se permite elegir
+       una nueva contraseña.
+    4. Tras usarse o expirar, el token queda inútil.
+    """
+
+    EXPIRY_SECONDS = 600       # 10 minutos
+    RESEND_COOLDOWN_SECONDS = 120
+
+    user = models.ForeignKey(
+        "auth.User",
+        on_delete=models.CASCADE,
+        related_name="password_reset_tokens",
+    )
+    code = models.CharField(max_length=6)
+    is_verified = models.BooleanField(default=False)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "Token de restablecimiento de contraseña"
+        verbose_name_plural = "Tokens de restablecimiento de contraseña"
+        ordering = ("-created_at",)
+
+    def is_expired(self) -> bool:
+        """Indica si el token ya superó el tiempo máximo permitido."""
+        return (timezone.now() - self.created_at).total_seconds() > self.EXPIRY_SECONDS
+
+    def seconds_until_resend(self) -> int:
+        """Segundos que faltan para poder reenviar el código."""
+        elapsed = int((timezone.now() - self.created_at).total_seconds())
+        return max(0, self.RESEND_COOLDOWN_SECONDS - elapsed)
+
+    def __str__(self) -> str:
+        return f"Reset token para {self.user.username} · {self.created_at:%Y-%m-%d %H:%M}"

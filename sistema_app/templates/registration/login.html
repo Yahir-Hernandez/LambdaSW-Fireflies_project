@@ -47,11 +47,16 @@
                   <a class="btn btn--ghost btn--sm auth-form__back" href="{% url 'sistema_app:home' %}">
                     <i class="fa-solid fa-arrow-left"></i> Volver al inicio
                   </a>
-                  <input
-                    type="submit"
-                    name="Ingresar"
-                    class="btn btn-success float-right"
-                  />
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                    <input
+                      type="submit"
+                      name="Ingresar"
+                      class="btn btn-success float-right"
+                    />
+                    <a href="{% url 'sistema_app:password_reset_request' %}" style="font-size:.78rem;color:var(--text-dim);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">
+                      ¿Olvidaste tu contraseña?
+                    </a>
+                  </div>
                 </div>
               </form>
             </div>

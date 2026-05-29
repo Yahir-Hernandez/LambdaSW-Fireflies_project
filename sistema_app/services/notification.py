@@ -182,6 +182,24 @@ class NotificationService:
         )
 
     @classmethod
+    def send_password_reset_email(
+        cls, recipient_email: str, code: str, recipient_name: str = ""
+    ) -> bool:
+        """Envía el código de seis dígitos para restablecer la contraseña del usuario."""
+        ctx = {"code": code, "name": recipient_name}
+        ctx_html = {**ctx, "logo_cid": "logo"}
+        text_body = render_to_string("emails/password_reset.txt", ctx)
+        html_body = render_to_string("emails/password_reset.html", ctx_html)
+
+        return cls._deliver(
+            subject="Restablece tu contraseña - Festival de las Luciérnagas",
+            text_body=text_body,
+            html_body=html_body,
+            recipient=recipient_email or "",
+            inline_images=[("logo", _read_logo_bytes())],
+        )
+
+    @classmethod
     def send_verification_email(
         cls, recipient_email: str, code: str, recipient_name: str = ""
     ) -> bool:

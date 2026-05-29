@@ -20,7 +20,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .forms import CustomUserCreationForm
-from .models import Lodging, LoginAttempt, Park, PendingRegistration, Reservation
+from .models import Lodging, LoginAttempt, Park, PendingRegistration, PasswordResetToken, Reservation
 from .services import (
     AvailabilityService,
     NotificationService,
@@ -447,4 +447,203 @@ def disponibilidad_api(request):
             }
             for lo in lodgings
         ]
+    })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Recuperar contraseña (sin sesión activa)
+# ─────────────────────────────────────────────────────────────────────────────
+
+PASSWORD_RESET_SESSION_KEY = "password_reset_token_id"
+
+
+def password_reset_request(request):
+    """Muestra el formulario de solicitud de restablecimiento de contraseña."""
+    if request.method == "POST":
+        email = (request.POST.get("email") or "").strip().lower()
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            # Invalidar tokens anteriores no usados
+            PasswordResetToken.objects.filter(user=user, is_used=False).update(is_used=True)
+            token = PasswordResetToken.objects.create(
+                user=user,
+                code=generate_verification_code() + str(__import__("secrets").randbelow(10)),
+            )
+            from .services import NotificationService
+            NotificationService.send_password_reset_email(
+                recipient_email=user.email,
+                code=token.code,
+                recipient_name=user.first_name or user.username,
+            )
+            request.session[PASSWORD_RESET_SESSION_KEY] = token.pk
+        # Siempre redirigir para no revelar si el correo existe
+        return redirect("sistema_app:password_reset_verify")
+    return render(request, "registration/password_reset_request.html")
+
+
+def password_reset_verify(request):
+    """Muestra la pantalla de ingreso del código recibido por correo."""
+    token_id = request.session.get(PASSWORD_RESET_SESSION_KEY)
+    if not token_id:
+        return redirect("sistema_app:password_reset_request")
+    token = PasswordResetToken.objects.filter(pk=token_id, is_used=False).first()
+    if not token:
+        request.session.pop(PASSWORD_RESET_SESSION_KEY, None)
+        return redirect("sistema_app:password_reset_request")
+    from .utils import mask_email
+    return render(request, "registration/password_reset_verify.html", {
+        "masked_email": mask_email(token.user.email),
+        "resend_in": token.seconds_until_resend(),
+    })
+
+
+@require_POST
+def password_reset_verify_api(request):
+    """Valida el código ingresado y marca el token como verificado."""
+    token_id = request.session.get(PASSWORD_RESET_SESSION_KEY)
+    if not token_id:
+        return JsonResponse({"ok": False, "error": "Sesión expirada."}, status=400)
+
+    token = PasswordResetToken.objects.filter(pk=token_id, is_used=False).first()
+    if not token:
+        return JsonResponse({"ok": False, "error": "Token inválido."}, status=400)
+
+    if token.is_expired():
+        return JsonResponse({"ok": False, "error": "El código ha expirado."}, status=400)
+
+    import json
+    try:
+        body = json.loads(request.body)
+        code = (body.get("code") or "").strip()
+    except Exception:
+        code = ""
+
+    if code != token.code:
+        return JsonResponse({"ok": False, "error": "Código incorrecto."}, status=400)
+
+    token.is_verified = True
+    token.save(update_fields=["is_verified"])
+    return JsonResponse({"ok": True})
+
+
+@require_POST
+def password_reset_resend_api(request):
+    """Reenvía el código de restablecimiento al correo del usuario."""
+    token_id = request.session.get(PASSWORD_RESET_SESSION_KEY)
+    if not token_id:
+        return JsonResponse({"ok": False, "error": "Sesión expirada."}, status=400)
+
+    token = PasswordResetToken.objects.filter(pk=token_id, is_used=False).first()
+    if not token:
+        return JsonResponse({"ok": False, "error": "Token inválido."}, status=400)
+
+    if token.seconds_until_resend() > 0:
+        return JsonResponse({"ok": False, "error": "Espera antes de reenviar."}, status=429)
+
+    from .utils import generate_verification_code
+    import secrets as _secrets
+    token.code = generate_verification_code() + str(_secrets.randbelow(10))
+    token.created_at = timezone.now()
+    token.is_verified = False
+    token.save(update_fields=["code", "created_at", "is_verified"])
+
+    from .services import NotificationService
+    NotificationService.send_password_reset_email(
+        recipient_email=token.user.email,
+        code=token.code,
+        recipient_name=token.user.first_name or token.user.username,
+    )
+    return JsonResponse({"ok": True, "resend_in": PasswordResetToken.RESEND_COOLDOWN_SECONDS})
+
+
+def password_reset_confirm(request):
+    """Muestra el formulario de nueva contraseña (solo si el código fue verificado)."""
+    token_id = request.session.get(PASSWORD_RESET_SESSION_KEY)
+    if not token_id:
+        return redirect("sistema_app:password_reset_request")
+
+    # Carga el token junto con el usuario en una sola consulta
+    token = PasswordResetToken.objects.select_related('user').filter(
+        pk=token_id, is_used=False, is_verified=True
+    ).first()
+
+    if not token or token.is_expired():
+        request.session.pop(PASSWORD_RESET_SESSION_KEY, None)
+        return redirect("sistema_app:password_reset_request")
+
+    error = None
+    if request.method == "POST":
+        p1 = request.POST.get("password1", "")
+        p2 = request.POST.get("password2", "")
+
+        if not p1:
+            error = "La contraseña no puede estar vacía."
+        elif p1 != p2:
+            error = "Las contraseñas no coinciden."
+        elif len(p1) < 8:
+            error = "La contraseña debe tener al menos 8 caracteres."
+        else:
+            try:
+                with transaction.atomic():
+                    user = token.user
+                    user.set_password(p1)          # ✅ forma correcta
+                    user.save(update_fields=["password"])
+
+                    token.is_used = True
+                    token.save(update_fields=["is_used"])
+
+                    # Invalidar otros tokens pendientes del mismo usuario
+                    PasswordResetToken.objects.filter(
+                        user=user, is_used=False
+                    ).update(is_used=True)
+
+                # Limpiar sesión y redirigir
+                request.session.pop(PASSWORD_RESET_SESSION_KEY, None)
+                return redirect("sistema_app:password_reset_done")
+            except Exception as e:
+                # Log del error para depuración (opcional)
+                error = "Ocurrió un error al cambiar la contraseña. Intenta de nuevo."
+
+    return render(request, "registration/password_reset_confirm.html", {"error": error})
+
+
+def password_reset_done(request):
+    """Pantalla de confirmación tras cambiar la contraseña exitosamente."""
+    return render(request, "registration/password_reset_done.html")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cambiar contraseña (con sesión activa, desde el perfil)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@login_required
+def password_change(request):
+    """Permite al usuario autenticado cambiar su contraseña desde el perfil."""
+    error = None
+    success = False
+    if request.method == "POST":
+        current = request.POST.get("current_password", "")
+        p1 = request.POST.get("password1", "")
+        p2 = request.POST.get("password2", "")
+
+        if not request.user.check_password(current):
+            error = "La contraseña actual es incorrecta."
+        elif not p1:
+            error = "La nueva contraseña no puede estar vacía."
+        elif p1 != p2:
+            error = "Las contraseñas nuevas no coinciden."
+        elif len(p1) < 8:
+            error = "La contraseña debe tener al menos 8 caracteres."
+        elif p1 == current:
+            error = "La nueva contraseña debe ser diferente a la actual."
+        else:
+            from django.contrib.auth import update_session_auth_hash
+            request.user.set_password(p1)
+            request.user.save(update_fields=["password"])
+            update_session_auth_hash(request, request.user)  # mantiene sesión activa
+            success = True
+
+    return render(request, "registration/password_change.html", {
+        "error": error,
+        "success": success,
     })

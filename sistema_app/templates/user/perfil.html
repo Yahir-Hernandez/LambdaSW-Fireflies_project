@@ -65,6 +65,9 @@
                 Panel de administración
               </a>
             {% endif %}
+            <a href="{% url 'sistema_app:password_change' %}" class="btn btn--outline btn--sm" style="min-width:200px;text-align:center;">
+              <i class="fa-solid fa-lock"></i> Cambiar contraseña
+            </a>
             <form method="post" action="{% url 'sistema_app:logout' %}">
               {% csrf_token %}
               <button type="submit" class="btn btn--outline btn--sm" style="min-width:200px;">
@@ -152,13 +155,16 @@
                 </div>
                 <div class="reservation-actions">
                   {% if reserva.is_cancellable %}
-                    <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
-                          onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn--outline btn--sm btn--alert">
-                        <i class="fa-solid fa-xmark"></i> Cancelar reserva
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      class="btn btn--outline btn--sm btn--alert js-cancel-btn"
+                      data-reserva-id="{{ reserva.pk }}"
+                      data-reserva-park="{{ reserva.park.name }}"
+                      data-cancel-url="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
+                      data-csrf="{{ csrf_token }}"
+                    >
+                      <i class="fa-solid fa-xmark"></i> Cancelar reserva
+                    </button>
                   {% endif %}
                 </div>
 
@@ -204,6 +210,40 @@
     </div>
   </div>
 </section>
+
+{# ── Modal de confirmación de cancelación ──────────────────────────────── #}
+<dialog id="cancel-confirm-dialog" class="auth-dialog" aria-labelledby="cancel-dialog-title">
+  <div class="auth-dialog__body">
+    <div class="auth-dialog__icon" aria-hidden="true" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:#ef4444;">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <h3 class="auth-dialog__title" id="cancel-dialog-title">¿Cancelar reserva?</h3>
+    <p class="auth-dialog__desc" id="cancel-dialog-desc">
+      Estás a punto de cancelar tu reserva en <strong id="cancel-park-name"></strong>.
+      Esta acción no se puede deshacer.
+    </p>
+    <div class="auth-dialog__actions">
+      <button type="button" class="btn btn--ghost" id="cancel-dialog-no">
+        Volver
+      </button>
+      <button type="button" class="btn btn--alert" id="cancel-dialog-yes">
+        <i class="fa-solid fa-xmark"></i> Sí, cancelar
+      </button>
+    </div>
+  </div>
+</dialog>
+
+{# ── Modal de éxito tras cancelar ──────────────────────────────────────── #}
+<dialog id="cancel-success-dialog" class="auth-dialog auth-dialog--success" aria-labelledby="cancel-success-title">
+  <div class="auth-dialog__body">
+    <div class="auth-dialog__icon" aria-hidden="true">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <h3 class="auth-dialog__title" id="cancel-success-title">Reserva cancelada</h3>
+    <p class="auth-dialog__desc">Actualizando tu lista de reservas…</p>
+  </div>
+</dialog>
+
 {% endblock %}
 
 {% block extra_js %}
