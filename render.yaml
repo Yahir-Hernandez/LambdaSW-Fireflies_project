@@ -1,0 +1,37 @@
+# Blueprint de Render
+# Crea un servicio web y una base de datos PostgreSQL.
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: luciernagas-db
+    plan: free
+    databaseName: luciernagas
+    user: luciernagas
+
+services:
+  - type: web
+    name: luciernagas2026
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: "bash build.sh"
+    startCommand: "gunicorn luciernagas2026.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DATABASE_URL
+        fromDatabase:
+          name: luciernagas-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true            # Render genera una clave segura nueva
+      - key: DEBUG
+        value: "False"
+      - key: EMAIL_BACKEND
+        value: anymail.backends.brevo.EmailBackend
+      - key: WEB_CONCURRENCY
+        value: "4"                     # gunicorn lo lee para el nº de workers
+      - key: BREVO_API_KEY
+        sync: false                    # SECRETO: el valor se pone en el dashboard de Render, NUNCA aquí                    
+      - key: DEFAULT_FROM_EMAIL
+        sync: false                    # remitente verificado en Brevo (lo pones en el dashboard)

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+
+import dj_database_url
 import environ
 
 env = environ.Env()
@@ -27,9 +29,20 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+# env.bool interpreta "True"/"False" correctamente (env('DEBUG') devolvía la cadena
+# "False", que es truthy). Por defecto False = producción segura; el .env de
+# desarrollo pone DEBUG=True.
+DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = []
+# Render inyecta estas dos variables automáticamente en sus servicios.
+ON_RENDER = env.bool('RENDER', default=False)
+RENDER_HOST = env('RENDER_EXTERNAL_HOSTNAME', default='')
+
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+if RENDER_HOST:
+    ALLOWED_HOSTS.append(RENDER_HOST)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_HOST}')
 
 # Application definition
 
@@ -52,10 +65,14 @@ INSTALLED_APPS = [
     'sistema_app',
     'crispy_forms',
     'crispy_bootstrap5',
+    'anymail',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise sirve los archivos estáticos en producción; debe ir justo
+    # después de SecurityMiddleware.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -88,11 +105,13 @@ WSGI_APPLICATION = 'luciernagas2026.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# En Render se lee DATABASE_URL (PostgreSQL). Sin esa variable cae a SQLite local,
+# de modo que el entorno de desarrollo no cambia.
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600,
+    )
 }
 
 
@@ -137,6 +156,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# El almacenamiento con manifest (hashes de caché + compresión de WhiteNoise) solo
+# se activa en Render. En local y en los tests (que corren con DEBUG=False) se usa el
+# almacenamiento simple para no exigir un manifest generado por collectstatic.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if ON_RENDER
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        ),
+    },
+}
 
 # Email — por defecto, en desarrollo los correos se guardan como archivos en
 # EMAIL_FILE_PATH (terminal limpia, pero inspeccionables). En producción se
@@ -157,13 +191,39 @@ EMAIL_PORT          = env.int('EMAIL_PORT',      default=587)
 EMAIL_USE_TLS       = env.bool('EMAIL_USE_TLS',  default=True)
 EMAIL_HOST_USER     = env('EMAIL_HOST_USER',     default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+EMAIL_TIMEOUT       = env.int('EMAIL_TIMEOUT',   default=15)
+
+# Render bloquea los puertos SMTP salientes (25/465/587), por eso en producción el
+# envío se hace por la API HTTP de Brevo vía django-anymail. Se activa poniendo
+# EMAIL_BACKEND=anymail.backends.brevo.EmailBackend en las variables de Render.
+ANYMAIL = {'BREVO_API_KEY': env('BREVO_API_KEY', default='')}
 
 # URL base usada para construir links absolutos desde código que no tiene
 # acceso a un ``request`` (ej. NotificationService al generar el QR de check-in).
 # En producción debe apuntar al dominio real con ``https://``.
-SITE_URL = env('SITE_URL', default='http://localhost:8000')
+SITE_URL = env(
+    'SITE_URL',
+    default=(f'https://{RENDER_HOST}' if RENDER_HOST else 'http://localhost:8000'),
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Seguridad: solo se aplica en producción (DEBUG=False) para no estorbar el
+# desarrollo local por HTTP. En Render el TLS termina en el proxy, por eso se
+# confía en la cabecera X-Forwarded-Proto para detectar HTTPS.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    # HSTS arranca en 0; subir (p. ej. 3600 y luego 31536000) tras confirmar HTTPS.
+    SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=0)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool(
+        'SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True
+    )
+    SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD', default=False)
