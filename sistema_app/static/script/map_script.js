@@ -142,7 +142,7 @@ function showParkInfo(parque) {
     
     // Obtener imagen aleatoria 1 a 12
     const randomImgNumber = Math.floor(Math.random() * 12) + 1;
-    const headerImageUrl = parkIconUrl.replace('luciernaga.png', `forests/forest_${randomImgNumber}.jpg`);
+    const headerImageUrl = parkIconUrl.replace('luciernaga.png', `forests/forest_${randomImgNumber}.webp`);
     
     parkInfo.innerHTML = `
         <div class="park-details">

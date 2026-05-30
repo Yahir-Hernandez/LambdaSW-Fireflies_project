@@ -1,8 +1,13 @@
 /* Estilos para la página del Festival */
+:root {
+  --festival-nav-height: 112px;
+}
+
 .festival-carousel-wrapper {
   position: relative;
   width: 100%;
-  height: calc(100vh - 80px); /* 80px asumiendo un navbar aproximado */
+  height: calc(100vh - var(--festival-nav-height));
+  margin-top: var(--festival-nav-height);
   min-height: 600px;
   overflow: hidden;
   color: var(--text-dim, #ccc);
@@ -95,6 +100,10 @@
 
 /* Ocultar las flechas en móviles / dar prioridad a táctil */
 @media (max-width: 900px) {
+  :root {
+    --festival-nav-height: 98px;
+  }
+
   .festival-nav {
     display: none;
   }
@@ -107,6 +116,8 @@
   border-radius: 16px;
   max-width: 800px;
   width: 100%;
+  color: rgb(203, 203, 203);
+  font-weight: bolder;
 }
 
 .festival-main-logo {
