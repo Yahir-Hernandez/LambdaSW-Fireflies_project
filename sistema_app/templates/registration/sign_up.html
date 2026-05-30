@@ -1,8 +1,9 @@
-{% load static%}
+{% load static %}
+{% load crispy_forms_tags %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-	<title>iniciar sesión</title>
+	<title>Registrarse – Festival de Luciernagas</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -10,16 +11,14 @@
 	<!-- Bootstrap CSS -->
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-	
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet" />
 	<link rel="stylesheet" href="{% static 'css/user/base.css' %}">
 	<link rel="stylesheet" href="{% static 'css/user/registro.css' %}">
-
 </head>
 <body>
-	{%load crispy_forms_tags %}
 	<section class="hero auth-hero">
 		<div class="auth-split">
 			<div class="auth-panel">
@@ -27,20 +26,53 @@
 					<div class="card-body">
 						<h2 class="auth-dialog__title">Registrarse</h2>
 						<hr>
-						<form action="" method="post" class="auth-form auth-form--signup">
+						<form action="" method="post" class="auth-form auth-form--signup" id="signup-form" data-loader>
 							{% csrf_token %}
 							<input type="hidden" name="next" value="{{ next }}">
-							{{form | crispy}}
+
+							{# Todos los campos excepto terms_accepted #}
+							{% for field in form %}
+								{% if field.name != 'terms_accepted' %}
+									{{ field | as_crispy_field }}
+								{% endif %}
+							{% endfor %}
+
+							{# Bloque de Términos y Condiciones #}
+							<div class="terms-block" id="div_id_terms_accepted">
+								<div class="terms-check-row {% if form.terms_accepted.errors %}terms-check-row--error{% endif %}">
+									<input
+										class="terms-checkbox"
+										type="checkbox"
+										name="terms_accepted"
+										id="id_terms_accepted"
+										{% if form.terms_accepted.value %}checked{% endif %}
+										required
+									>
+									<label class="terms-label" for="id_terms_accepted">
+										He leído y acepto los <button type="button" class="terms-link-btn" id="open-terms-modal">Términos y Condiciones</button> y el <button type="button" class="terms-link-btn" id="open-privacy-modal">Aviso de Privacidad</button>
+									</label>
+								</div>
+
+								{% if form.terms_accepted.errors %}
+									<div class="terms-error">
+										{% for error in form.terms_accepted.errors %}
+											<span>{{ error }}</span>
+										{% endfor %}
+									</div>
+								{% endif %}
+							</div>
+
 							<div class="auth-form__actions">
 								<a class="btn btn--ghost btn--sm auth-form__back" href="{% url 'sistema_app:home' %}">
 									<i class="fa-solid fa-arrow-left"></i> Volver al inicio
 								</a>
-								<input type="submit" name="Ingresar" class="btn btn-success float-right" >
+								<input type="submit" name="Ingresar" value="Crear cuenta" class="btn btn-success float-right">
 							</div>
 						</form>
 					</div>
 				</div>
 			</div>
+
 			<div class="auth-visual" aria-hidden="true">
 				<div class="hero__stars"></div>
 				<div class="hero__fireflies">
@@ -55,6 +87,227 @@
 			</div>
 		</div>
 	</section>
+
+	<!-- Modal Términos y Condiciones -->
+	<div class="tc-modal-overlay" id="terms-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-terms">
+		<div class="tc-modal">
+			<div class="tc-modal__header">
+				<h3 id="modal-title-terms">Términos y Condiciones</h3>
+				<button class="tc-modal__close" id="close-terms-modal" aria-label="Cerrar">&times;</button>
+			</div>
+			<div class="tc-modal__body">
+				<p><strong>Última actualización:</strong> Mayo 2026</p>
+				<p>
+					Bienvenido al sistema de reservaciones del
+					<strong>Festival Internacional de las Luciérnagas</strong>. Al registrarte, acceder o utilizar
+					esta plataforma, aceptas los presentes Términos y Condiciones.
+				</p>
+
+				<h5>1. Registro de usuario</h5>
+				<p>
+					Para utilizar el sistema es necesario proporcionar información veraz,
+					completa y actualizada. El usuario es responsable de mantener la
+					confidencialidad de sus credenciales de acceso y de todas las actividades
+					realizadas desde su cuenta.
+				</p>
+
+				<h5>2. Uso de la plataforma</h5>
+				<p>
+					La plataforma deberá utilizarse exclusivamente para actividades relacionadas
+					con el Festival de Luciérnagas. Queda prohibido proporcionar información
+					falsa, compartir cuentas, intentar acceder a información no autorizada o
+					realizar cualquier acción que afecte la seguridad o el funcionamiento del sistema.
+				</p>
+
+				<h5>3. Reservaciones</h5>
+				<p>
+					Todas las reservaciones están sujetas a disponibilidad. La organización
+					podrá modificar, reprogramar o cancelar reservaciones por razones operativas,
+					de seguridad, fuerza mayor o incumplimiento de estos términos.
+				</p>
+
+				<h5>4. Disponibilidad del servicio</h5>
+				<p>
+					Aunque procuramos mantener la plataforma disponible de manera continua,
+					no garantizamos la ausencia de interrupciones, errores técnicos o periodos
+					de mantenimiento.
+				</p>
+
+				<h5>5. Suspensión de cuentas</h5>
+				<p>
+					Nos reservamos el derecho de suspender o cancelar cuentas que incumplan
+					estos términos, proporcionen información falsa o realicen actividades que
+					comprometan la integridad del sistema.
+				</p>
+
+				<h5>6. Limitación de responsabilidad</h5>
+				<p>
+					LambdaSW y el Festival de Luciérnagas no serán responsables por daños o
+					perjuicios derivados del uso indebido de la plataforma, interrupciones del
+					servicio o situaciones fuera de su control razonable.
+				</p>
+
+				<h5>7. Modificaciones</h5>
+				<p>
+					Nos reservamos el derecho de actualizar estos Términos y Condiciones en
+					cualquier momento. Las modificaciones entrarán en vigor desde su publicación
+					dentro de la plataforma.
+				</p>
+
+				<h5>8. Contacto</h5>
+				<p>
+					Para cualquier consulta relacionada con estos términos, puedes comunicarte
+					al correo: <strong>lambdasoftworks@gmail.com</strong>.
+				</p>
+			</div>
+			<div class="tc-modal__footer">
+				<button class="btn btn-success tc-modal__accept" id="accept-from-modal">Entendido</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal Aviso de Privacidad -->
+	<div class="tc-modal-overlay" id="privacy-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-privacy">
+		<div class="tc-modal">
+			<div class="tc-modal__header">
+				<h3 id="modal-title-privacy">Aviso de Privacidad</h3>
+				<button class="tc-modal__close" id="close-privacy-modal" aria-label="Cerrar">&times;</button>
+			</div>
+			<div class="tc-modal__body">
+				<p><strong>Última actualización:</strong> Mayo 2026</p>
+
+				<h5>1. Responsable del tratamiento de datos</h5>
+				<p>
+					Lambda Softworks, operador del sistema de reservaciones del
+					<strong>Festival de las Luciérnagas</strong>, es responsable del tratamiento
+					y protección de los datos personales proporcionados por los usuarios.
+				</p>
+
+				<h5>2. Datos que recopilamos</h5>
+				<ul>
+					<li>Nombre completo.</li>
+					<li>Nombre de usuario.</li>
+					<li>Correo electrónico.</li>
+					<li>Contraseña (almacenada de forma cifrada y segura).</li>
+					<li>Información relacionada con reservaciones realizadas dentro de la plataforma.</li>
+				</ul>
+
+				<h5>3. Finalidad del tratamiento</h5>
+				<p>Los datos personales serán utilizados para:</p>
+				<ul>
+					<li>Crear y administrar cuentas de usuario.</li>
+					<li>Gestionar reservaciones y registros del festival.</li>
+					<li>Enviar correos de verificación, confirmación y notificaciones relacionadas con el servicio.</li>
+					<li>Proteger la seguridad e integridad de la plataforma.</li>
+					<li>Cumplir obligaciones legales aplicables.</li>
+				</ul>
+
+				<h5>4. Compartición de información</h5>
+				<p>
+					No vendemos ni comercializamos datos personales. La información únicamente
+					podrá compartirse con proveedores de servicios necesarios para la operación
+					de la plataforma o cuando exista una obligación legal que así lo requiera.
+				</p>
+
+				<h5>5. Conservación de datos</h5>
+				<p>
+					Los datos personales serán conservados mientras la cuenta permanezca activa
+					o durante el periodo necesario para cumplir con las finalidades descritas
+					y las obligaciones legales aplicables.
+				</p>
+
+				<h5>6. Seguridad de la información</h5>
+				<p>
+					Implementamos medidas razonables de seguridad para proteger la información
+					contra accesos no autorizados, alteraciones, pérdidas o divulgaciones indebidas.
+				</p>
+
+				<h5>7. Derechos ARCO</h5>
+				<p>
+					Los usuarios podrán ejercer sus derechos de Acceso, Rectificación,
+					Cancelación u Oposición (ARCO) mediante una solicitud enviada al correo
+					<strong>lambdasoftworks@gmail.com</strong>.
+				</p>
+
+				<h5>8. Cambios al aviso</h5>
+				<p>
+					Este Aviso de Privacidad podrá actualizarse para reflejar cambios legales,
+					técnicos u operativos. Las modificaciones serán publicadas dentro de la
+					plataforma y surtirán efecto desde su publicación.
+				</p>
+			</div>
+			<div class="tc-modal__footer">
+				<button class="btn btn-success tc-modal__accept" id="accept-from-privacy-modal">Entendido</button>
+			</div>
+		</div>
+	</div>
+
 	<script src="{% static 'script/luciernagas.js' %}"></script>
+	<script src="{% static 'script/loader.js' %}"></script>
+	<script>
+	(function () {
+		// ── Helpers ──────────────────────────────────────────────────────────
+		function openModal(id) {
+			const modal = document.getElementById(id);
+			if (modal) {
+				modal.classList.add('is-open');
+				document.body.style.overflow = 'hidden';
+			}
+		}
+		function closeModal(id) {
+			const modal = document.getElementById(id);
+			if (modal) {
+				modal.classList.remove('is-open');
+				document.body.style.overflow = '';
+			}
+		}
+
+		// ── Terms modal ───────────────────────────────────────────────────────
+		document.getElementById('open-terms-modal').addEventListener('click', function (e) {
+			e.preventDefault();
+			openModal('terms-modal');
+		});
+		document.getElementById('close-terms-modal').addEventListener('click', function () {
+			closeModal('terms-modal');
+		});
+		document.getElementById('accept-from-modal').addEventListener('click', function () {
+			document.getElementById('id_terms_accepted').checked = true;
+			closeModal('terms-modal');
+		});
+
+		// ── Privacy modal ─────────────────────────────────────────────────────
+		document.getElementById('open-privacy-modal').addEventListener('click', function (e) {
+			e.preventDefault();
+			openModal('privacy-modal');
+		});
+		document.getElementById('close-privacy-modal').addEventListener('click', function () {
+			closeModal('privacy-modal');
+		});
+		document.getElementById('accept-from-privacy-modal').addEventListener('click', function () {
+			document.getElementById('id_terms_accepted').checked = true;
+			closeModal('privacy-modal');
+		});
+
+		// ── Close on overlay click ────────────────────────────────────────────
+		document.querySelectorAll('.tc-modal-overlay').forEach(function (overlay) {
+			overlay.addEventListener('click', function (e) {
+				if (e.target === overlay) {
+					overlay.classList.remove('is-open');
+					document.body.style.overflow = '';
+				}
+			});
+		});
+
+		// ── Close on Escape ───────────────────────────────────────────────────
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape') {
+				document.querySelectorAll('.tc-modal-overlay.is-open').forEach(function (m) {
+					m.classList.remove('is-open');
+					document.body.style.overflow = '';
+				});
+			}
+		});
+	})();
+	</script>
 </body>
 </html>

@@ -12,6 +12,7 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('perfil/', views.perfil, name='perfil'),
+    path('perfil/cambiar-contrasena/', views.password_change, name='password_change'),
     path('mapa/', views.mapa, name='mapa'),
     path('festival/', views.festival, name='festival'),
     path('reservaciones/', views.reservation_list, name='reservation_list'),
@@ -19,4 +20,11 @@ urlpatterns = [
     path('reservaciones/crear/', views.crear_reserva, name='crear_reserva'),
     path('reservaciones/<int:pk>/cancelar/', views.reservation_cancel, name='reservation_cancel'),
     path('api/disponibilidad/', views.disponibilidad_api, name='disponibilidad_api'),
+    # Recuperar contraseña
+    path('recuperar-contrasena/', views.password_reset_request, name='password_reset_request'),
+    path('recuperar-contrasena/verificar/', views.password_reset_verify, name='password_reset_verify'),
+    path('api/recuperar-contrasena/verificar/', views.password_reset_verify_api, name='password_reset_verify_api'),
+    path('api/recuperar-contrasena/reenviar/', views.password_reset_resend_api, name='password_reset_resend_api'),
+    path('recuperar-contrasena/nueva/', views.password_reset_confirm, name='password_reset_confirm'),
+    path('recuperar-contrasena/listo/', views.password_reset_done, name='password_reset_done'),
 ]

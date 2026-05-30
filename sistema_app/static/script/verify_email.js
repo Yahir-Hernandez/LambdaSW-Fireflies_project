@@ -131,6 +131,7 @@
 
         const fd = new FormData();
         fd.append('code', code);
+        if (window.AppLoader) window.AppLoader.show();
         try {
             const res = await fetch(verifyUrls.verify, {
                 method: 'POST',
@@ -153,6 +154,7 @@
         } catch (_err) {
             setError('Error de red. Intenta de nuevo.');
         } finally {
+            if (window.AppLoader) window.AppLoader.hide();
             submitting = false;
         }
     };
@@ -212,6 +214,7 @@
 
     resendBtn.addEventListener('click', async () => {
         clearError();
+        if (window.AppLoader) window.AppLoader.show();
         try {
             const res = await fetch(verifyUrls.resend, {
                 method: 'POST',
@@ -227,6 +230,8 @@
             if (typeof data.retry_in === 'number') startResendCountdown(data.retry_in);
         } catch (_err) {
             setError('Error de red. Intenta de nuevo.');
+        } finally {
+            if (window.AppLoader) window.AppLoader.hide();
         }
     });
 })();

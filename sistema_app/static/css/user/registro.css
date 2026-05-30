@@ -66,11 +66,6 @@
   justify-content: center;
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 .card-body {
   padding: 0;
   width: min(680px, 100%);
@@ -109,12 +104,14 @@
   float: none;
   width: min(240px, 100%);
 }
-.auth-form--signup .form-text {
+.auth-form--signup .form-text,
+.auth-form--password .form-text {
   font-size: 0.72rem;
   color: var(--text-dim);
   margin-top: 6px;
 }
-.auth-form--signup #div_id_password1 .form-text {
+.auth-form--signup #div_id_password1 .form-text,
+.auth-form--password #div_id_new_password1 .form-text {
   max-height: 0;
   opacity: 0;
   margin-top: 0;
@@ -123,26 +120,75 @@
   transition: max-height .25s ease, opacity .2s ease, margin-top .2s ease;
 }
 .auth-form--signup #div_id_password1:focus-within .form-text,
-.auth-form--signup #div_id_password1:hover .form-text {
+.auth-form--signup #div_id_password1:hover .form-text,
+.auth-form--password #div_id_new_password1:focus-within .form-text,
+.auth-form--password #div_id_new_password1:hover .form-text {
   max-height: 240px;
   opacity: 1;
   margin-top: 8px;
   pointer-events: auto;
 }
-.auth-form--signup .form-text ul {
+.auth-form--signup .form-text ul,
+.auth-form--password .form-text ul {
   margin: 8px 0 0;
   padding-left: 18px;
 }
-.auth-form--signup .form-text li {
+.auth-form--signup .form-text li,
+.auth-form--password .form-text li {
   margin-bottom: 6px;
   line-height: 1.4;
 }
 
+/* Formularios de contraseña (cambio / nueva): una sola columna */
+.auth-form--password,
+.auth-form--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.auth-form--password .mb-3 {
+  margin-bottom: 0;
+}
+
+/* Subtítulo gris bajo el título de las tarjetas de auth */
+.auth-form__intro {
+  font-size: .9rem;
+  color: var(--text-dim);
+  margin-bottom: 1.6rem;
+}
+
+/* Tarjeta centrada (pantalla de éxito de recuperación) */
+.card-body--centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 24px;
+}
+.card-body--centered .auth-dialog__title {
+  margin: 0;
+  font-size: 2.2rem;
+}
+.card-body--centered .auth-form__intro {
+  font-size: 1.1rem;
+  max-width: 400px;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+/* CTA ancho centrado (botón de las tarjetas de auth) */
+.auth-cta {
+  min-width: 220px;
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
 /* Encabezado */
 .card-body h2 {
-  font-family: 'DM Serif Display', serif;
+  font-family: var(--font-title);
   font-size: 1.85rem;
-  font-weight: 400;
+  font-weight: 700;
   color: var(--text);
   margin: 0 0 0.25rem;
   letter-spacing: -0.02em;
@@ -227,8 +273,130 @@ label {
 }
 
 @media (min-width: 1100px) {
-  .auth-form--signup #div_id_password1 .form-text ul {
+  .auth-form--signup #div_id_password1 .form-text ul,
+  .auth-form--password #div_id_new_password1 .form-text ul {
     columns: 2;
     column-gap: 18px;
   }
 }
+
+/* ── Términos y Condiciones ──────────────────────────────────────────────── */
+
+/* Bloque contenedor dentro del form grid */
+#div_id_terms_accepted {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Caja desplazable con el texto de T&C */
+.terms-scroll-box {
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--text-dim);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+  scroll-behavior: smooth;
+  transition: border-color var(--transition);
+}
+.terms-scroll-box:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.terms-scroll-box h5 {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+.terms-scroll-box h6 {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 14px 0 4px;
+}
+.terms-scroll-box p {
+  margin: 0 0 8px;
+}
+
+/* Fila del checkbox */
+.terms-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.terms-checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.terms-label {
+  font-size: 0.82rem;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  cursor: pointer;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+/* Botones-link inline en la label */
+.terms-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.terms-link-btn:hover {
+  color: var(--accentHover);
+}
+
+/* Error del checkbox */
+.terms-check-row--error .terms-checkbox {
+  outline: 2px solid #e74c3c;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.terms-error {
+  font-size: 0.78rem;
+  color: #e74c3c;
+  margin-top: -4px;
+}
+
+/* ── Campos de contraseña con botón mostrar/ocultar ─────────────────────── */
+.pw-field-wrap {
+  position: relative;
+}
+.pw-field-wrap .form-control {
+  padding-right: 2.8rem !important;
+}
+.pw-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: .9rem;
+  padding: 4px;
+  transition: color var(--transition);
+  line-height: 1;
+}
+.pw-toggle:hover { color: var(--text); }

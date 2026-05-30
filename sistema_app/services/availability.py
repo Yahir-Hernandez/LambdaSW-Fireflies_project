@@ -1,9 +1,4 @@
-"""
-Servicio de disponibilidad de hospedajes en un rango de fechas determinado.
-
-Tipos de hospedaje:
-* **CABIN**: cabaña exclusiva. Cualquier reserva activa traslapada la bloquea.
-* **CAMPING**: parcela compartible. Admite varias reservas hasta sumar aluna capacidad n.
+"""Calcula la disponibilidad de hospedajes en un rango de fechas.
 """
 
 from __future__ import annotations
@@ -15,15 +10,16 @@ from ..models import Lodging, Park, Reservation
 
 
 class AvailabilityService:
-    """Disponibilidad de hospedajes según rango y tipo.
+    """Servicio que determina cuántos lugares quedan libres en un hospedaje.
 
-    Una reserva A se considera traslapada con el rango de fechas [s, e) si
-    (A.start_date < e) ^ (A.end_date > s).
+    Una reserva existente A se considera traslapada con un rango de
+    fechas que va de s a e cuando A inicia antes de e y termina después
+    de s.
     """
 
     @staticmethod
     def _overlap(qs, start_date: date, end_date: date):
-        """Filtra las reservas activas que se traslapan con el rango."""
+        """Filtra del conjunto las reservas activas que se traslapan con el rango."""
         return qs.filter(
             status=Reservation.Status.ACTIVE,
             start_date__lt=end_date,
@@ -34,8 +30,18 @@ class AvailabilityService:
     def people_booked(
         cls, lodging: Lodging, start_date: date, end_date: date
     ) -> int:
-        """Suma de las n personas de las reservas activas traslapadas.
-        0 si no hay."""
+        """
+        Devuelve la cantidad total de personas reservadas en el rango.
+
+        Args:
+            lodging: Hospedaje a consultar.
+            start_date: Día de inicio del rango.
+            end_date: Día de fin del rango.
+
+        Returns:
+            Suma de personas en reservas activas que cubren el rango. Si
+            no hay reservas, devuelve cero.
+        """
         return (
             cls._overlap(
                 Reservation.objects.filter(lodging=lodging),
@@ -49,7 +55,13 @@ class AvailabilityService:
     def remaining_capacity(
         cls, lodging: Lodging, start_date: date, end_date: date
     ) -> int:
-        """Retorna la capacidad residual de un hospedaje."""
+        """
+        Devuelve cuántos lugares libres tiene el hospedaje en el rango.
+
+        Para una cabaña, devuelve cero si existe cualquier reserva
+        traslapada. Para una parcela de camping, devuelve la capacidad
+        menos las personas ya reservadas, sin pasar nunca de cero.
+        """
         if lodging.kind == Lodging.Kind.CABIN:
             booked = cls._overlap(
                 Reservation.objects.filter(lodging=lodging),
@@ -68,8 +80,22 @@ class AvailabilityService:
         end_date: date,
         n_people: int = 1,
     ) -> Iterable[Lodging]:
-        """Hospedajes del tipo dado que admiten al menos n personas.
-        Se ordenan en orden decreciente por capacidad.
+        """
+        Devuelve los hospedajes del tipo indicado que admiten al menos n personas.
+
+        Args:
+            park: Parque del cual buscar hospedajes.
+            kind: Tipo de hospedaje a filtrar, cabaña o camping.
+            start_date: Día de inicio del rango deseado.
+            end_date: Día de fin del rango deseado.
+            n_people: Cantidad mínima de personas que el hospedaje debe
+                poder recibir.
+
+        Returns:
+            Lista de hospedajes que satisfacen el filtro, ordenados por
+            capacidad ascendente y luego por nombre. A cada elemento se
+            le agrega el atributo available_capacity con los lugares
+            libres calculados.
         """
         candidates = park.lodgings.filter(kind=kind).order_by("capacity", "name")
         result = []
@@ -88,5 +114,5 @@ class AvailabilityService:
         end_date: date,
         n_people: int = 1,
     ) -> bool:
-        """True si caben n personas en el rango."""
+        """Indica si caben n personas en el hospedaje durante el rango."""
         return cls.remaining_capacity(lodging, start_date, end_date) >= n_people

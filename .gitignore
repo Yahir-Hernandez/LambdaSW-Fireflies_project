@@ -10,9 +10,6 @@
 
 db.sqlite3
 
-CLAUDE.md
-claude.md
-
 # Entornos virtuales
 venv/
 env/
@@ -24,6 +21,9 @@ conda_env/
 # Static y media
 staticfiles/
 media/
+
+# Correos guardados por el backend filebased en desarrollo
+sent_emails/
 
 # pytest
 .pytest_cache/

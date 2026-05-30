@@ -17,22 +17,22 @@
     <span class="ff" style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%;"></span>
   </div>
 
-    <div class="profile-container"
-      data-forest-images="
-        {% static 'img/forests/forest_1.jpg' %}|
-        {% static 'img/forests/forest_2.jpg' %}|
-        {% static 'img/forests/forest_3.jpg' %}|
-        {% static 'img/forests/forest_4.jpg' %}|
-        {% static 'img/forests/forest_5.jpg' %}|
-        {% static 'img/forests/forest_6.jpg' %}|
-        {% static 'img/forests/forest_7.jpg' %}|
-        {% static 'img/forests/forest_8.jpg' %}|
-        {% static 'img/forests/forest_9.jpg' %}|
-        {% static 'img/forests/forest_10.jpg' %}|
-        {% static 'img/forests/forest_12.jpg' %}">
+  <div class="profile-container"
+    data-forest-images="
+      {% static 'img/forests/forest_1.webp' %}|
+      {% static 'img/forests/forest_2.webp' %}|
+      {% static 'img/forests/forest_3.webp' %}|
+      {% static 'img/forests/forest_4.webp' %}|
+      {% static 'img/forests/forest_5.webp' %}|
+      {% static 'img/forests/forest_6.webp' %}|
+      {% static 'img/forests/forest_7.webp' %}|
+      {% static 'img/forests/forest_8.webp' %}|
+      {% static 'img/forests/forest_9.webp' %}|
+      {% static 'img/forests/forest_10.webp' %}|
+      {% static 'img/forests/forest_12.webp' %}">
 
     <div class="profile-content">
-
+      <!-- Sección de información del perfil -->
       <div class="profile-section profile-section--info">
         <div class="profile-info-card">
           <div class="profile-info-card__avatar" aria-hidden="true">
@@ -59,30 +59,33 @@
               <span class="profile-info-row__value">{{ user.username }}</span>
             </div>
           </div>
-          <div class="profile-info-card__actions" style="margin-top:16px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+          <div class="profile-info-card__actions">
             {% if user.is_staff %}
-              <a href="{% url 'admin:index' %}" class="btn btn--primary btn--sm" style="min-width:200px;text-align:center;">
+              <a href="{% url 'admin:index' %}" class="btn btn--primary btn--sm">
                 Panel de administración
               </a>
             {% endif %}
+            <a href="{% url 'sistema_app:password_change' %}" class="btn btn--outline btn--sm">
+               Cambiar contraseña
+            </a>
             <form method="post" action="{% url 'sistema_app:logout' %}">
               {% csrf_token %}
-              <button type="submit" class="btn btn--outline btn--sm" style="min-width:200px;">
+              <button type="submit" class="btn btn--outline btn--sm">
                 <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
               </button>
             </form>
           </div>
         </div>
       </div>
-      
 
+      <!-- Sección de reservas -->
       <div class="profile-section">
         <h2 class="section-title">
           <i class="fa-solid fa-calendar-check"></i>
           {% if show_past %}Reservas pasadas{% else %}Reservas actuales{% endif %}
         </h2>
 
-        <div class="reservations-tabs" style="margin:8px 0 16px;display:flex;gap:8px;">
+        <div class="reservations-tabs">
           {% if show_past %}
             <a class="btn btn--outline btn--sm" href="{% url 'sistema_app:perfil' %}">
               <i class="fa-solid fa-arrow-left"></i> Ver reservas actuales
@@ -100,21 +103,15 @@
             <div class="filters-grid">
               <label class="filter-field">
                 <span class="filter-label">Buscar</span>
-                <input
-                  type="search"
-                  name="q"
-                  class="filter-input"
-                  placeholder="Parque u hospedaje"
-                  value="{{ filters.q }}"
-                />
+                <input type="search" name="q" class="filter-input" placeholder="Parque u hospedaje" value="{{ filters.q }}">
               </label>
               <label class="filter-field">
                 <span class="filter-label">Desde</span>
-                <input type="date" name="from" class="filter-input" value="{{ filters.from }}" />
+                <input type="date" name="from" class="filter-input" value="{{ filters.from }}">
               </label>
               <label class="filter-field">
                 <span class="filter-label">Hasta</span>
-                <input type="date" name="to" class="filter-input" value="{{ filters.to }}" />
+                <input type="date" name="to" class="filter-input" value="{{ filters.to }}">
               </label>
               <label class="filter-field">
                 <span class="filter-label">Ordenar</span>
@@ -126,12 +123,8 @@
               </label>
             </div>
             <div class="filters-actions">
-              <button type="submit" class="btn btn--primary btn--sm">
-                Aplicar
-              </button>
-              <a class="btn btn--ghost btn--sm" href="{% if show_past %}{% url 'sistema_app:perfil' %}?show=past{% else %}{% url 'sistema_app:perfil' %}{% endif %}">
-                Limpiar
-              </a>
+              <button type="submit" class="btn btn--primary btn--sm">Aplicar</button>
+              <a class="btn btn--ghost btn--sm" href="{% if show_past %}{% url 'sistema_app:perfil' %}?show=past{% else %}{% url 'sistema_app:perfil' %}{% endif %}">Limpiar</a>
             </div>
           </form>
         </div>
@@ -141,7 +134,7 @@
             {% for reserva in reservas %}
             <div class="reservation-card">
               <div class="reservation-image">
-                <img src="{% static 'img/forests/forest_1.jpg' %}" class="reservation__img" alt="Bosque" loading="lazy" />
+                <img src="{% static 'img/forests/forest_1.webp' %}" class="reservation__img" alt="Bosque" loading="lazy" />
               </div>
               <div class="reservation-info">
                 <div class="reservation-header">
@@ -152,16 +145,16 @@
                 </div>
                 <div class="reservation-actions">
                   {% if reserva.is_cancellable %}
-                    <form method="post" action="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
-                          onsubmit="return confirm('¿Cancelar la reservación #{{ reserva.pk }}?');">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn--outline btn--sm btn--alert">
-                        <i class="fa-solid fa-xmark"></i> Cancelar reserva
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      class="btn btn--outline btn--sm btn--alert js-cancel-btn"
+                      data-reserva-park="{{ reserva.park.name }}"
+                      data-cancel-url="{% url 'sistema_app:reservation_cancel' reserva.pk %}"
+                    >
+                      <i class="fa-solid fa-xmark"></i> Cancelar reserva
+                    </button>
                   {% endif %}
                 </div>
-
                 <div class="reservation-details">
                   <div class="detail-item">
                     <i class="fa-solid fa-calendar-days"></i>
@@ -176,11 +169,7 @@
                     <span>{{ reserva.lodging.get_kind_display }} · {{ reserva.lodging.name }}</span>
                   </div>
                 </div>
-
-                
               </div>
-
-              
             </div>
             {% endfor %}
           {% else %}
@@ -204,9 +193,43 @@
     </div>
   </div>
 </section>
+
+{# ── Modal de confirmación de cancelación ──────────────────────────────── #}
+<dialog id="cancel-confirm-dialog" class="auth-dialog" aria-labelledby="cancel-dialog-title">
+  <div class="auth-dialog__body">
+    <div class="auth-dialog__icon auth-dialog__icon--danger" aria-hidden="true">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <h3 class="auth-dialog__title" id="cancel-dialog-title">¿Cancelar reserva?</h3>
+    <p class="auth-dialog__desc" id="cancel-dialog-desc">
+      Estás a punto de cancelar tu reserva en <strong id="cancel-park-name"></strong>.
+      Esta acción no se puede deshacer.
+    </p>
+    <div class="auth-dialog__actions">
+      <button type="button" class="btn btn--ghost" id="cancel-dialog-no">
+        Volver
+      </button>
+      <button type="button" class="btn btn--accent" id="cancel-dialog-yes">
+        Sí, cancelar
+      </button>
+    </div>
+  </div>
+</dialog>
+
+{# ── Modal de éxito tras cancelar ──────────────────────────────────────── #}
+<dialog id="cancel-success-dialog" class="auth-dialog auth-dialog--success" aria-labelledby="cancel-success-title">
+  <div class="auth-dialog__body">
+    <div class="auth-dialog__icon" aria-hidden="true">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <h3 class="auth-dialog__title" id="cancel-success-title">Reserva cancelada</h3>
+    <p class="auth-dialog__desc">Actualizando tu lista de reservas…</p>
+  </div>
+</dialog>
 {% endblock %}
 
 {% block extra_js %}
-  <script src="{% static 'script/perfil.js' %}"></script>
+  <script src="{% static 'script/perfil.js' %}"></script>   <!-- Solo para las imágenes de fondo -->
   <script src="{% static 'script/luciernagas.js' %}"></script>
+  <script src="{% static 'script/reservation_cancel.js' %}"></script>
 {% endblock %}

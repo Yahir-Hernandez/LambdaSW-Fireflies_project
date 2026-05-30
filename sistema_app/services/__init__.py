@@ -1,19 +1,27 @@
 """Capa de servicios del dominio de reservaciones.
 
-Un módulo por responsabilidad:
+Cada módulo de este paquete cumple una sola responsabilidad:
 
-* ``validation``      RNB-01..04 sobre los datos de una posible reserva
-* ``availability``    cálculo de huecos disponibles (CABIN vs CAMPING)
-* ``notification``    envío de correos transaccionales
-* ``reservations``    orquestador: crea / cancela / consulta
+* validation. Aplica las reglas de negocio RNB-01 a RNB-04 sobre los datos
+  de una posible reserva.
+* availability. Calcula la capacidad libre de cabañas y parcelas de
+  camping en un rango de fechas.
+* lodging_validation. Impide bajar la capacidad de un hospedaje por
+  debajo de lo que ya está reservado.
+* notification. Envía correos transaccionales al usuario.
+* checkin. Cambia la reservación de estado activa a usada cuando se
+  escanea el QR en la entrada.
+* reservations. Orquestador principal. Crea, cancela y consulta
+  reservaciones.
 
-Consumir siempre desde ``sistema_app.services`` para no acoplarse a la
-organización interna.
+Los consumidores externos siempre deben importar desde sistema_app.services
+y no desde los módulos internos, para no acoplarse a la organización del
+paquete.
 """
 
-# ``secrets`` se re-exporta a nivel de paquete porque los tests existentes
-# mockean ``sistema_app.services.secrets.randbelow``. Como los módulos son
-# singleton, el patch aplica también al uso real desde ``sistema_app.utils``.
+# Se re-exporta a nivel de paquete porque los tests mockean
+# sistema_app.services.secrets.randbelow y el parche debe aplicar también
+# al uso real desde sistema_app.utils.
 import secrets  # noqa: F401
 
 from ..utils import generate_verification_code, mask_email

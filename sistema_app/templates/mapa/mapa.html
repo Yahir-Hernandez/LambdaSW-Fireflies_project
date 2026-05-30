@@ -102,7 +102,7 @@
     </div>
     
     <div class="modal-body">
-      <form id="reservaForm" method="post" action="{% url 'sistema_app:crear_reserva' %}">
+      <form id="reservaForm" method="post" action="{% url 'sistema_app:crear_reserva' %}" data-loader>
         {% csrf_token %}
         <div class="reserva-layout">
           <div class="reserva-info-sidebar">

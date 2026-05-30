@@ -138,13 +138,15 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Email — en desarrollo imprimimos los correos en consola. En producción se
-# debe configurar un backend SMTP real. Los fallos de envío no invalidan la
+# Email — por defecto, en desarrollo los correos se guardan como archivos en
+# EMAIL_FILE_PATH (terminal limpia, pero inspeccionables). En producción se
+# configura un backend SMTP real vía .env. Los fallos de envío no invalidan la
 # reservación (ver NotificationService).
 EMAIL_BACKEND = env(
     'EMAIL_BACKEND',
-    default='django.core.mail.backends.console.EmailBackend',
+    default='django.core.mail.backends.filebased.EmailBackend',
 )
+EMAIL_FILE_PATH = env('EMAIL_FILE_PATH', default=str(BASE_DIR / 'sent_emails'))
 DEFAULT_FROM_EMAIL = env(
     'DEFAULT_FROM_EMAIL',
     default='noreply@luciernagas2026.mx',

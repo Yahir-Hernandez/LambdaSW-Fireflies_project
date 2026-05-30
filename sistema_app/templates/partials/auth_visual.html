@@ -1,0 +1,14 @@
+{% load static %}
+{# Columna visual compartida por las páginas de autenticación (luciérnagas + logo). #}
+<div class="auth-visual" aria-hidden="true">
+  <div class="hero__stars"></div>
+  <div class="hero__fireflies">
+    <span class="ff" style="--dx: 16px; --dy: -20px; --dur: 3.2s; left: 18%; top: 20%;"></span>
+    <span class="ff" style="--dx: -18px; --dy: 14px; --dur: 3.6s; left: 72%; top: 28%;"></span>
+    <span class="ff" style="--dx: 10px; --dy: -16px; --dur: 2.8s; left: 84%; top: 54%;"></span>
+    <span class="ff" style="--dx: -20px; --dy: 10px; --dur: 4.1s; left: 30%; top: 72%;"></span>
+    <span class="ff" style="--dx: 12px; --dy: -14px; --dur: 3.4s; left: 55%; top: 78%;"></span>
+    <span class="ff" style="--dx: -14px; --dy: 18px; --dur: 3.9s; left: 8%; top: 60%;"></span>
+  </div>
+  <img src="{% static 'img/logo_b.png' %}" alt="Logo del Festival" class="logo" />
+</div>

@@ -1,7 +1,7 @@
 """Orquestador de operaciones de reservación.
 
-Única capa que debe consumirse desde vistas / admin para crear, cancelar
-o consultar reservaciones.
+Es la única capa que las vistas y el panel de administración deben
+consumir para crear, cancelar o consultar reservaciones.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from .validation import ReservationValidator
 
 
 class ReservationService:
-    """Crea, cancela y lista reservaciones aplicando reglas y notificaciones."""
+    """Crea, cancela y lista reservaciones aplicando las reglas y los avisos por correo."""
 
     @classmethod
     @transaction.atomic
@@ -30,15 +30,30 @@ class ReservationService:
         end_date: date,
         n_people: int,
     ) -> Reservation:
-        """Crea una reservación validando RNB y disponibilidad.
-        Usa @transaction.atomic para las condiciones de carrera que pudiesen
-        existir.
-        
-        Raises
-        ------
-        ValidationError
-            Parque eliminado, RNB violada, o sin capacidad.
         """
+        Crea una reservación verificando las reglas de negocio y la disponibilidad.
+
+        Toda la operación corre dentro de una transacción para evitar las
+        condiciones de carrera cuando varios usuarios reservan al mismo
+        tiempo. Tras guardar la reserva, se programa el envío del correo
+        de confirmación para después del commit.
+
+        Args:
+            user: Usuario que realiza la reservación.
+            lodging: Cabaña o parcela seleccionada.
+            start_date: Día en que comienza la estancia.
+            end_date: Día en que termina la estancia.
+            n_people: Número de personas que se hospedarán.
+
+        Returns:
+            La reservación recién creada en estado activa.
+
+        Raises:
+            ValidationError: Si el parque fue eliminado, si alguna regla
+                de negocio se incumple, o si ya no queda capacidad.
+        """
+        # Bloqueo a nivel de fila sobre el hospedaje para evitar que dos
+        # usuarios reserven la misma cabaña simultáneamente.
         locked_lodging = (
             Lodging.objects.select_for_update()
             .select_related("park")
@@ -85,16 +100,23 @@ class ReservationService:
 
     @classmethod
     def cancel_reservation(cls, user, reservation: Reservation) -> Reservation:
-        """Cancela borrando la fila tras agendar el correo de cancelación.
+        """
+        Cancela una reservación y programa el envío del correo de aviso.
 
-        El objeto Python retornado conserva los atributos cargados en memoria
-        (gracias a select_related), por lo que callers pueden seguir usando
-        ``reservation.pk`` para mensajes flash o logs.
+        La reservación se elimina de la base de datos, pero el objeto
+        Python devuelto conserva los atributos en memoria para que el
+        llamador pueda seguir mostrándolos en mensajes flash o referencias.
 
-        Raises
-        ------
-        ValidationError
-            Sin permisos, o reserva no cancelable.
+        Args:
+            user: Usuario que solicita la cancelación.
+            reservation: Reservación a cancelar.
+
+        Returns:
+            La reservación eliminada, con sus atributos aún cargados.
+
+        Raises:
+            ValidationError: Si el usuario no tiene permiso o si la
+                reservación ya no es cancelable por su estado o fecha.
         """
         if reservation.user_id != getattr(user, "id", None) and not user.is_staff:
             raise ValidationError("No tienes permisos para cancelar esta reservación.")
@@ -103,8 +125,8 @@ class ReservationService:
                 "Solo es posible cancelar una reserva activa antes de su fecha de inicio."
             )
 
-        # Re-cargamos con select_related para que el closure del email tenga
-        # todos los datos en memoria incluso después del DELETE.
+        # Se recarga con datos relacionados para que el correo siga
+        # teniendo toda la información disponible después del borrado.
         reservation = (
             Reservation.objects.select_related("user", "park", "lodging")
             .get(pk=reservation.pk)
@@ -113,8 +135,8 @@ class ReservationService:
         with transaction.atomic():
             saved_pk = reservation.pk
             reservation.delete()
-            # Django setea pk=None tras delete; lo restauramos para que el
-            # subject "Cancelación de reserva #N" quede correcto.
+            # Django deja pk en None tras eliminar; lo restauramos para
+            # que el asunto del correo conserve el número original.
             reservation.pk = saved_pk
             reservation.id = saved_pk
             transaction.on_commit(
@@ -124,7 +146,7 @@ class ReservationService:
 
     @classmethod
     def get_user_reservations(cls, user, only_active: bool = False):
-        """Reservaciones del usuario, con park/lodging pre-cargados."""
+        """Devuelve las reservaciones del usuario con el parque y el hospedaje precargados."""
         qs = Reservation.objects.filter(user=user).select_related("park", "lodging")
         if only_active:
             qs = qs.filter(status=Reservation.Status.ACTIVE)
