@@ -25,6 +25,9 @@ conda_env/
 staticfiles/
 media/
 
+# Correos guardados por el backend filebased en desarrollo
+sent_emails/
+
 # pytest
 .pytest_cache/
 */.pytest_cache/
