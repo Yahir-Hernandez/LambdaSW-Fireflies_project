@@ -8,6 +8,7 @@ método devuelve False.
 
 from __future__ import annotations
 
+import logging
 from email.mime.image import MIMEImage
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from ..utils import generate_qr_png
 
 # Ruta del logo embebido en todos los correos.
 _LOGO_PATH = Path(__file__).resolve().parent.parent / "static" / "img" / "logo_b.png"
+logger = logging.getLogger(__name__)
 
 
 def _read_logo_bytes() -> bytes:
@@ -31,6 +33,7 @@ def _read_logo_bytes() -> bytes:
         try:
             _read_logo_bytes._cache = _LOGO_PATH.read_bytes()
         except OSError:
+            logger.warning("No se pudo leer el logo embebido para correos: %s", _LOGO_PATH)
             _read_logo_bytes._cache = b""
     return _read_logo_bytes._cache
 
@@ -148,6 +151,7 @@ class NotificationService:
         las imágenes dentro del cuerpo y no como adjuntos al pie.
         """
         if not recipient:
+            logger.warning("Se canceló el envío de correo porque el destinatario está vacío. subject=%s", subject)
             return False
 
         msg = EmailMultiAlternatives(
@@ -168,8 +172,10 @@ class NotificationService:
 
         try:
             msg.send(fail_silently=False)
+            logger.info("Correo enviado correctamente. subject=%s recipient=%s html=%s inline_images=%s", subject, recipient, bool(html_body), len(inline_images or []))
             return True
         except Exception:
+            logger.exception("Fallo al enviar correo. subject=%s recipient=%s html=%s inline_images=%s", subject, recipient, bool(html_body), len(inline_images or []))
             return False
 
     @classmethod
