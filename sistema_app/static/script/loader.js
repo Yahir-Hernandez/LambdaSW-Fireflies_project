@@ -33,7 +33,9 @@
 
     // Mostrar el loader al enviar formularios marcados con data-loader.
     document.querySelectorAll('form[data-loader]').forEach(function (form) {
-      form.addEventListener('submit', function () {
+      form.addEventListener('submit', function (event) {
+        // Si otra validación JS ya canceló el envío, no mostrar.
+        if (event.defaultPrevented) return;
         // Si el navegador bloquea el envío por validación nativa, no mostrar.
         if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
         show();

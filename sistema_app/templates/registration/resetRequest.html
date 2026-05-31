@@ -25,6 +25,10 @@
               Ingresa el correo asociado a tu cuenta y te enviaremos un código de verificación.
             </p>
 
+            {% if error %}
+              <div class="alert alert-danger" role="alert">{{ error }}</div>
+            {% endif %}
+
             <form method="post" class="auth-form auth-form--stack" data-loader>
               {% csrf_token %}
               <div>
@@ -35,6 +39,7 @@
                   id="id_email"
                   class="form-control"
                   placeholder="tu@correo.com"
+                  value="{{ email|default:'' }}"
                   required
                   autofocus
                 >

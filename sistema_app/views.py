@@ -485,6 +485,11 @@ def password_reset_request(request):
     if request.method == "POST":
         email = (request.POST.get("email") or "").strip().lower()
         user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            return render(request, "registration/resetRequest.html", {
+                "error": "Este correo no está asociado a ninguna cuenta.",
+                "email": email,
+            })
         if user:
             # Invalidar tokens anteriores no usados
             PasswordResetToken.objects.filter(user=user, is_used=False).update(is_used=True)
