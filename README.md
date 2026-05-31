@@ -1,6 +1,8 @@
 # Festival Internacional de las Luciérnagas
 
-<img src="sistema_app/static/img/logo_b.png" alt="Logo del proyecto" width="300"/>
+<p align="center">
+   <img src="sistema_app/static/img/logo_b.png" alt="Logo del proyecto" width="300"/>
+</p>
 
 Página web desarrollada con Django como proyecto final para la materia de Ingeniería de Software.
 
