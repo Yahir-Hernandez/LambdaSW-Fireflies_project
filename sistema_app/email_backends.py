@@ -55,6 +55,7 @@ class SendGridEmailBackend(BaseEmailBackend):
         if not email_messages:
             return 0
         if not self.api_key:
+            logger.error("SENDGRID_API_KEY no está configurada.")
             if self.fail_silently:
                 return 0
             raise ValueError("SENDGRID_API_KEY no está configurada.")
@@ -80,11 +81,39 @@ class SendGridEmailBackend(BaseEmailBackend):
 
         try:
             with urlopen(request, timeout=self.timeout) as response:
+                logger.info(
+                    "SendGrid aceptó el correo. status=%s subject=%s recipient_count=%s",
+                    response.status,
+                    message.subject,
+                    len(getattr(message, "to", []) or []),
+                )
                 return 200 <= response.status < 300
         except (HTTPError, URLError, TimeoutError, OSError) as exc:
+            if isinstance(exc, HTTPError):
+                response_body = b""
+                try:
+                    response_body = exc.read() or b""
+                except Exception:
+                    response_body = b""
+
+                logger.warning(
+                    "SendGrid rechazó el envío. status=%s reason=%s subject=%s recipient_count=%s body=%s",
+                    exc.code,
+                    exc.reason,
+                    message.subject,
+                    len(getattr(message, "to", []) or []),
+                    response_body.decode("utf-8", errors="replace")[:1000],
+                )
+            else:
+                logger.warning(
+                    "Fallo de red al enviar correo por SendGrid. subject=%s recipient_count=%s error=%s",
+                    message.subject,
+                    len(getattr(message, "to", []) or []),
+                    exc,
+                )
+
             if not self.fail_silently:
                 raise
-            logger.warning("SendGrid rechazó el envío de correo: %s", exc)
             return False
 
     def _build_payload(self, message) -> dict:
