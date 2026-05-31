@@ -28,9 +28,11 @@ instalar ninguna dependencia.
 Si así lo prefieres, también puedes ejecutar nuestro proyecto desde tu máquina local.
 Siéntete libre de explorar los archivos de nuestro proyecto para visualizar cómo está construído.
 
+A continuación se muestra una guía breve de cómo ejecutar este proyecto.
+
 ---
 
-### Instalación de Conda
+### 1. Instalación de Conda
 
 El proyecto utiliza **Conda** para la gestión de un entorno virtual. 
 Es la única dependencia que debe instalarse manualmente y puede obtenerse de manera completamente gratuita:
@@ -42,23 +44,23 @@ Instálalo con las opciones por defecto.
 Para verificar la instalación, abre una terminal y ejecuta:
 
 ```bash
-   conda --version
+conda --version
 ```
 
 ---
 
-### Clonar el repositorio
+### 2. Clonar el repositorio
 
 1. Descarga o clona este repositorio en tu máquina local.
 2. Abre una terminal y navega hasta la carpeta del proyecto.
-3. 
+
 ```bash
 cd <tu_ruta_al_proyecto>/LambdaSW-Fireflies_project
 ```
 
 ---
 
-### Crear y activar el entorno virtual
+### 3. Crear y activar el entorno virtual
 
 Instala las dependencias del proyecto (este comando solo se ejecuta una vez):
 
@@ -77,7 +79,7 @@ Cada vez que abras una nueva terminal para trabajar con el proyecto, deberás ej
 
 ---
 
-### Migrar la base de datos
+### 4. Migrar la base de datos
 
 Ejecuta las migraciones para inicializar la base de datos:
 
@@ -87,7 +89,7 @@ python manage.py migrate
 
 ---
 
-### (Opcional) Crear un usuario administrador
+### 5. (Opcional) Crear un usuario administrador
 
 Si necesitas acceso al panel de administración ejecuta el comando:
 
@@ -99,7 +101,7 @@ Y sigue las instrucciones en terminal para registrar el nuevo usuario.
 
 ---
 
-### Ejecutar el servidor
+### 6. Ejecutar el servidor
 
 Inicia el servidor de desarrollo:
 
