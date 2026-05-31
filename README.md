@@ -21,12 +21,14 @@ Página web desarrollada con Django como proyecto final para la materia de Ingen
 La aplicación ya cuenta con un despliegue disponible para que se pueda probar sin necesidad de
 instalar ninguna dependencia.
 
-¡Página en vivo del [Festival Internacional de las Luciérnagas](https://luciernagas2026-tg3o.onrender.com/)!
+- ¡Página en vivo del [Festival Internacional de las Luciérnagas](https://luciernagas2026-tg3o.onrender.com/)!
 
 ## Ejecución Local
 
 Si así lo prefieres, también puedes ejecutar nuestro proyecto desde tu máquina local.
 Siéntete libre de explorar los archivos de nuestro proyecto para visualizar cómo está construído.
+
+---
 
 ### Instalación de Conda
 
