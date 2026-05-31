@@ -43,6 +43,21 @@ class TestHomeView:
         assert response.status_code == 200
 
 
+@pytest.mark.django_db
+class TestReservationQrPng:
+    def test_returns_png_without_login(self, client, active_reservation, settings):
+        settings.SITE_URL = "https://luciernagas2026.onrender.com"
+        response = client.get(
+            reverse(
+                "sistema_app:reservation_qr_png",
+                args=[active_reservation.checkin_token],
+            )
+        )
+        assert response.status_code == 200
+        assert response["Content-Type"] == "image/png"
+        assert response.content.startswith(b"\x89PNG")
+
+
 # ===========================================================================
 # register
 # ===========================================================================

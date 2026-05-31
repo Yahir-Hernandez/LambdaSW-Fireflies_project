@@ -7,3 +7,6 @@ Fecha de inicio: {{ start_date }}
 Fecha de término: {{ end_date }}
 Personas: {{ people }}
 Código de reserva: #{{ reservation_id }}
+
+Si no puedes ver el código QR en tu correo, abre este enlace:
+{{ qr_url }}

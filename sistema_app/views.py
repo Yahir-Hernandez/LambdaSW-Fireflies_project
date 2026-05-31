@@ -11,18 +11,18 @@ from django.contrib.auth import (
 )
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.db.models import Sum
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render, resolve_url
-from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST
-
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render, resolve_url
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import CustomPasswordChangeForm, CustomUserCreationForm
 from .models import Lodging, LoginAttempt, Park, PendingRegistration, PasswordResetToken, Reservation
@@ -33,6 +33,7 @@ from .services import (
     generate_verification_code,
     mask_email,
 )
+from .utils import generate_qr_png
 
 
 def home(request):
@@ -70,6 +71,23 @@ def home(request):
 def festival(request):
     """Renderiza la página informativa del festival."""
     return render(request, "festival.html")
+
+
+@require_GET
+def reservation_qr_png(request, token):
+    """
+    Devuelve el QR de una reservación como PNG para clientes de correo.
+
+    La URL usa el token opaco de check-in, no el ID numérico de la reserva,
+    para que pueda abrirse desde Gmail/Outlook móvil sin iniciar sesión.
+    """
+    reservation = get_object_or_404(Reservation, checkin_token=token)
+    checkin_path = reverse(
+        "admin:sistema_app_reservation_checkin_data",
+        args=[reservation.checkin_token],
+    )
+    checkin_url = f"{settings.SITE_URL.rstrip('/')}{checkin_path}"
+    return HttpResponse(generate_qr_png(checkin_url), content_type="image/png")
 
 
 def _safe_next(request, fallback="sistema_app:home"):

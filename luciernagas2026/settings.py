@@ -24,12 +24,26 @@ environ.Env.read_env(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-local-dev-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list(
+    'ALLOWED_HOSTS',
+    default=['localhost', '127.0.0.1', '[::1]'],
+)
+RENDER_EXTERNAL_HOSTNAME = env('RENDER_EXTERNAL_HOSTNAME', default='')
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+if RENDER_EXTERNAL_HOSTNAME:
+    render_origin = f"https://{RENDER_EXTERNAL_HOSTNAME}"
+    if render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(render_origin)
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
@@ -56,6 +70,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -88,12 +103,19 @@ WSGI_APPLICATION = 'luciernagas2026.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = env('DATABASE_URL', default='')
+if DATABASE_URL:
+    DATABASES = {
+        'default': env.db('DATABASE_URL'),
     }
-}
+    DATABASES['default']['CONN_MAX_AGE'] = env.int('DATABASE_CONN_MAX_AGE', default=600)
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -136,12 +158,28 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+WHITENOISE_MANIFEST_STRICT = env.bool('WHITENOISE_MANIFEST_STRICT', default=False)
+USE_WHITENOISE_STORAGE = env.bool(
+    'USE_WHITENOISE_STORAGE',
+    default=env.bool('RENDER', default=False),
+)
+
+if USE_WHITENOISE_STORAGE:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
 
 # Email — por defecto, en desarrollo los correos se guardan como archivos en
 # EMAIL_FILE_PATH (terminal limpia, pero inspeccionables). En producción se
-# configura un backend SMTP real vía .env. Los fallos de envío no invalidan la
-# reservación (ver NotificationService).
+# configura un backend real vía .env. En Render se usa SendGrid por HTTP.
+# Los fallos de envío no invalidan la reservación (ver NotificationService).
 EMAIL_BACKEND = env(
     'EMAIL_BACKEND',
     default='django.core.mail.backends.filebased.EmailBackend',
@@ -158,10 +196,27 @@ EMAIL_USE_TLS       = env.bool('EMAIL_USE_TLS',  default=True)
 EMAIL_HOST_USER     = env('EMAIL_HOST_USER',     default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
+# SendGrid Web API v3. Actívalo con:
+# EMAIL_BACKEND=sistema_app.email_backends.SendGridEmailBackend
+SENDGRID_API_KEY = env('SENDGRID_API_KEY', default='')
+SENDGRID_API_URL = env(
+    'SENDGRID_API_URL',
+    default='https://api.sendgrid.com/v3/mail/send',
+)
+SENDGRID_TIMEOUT = env.int('SENDGRID_TIMEOUT', default=10)
+SENDGRID_SANDBOX_MODE = env.bool('SENDGRID_SANDBOX_MODE', default=False)
+
+# inline: usa CID/MIME como SMTP tradicional.
+# remote: usa URLs HTTPS para mejorar compatibilidad en Gmail/Outlook móvil.
+EMAIL_IMAGE_MODE = env('EMAIL_IMAGE_MODE', default='inline')
+
 # URL base usada para construir links absolutos desde código que no tiene
 # acceso a un ``request`` (ej. NotificationService al generar el QR de check-in).
 # En producción debe apuntar al dominio real con ``https://``.
-SITE_URL = env('SITE_URL', default='http://localhost:8000')
+SITE_URL = env(
+    'SITE_URL',
+    default=env('RENDER_EXTERNAL_URL', default='http://localhost:8000'),
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

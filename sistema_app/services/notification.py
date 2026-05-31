@@ -14,6 +14,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.templatetags.static import static
 from django.urls import reverse
 
 from ..models import Reservation
@@ -45,6 +46,59 @@ class NotificationService:
     DEFAULT_FROM = getattr(
         settings, "DEFAULT_FROM_EMAIL", "noreply@luciernagas2026.mx"
     )
+
+    @classmethod
+    def _site_url(cls) -> str:
+        """Devuelve la URL pública del sitio, sin diagonal final."""
+        return getattr(settings, "SITE_URL", "http://localhost:8000").rstrip("/")
+
+    @classmethod
+    def _absolute_url(cls, path: str) -> str:
+        """Convierte una ruta interna en URL absoluta para clientes de correo."""
+        if path.startswith(("http://", "https://", "cid:", "data:")):
+            return path
+        return f"{cls._site_url()}/{path.lstrip('/')}"
+
+    @classmethod
+    def _static_url(cls, path: str) -> str:
+        try:
+            return static(path)
+        except ValueError:
+            static_url = getattr(settings, "STATIC_URL", "/static/")
+            return f"{static_url.rstrip('/')}/{path.lstrip('/')}"
+
+    @classmethod
+    def _use_remote_images(cls) -> bool:
+        """Indica si los correos deben apuntar a imágenes HTTPS en vez de CID."""
+        return getattr(settings, "EMAIL_IMAGE_MODE", "inline").lower() == "remote"
+
+    @classmethod
+    def _logo_context(cls) -> tuple[dict, list[tuple[str, bytes]]]:
+        # Prefer remote images when configured or when the local logo
+        # file cannot be read. This avoids producing an HTML `cid:` src
+        # without an attached image, which many mobile clients show as
+        # a broken image icon.
+        logo_bytes = _read_logo_bytes()
+        if cls._use_remote_images() or not logo_bytes:
+            return {"logo_src": cls._absolute_url(cls._static_url("img/logo_b.png"))}, []
+
+        return {"logo_src": "cid:logo", "logo_cid": "logo"}, [("logo", logo_bytes)]
+
+    @classmethod
+    def _checkin_url(cls, reservation: Reservation) -> str:
+        checkin_path = reverse(
+            "admin:sistema_app_reservation_checkin_data",
+            args=[reservation.checkin_token],
+        )
+        return f"{cls._site_url()}{checkin_path}"
+
+    @classmethod
+    def _reservation_qr_url(cls, reservation: Reservation) -> str:
+        qr_path = reverse(
+            "sistema_app:reservation_qr_png",
+            args=[reservation.checkin_token],
+        )
+        return cls._absolute_url(qr_path)
 
     @classmethod
     def _build_reservation_context(cls, reservation: Reservation) -> dict:
@@ -99,7 +153,7 @@ class NotificationService:
         msg = EmailMultiAlternatives(
             subject=subject,
             body=text_body,
-            from_email=cls.DEFAULT_FROM,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", cls.DEFAULT_FROM),
             to=[recipient],
         )
 
@@ -128,7 +182,6 @@ class NotificationService:
             recipient=recipient,
         )
 
-
     @classmethod
     def send_confirmation_email(cls, reservation: Reservation) -> bool:
         """Envía la confirmación de una reservación junto con su código QR de entrada."""
@@ -138,15 +191,16 @@ class NotificationService:
 
         ctx = cls._build_reservation_context(reservation)
 
-        # URL absoluta del endpoint de check-in.
-        checkin_path = reverse(
-            "admin:sistema_app_reservation_checkin_data",
-            args=[reservation.checkin_token],
-        )
-        checkin_url = f"{settings.SITE_URL.rstrip('/')}{checkin_path}"
-        qr_png = generate_qr_png(checkin_url)
+        checkin_url = cls._checkin_url(reservation)
+        logo_ctx, inline_images = cls._logo_context()
+        if cls._use_remote_images():
+            qr_src = cls._reservation_qr_url(reservation)
+        else:
+            qr_src = "cid:qr"
+            inline_images = [("qr", generate_qr_png(checkin_url)), *inline_images]
 
-        ctx_html = {**ctx, "qr_cid": "qr", "logo_cid": "logo"}
+        ctx = {**ctx, "qr_url": cls._reservation_qr_url(reservation)}
+        ctx_html = {**ctx, **logo_ctx, "qr_src": qr_src, "checkin_url": checkin_url}
         text_body = render_to_string("emails/reservation_confirmation.txt", ctx)
         html_body = render_to_string("emails/reservation_confirmation.html", ctx_html)
 
@@ -155,10 +209,7 @@ class NotificationService:
             text_body=text_body,
             html_body=html_body,
             recipient=recipient,
-            inline_images=[
-                ("qr", qr_png),
-                ("logo", _read_logo_bytes()),
-            ],
+            inline_images=inline_images,
         )
 
     @classmethod
@@ -169,7 +220,8 @@ class NotificationService:
             return False
 
         ctx = cls._build_reservation_context(reservation)
-        ctx_html = {**ctx, "logo_cid": "logo"}
+        logo_ctx, inline_images = cls._logo_context()
+        ctx_html = {**ctx, **logo_ctx}
         text_body = render_to_string("emails/reservation_cancellation.txt", ctx)
         html_body = render_to_string("emails/reservation_cancellation.html", ctx_html)
 
@@ -178,7 +230,7 @@ class NotificationService:
             text_body=text_body,
             html_body=html_body,
             recipient=recipient,
-            inline_images=[("logo", _read_logo_bytes())],
+            inline_images=inline_images,
         )
 
     @classmethod
@@ -187,7 +239,8 @@ class NotificationService:
     ) -> bool:
         """Envía el código de seis dígitos para restablecer la contraseña del usuario."""
         ctx = {"code": code, "name": recipient_name}
-        ctx_html = {**ctx, "logo_cid": "logo"}
+        logo_ctx, inline_images = cls._logo_context()
+        ctx_html = {**ctx, **logo_ctx}
         text_body = render_to_string("emails/password_reset.txt", ctx)
         html_body = render_to_string("emails/password_reset.html", ctx_html)
 
@@ -196,7 +249,7 @@ class NotificationService:
             text_body=text_body,
             html_body=html_body,
             recipient=recipient_email or "",
-            inline_images=[("logo", _read_logo_bytes())],
+            inline_images=inline_images,
         )
 
     @classmethod
@@ -205,7 +258,8 @@ class NotificationService:
     ) -> bool:
         """Envía el código de cinco dígitos para verificar la cuenta del usuario."""
         ctx = {"code": code, "name": recipient_name}
-        ctx_html = {**ctx, "logo_cid": "logo"}
+        logo_ctx, inline_images = cls._logo_context()
+        ctx_html = {**ctx, **logo_ctx}
         text_body = render_to_string("emails/verification_code.txt", ctx)
         html_body = render_to_string("emails/verification_code.html", ctx_html)
 
@@ -214,5 +268,5 @@ class NotificationService:
             text_body=text_body,
             html_body=html_body,
             recipient=recipient_email or "",
-            inline_images=[("logo", _read_logo_bytes())],
+            inline_images=inline_images,
         )

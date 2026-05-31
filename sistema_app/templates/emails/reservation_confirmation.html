@@ -6,7 +6,7 @@
     Hola <strong>{{ user_name }}</strong>, te mostramos un resumen de tu orden.
   </p>
 
-  <table role="presentation" width="100%" cellpadding="8" cellspacing="0" border="0" style="border-collapse:collapse;margin:16px 0;background:#f8f6ef;border-radius:6px;">
+  <table role="presentation" width="100%" cellpadding="8" cellspacing="0" border="0" style="border-collapse:collapse;margin:16px 0;background:#f8f6ef;border-radius:6px;width:100%;">
     <tr><td style="font-weight:bold;color:#0a1d3a;width:40%;">Tipo</td><td>{{ kind_display }}</td></tr>
     <tr><td style="font-weight:bold;color:#0a1d3a;">Hospedaje</td><td>{{ lodging_name }}</td></tr>
     <tr><td style="font-weight:bold;color:#0a1d3a;">Llegada</td><td>{{ start_date }}</td></tr>
@@ -22,7 +22,12 @@
     Presenta este código QR en la entrada del parque.
   </p>
   <p style="text-align:center;margin:0;">
-    <img src="cid:{{ qr_cid }}" alt="QR de check-in" width="240" height="240" style="display:inline-block;border:6px solid #f6c945;border-radius:8px;">
+    <img src="{{ qr_src|default:'cid:qr' }}" alt="QR de check-in" width="240" class="qr-image" style="display:block;margin:0 auto;border:6px solid #f6c945;border-radius:8px;width:240px;max-width:100%;height:auto;">
+  </p>
+
+  <p style="margin:16px 0 0;text-align:center;font-size:13px;color:#666;">
+    Si tu cliente de correo bloquea la imagen, puedes abrir el QR desde
+    <a href="{{ qr_url }}" style="color:#0a6b5f;text-decoration:underline;">este enlace</a>.
   </p>
 
   <p style="margin:24px 0 0;font-size:13px;color:#666;">

@@ -314,6 +314,21 @@ class TestNotificationService:
         assert len(mail.outbox) == 1
         assert "12345" in mail.outbox[0].body
 
+    def test_confirmation_email_uses_remote_images_when_configured(self, active_reservation, settings):
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        settings.EMAIL_IMAGE_MODE = "remote"
+        settings.SITE_URL = "https://luciernagas2026.onrender.com"
+
+        result = NotificationService.send_confirmation_email(active_reservation)
+
+        assert result is True
+        html_body = mail.outbox[0].alternatives[0][0]
+        assert "cid:qr" not in html_body
+        assert "cid:logo" not in html_body
+        assert 'src="https://luciernagas2026.onrender.com/static/img/logo_b.png"' in html_body
+        assert f"/reservaciones/{active_reservation.checkin_token}/qr.png" in html_body
+        assert len(mail.outbox[0].attachments) == 0
+
     def test_no_email_user_returns_false(self, db, user, park, cabin, season_start, season_end_date):
         user.email = ""
         user.save()

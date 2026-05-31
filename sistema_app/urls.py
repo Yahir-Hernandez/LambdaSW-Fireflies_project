@@ -18,6 +18,7 @@ urlpatterns = [
     path('reservaciones/', views.reservation_list, name='reservation_list'),
     path('reservaciones/nueva/', views.reservation_create, name='reservation_create'),
     path('reservaciones/crear/', views.crear_reserva, name='crear_reserva'),
+    path('reservaciones/<uuid:token>/qr.png', views.reservation_qr_png, name='reservation_qr_png'),
     path('reservaciones/<int:pk>/cancelar/', views.reservation_cancel, name='reservation_cancel'),
     path('api/disponibilidad/', views.disponibilidad_api, name='disponibilidad_api'),
     # Recuperar contraseña
