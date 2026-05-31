@@ -26,6 +26,7 @@ VALID_DATA = {
     "email": "ana.lopez@test.com",
     "password1": "Sup3rS3gur@!",
     "password2": "Sup3rS3gur@!",
+    "terms_accepted": True,
 }
 
 

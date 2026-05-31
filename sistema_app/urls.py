@@ -21,7 +21,6 @@ urlpatterns = [
     path('reservaciones/<uuid:token>/qr.png', views.reservation_qr_png, name='reservation_qr_png'),
     path('reservaciones/<int:pk>/cancelar/', views.reservation_cancel, name='reservation_cancel'),
     path('api/disponibilidad/', views.disponibilidad_api, name='disponibilidad_api'),
-    # Recuperar contraseña
     path('recuperar-contrasena/', views.password_reset_request, name='password_reset_request'),
     path('recuperar-contrasena/verificar/', views.password_reset_verify, name='password_reset_verify'),
     path('api/recuperar-contrasena/verificar/', views.password_reset_verify_api, name='password_reset_verify_api'),

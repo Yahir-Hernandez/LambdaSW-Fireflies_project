@@ -1,5 +1,3 @@
-"""Backend de correo para enviar mensajes mediante SendGrid Web API v3."""
-
 from __future__ import annotations
 
 import base64
@@ -19,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 def _address(value: str) -> dict[str, str]:
-    """Convierte una dirección estilo ``Nombre <mail>`` al formato de SendGrid."""
     name, email = parseaddr(value)
     payload = {"email": email or value.strip()}
     if name:
@@ -38,8 +35,6 @@ def _attachment_extension(mimetype: str) -> str:
 
 
 class SendGridEmailBackend(BaseEmailBackend):
-    """Envía correos por HTTP sin depender del SMTP relay de SendGrid."""
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.api_key = getattr(settings, "SENDGRID_API_KEY", "")

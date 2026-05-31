@@ -140,9 +140,7 @@ function showParkInfo(parque) {
     // Calcular porcentaje de disponibilidad
     const availabilityPercent = (parque.disponibilidad_actual / parque.maximo_visitantes) * 100;
     
-    // Obtener imagen aleatoria 1 a 12
-    const randomImgNumber = Math.floor(Math.random() * 12) + 1;
-    const headerImageUrl = parkIconUrl.replace('luciernaga.png', `forests/forest_${randomImgNumber}.webp`);
+    const headerImageUrl = forestImages[Math.floor(Math.random() * forestImages.length)];
     
     parkInfo.innerHTML = `
         <div class="park-details">

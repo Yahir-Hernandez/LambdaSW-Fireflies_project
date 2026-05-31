@@ -77,6 +77,7 @@ class TestRegisterView:
             "email": "testuser@mail.com",
             "password1": "Sup3rS3gur@!",
             "password2": "Sup3rS3gur@!",
+            "terms_accepted": True,
         }
         response = client.post(url("register"), data)
         assert response.status_code == 302
@@ -91,6 +92,7 @@ class TestRegisterView:
             "email": "testuser2@mail.com",
             "password1": "Sup3rS3gur@!",
             "password2": "Sup3rS3gur@!",
+            "terms_accepted": True,
         }
         client.post(url("register"), data)
         assert PendingRegistration.objects.filter(email="testuser2@mail.com").exists()

@@ -66,6 +66,20 @@
     const availabilityUrl = "{% url 'sistema_app:disponibilidad_api' %}";
     const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
     const loginUrl = "{% url 'sistema_app:login' %}";
+    const forestImages = [
+      "{% static 'img/forests/forest_1.webp' %}",
+      "{% static 'img/forests/forest_2.webp' %}",
+      "{% static 'img/forests/forest_3.webp' %}",
+      "{% static 'img/forests/forest_4.webp' %}",
+      "{% static 'img/forests/forest_5.webp' %}",
+      "{% static 'img/forests/forest_6.webp' %}",
+      "{% static 'img/forests/forest_7.webp' %}",
+      "{% static 'img/forests/forest_8.webp' %}",
+      "{% static 'img/forests/forest_9.webp' %}",
+      "{% static 'img/forests/forest_10.webp' %}",
+      "{% static 'img/forests/forest_11.webp' %}",
+      "{% static 'img/forests/forest_12.webp' %}"
+    ];
     <!-- Modelamos los datos de los parques recibidos desde Backend -->
     <!-- Estos datos serán usados en script/map_script.js  -->
     const data_parks = [
