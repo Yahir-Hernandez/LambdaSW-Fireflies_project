@@ -30,7 +30,9 @@ Siéntete libre de explorar los archivos de nuestro proyecto para visualizar có
 
 A continuación se muestra una guía breve de cómo ejecutar este proyecto.
 
----
+> [!WARNING]
+> ¡El archivo `.env` de este proyecto no se comparte por razones de seguridad! Al ejecutar en local, algunas funcionalidades pueden verse afectadas o directamente no estar disponibles.
+> 
 
 ### 1. Instalación de Conda
 
