@@ -1,11 +1,11 @@
-"""Pruebas de integración del Django admin.
+"""
+Pruebas de integración del Django admin.
 
 Cubre dos comportamientos críticos:
-
-* ``ReservationAdmin``: solo el campo ``status`` es editable; el resto se
-  presenta como readonly y los cambios POST se ignoran.
-* ``LodgingAdmin``: reducir ``capacity`` por debajo de las reservas
-  futuras activas debe rechazarse vía ``Lodging.clean()``.
+    - ReservationAdmin: solo el campo status es editable; el resto se presenta
+      como readonly y los cambios POST se ignoran.
+    - LodgingAdmin: reducir capacity por debajo de las reservas futuras activas
+      debe rechazarse vía Lodging.clean().
 """
 
 import pytest
@@ -42,20 +42,20 @@ class TestReservationAdminReadonly:
     def test_reservation_change_view_only_status_editable(
         self, admin_client_superuser, active_reservation
     ):
+        """Superusuario hace GET al formulario de edición; verifica que solo el campo 'status' es editable y los demás son readonly."""
         url = reverse("admin:sistema_app_reservation_change",
                       args=[active_reservation.pk])
         response = admin_client_superuser.get(url)
         assert response.status_code == 200
         html = response.content.decode()
-        # Solo `status` debe aparecer como <select name="status">.
         assert 'name="status"' in html
-        # Los demás campos no deben ser editables (sin input/select con su name).
         for field in ("people", "start_date", "end_date", "lodging", "park", "user"):
             assert f'name="{field}"' not in html
 
     def test_reservation_post_ignores_changes_to_readonly_fields(
         self, admin_client_superuser, active_reservation
     ):
+        """Superusuario hace POST con people=99 y start_date diferente; verifica que los campos no cambiaron en BD."""
         url = reverse("admin:sistema_app_reservation_change",
                       args=[active_reservation.pk])
         original_people = active_reservation.people
@@ -73,6 +73,7 @@ class TestReservationAdminReadonly:
     def test_reservation_post_updates_status(
         self, admin_client_superuser, active_reservation
     ):
+        """Superusuario hace POST al formulario de edición con status=USED; verifica que el status se actualiza en BD."""
         url = reverse("admin:sistema_app_reservation_change",
                       args=[active_reservation.pk])
         admin_client_superuser.post(url, {
@@ -82,6 +83,7 @@ class TestReservationAdminReadonly:
         assert active_reservation.status == Reservation.Status.USED
 
     def test_reservation_add_view_returns_403(self, admin_client_superuser):
+        """Superusuario hace GET a la URL de creación de reservaciones en el admin; verifica que responde HTTP 403."""
         url = reverse("admin:sistema_app_reservation_add")
         response = admin_client_superuser.get(url)
         assert response.status_code == 403
@@ -89,6 +91,7 @@ class TestReservationAdminReadonly:
     def test_reservation_delete_action_still_works(
         self, admin_client_superuser, active_reservation
     ):
+        """Superusuario hace POST a la URL de eliminación con post=yes; verifica que la reservación es eliminada de BD."""
         url = reverse("admin:sistema_app_reservation_delete",
                       args=[active_reservation.pk])
         response = admin_client_superuser.post(url, {"post": "yes"})
@@ -105,6 +108,7 @@ class TestLodgingAdminCapacityValidation:
     def test_admin_rejects_capacity_reduction_for_cabin_with_active_future_reservation(
         self, admin_client_superuser, user, park, cabin, season_start, season_end_date
     ):
+        """Existe reserva activa de 4 personas en la cabaña; superusuario intenta reducir capacity a 2; verifica re-render con error y capacidad sin cambio."""
         Reservation.objects.create(
             user=user, park=park, lodging=cabin,
             start_date=season_start, end_date=season_end_date,
@@ -118,7 +122,6 @@ class TestLodgingAdminCapacityValidation:
             "capacity": 2,
             "description": cabin.description,
         })
-        # El form debe re-renderizar con error (status 200, no redirect).
         assert response.status_code == 200
         cabin.refresh_from_db()
         assert cabin.capacity == 4
@@ -126,6 +129,7 @@ class TestLodgingAdminCapacityValidation:
     def test_admin_rejects_capacity_reduction_for_camping_when_peak_exceeds(
         self, admin_client_superuser, user, park, camping_spot, season_start
     ):
+        """Dos reservas solapadas con pico de 8 personas; superusuario intenta reducir capacity del camping a 7; verifica re-render y sin cambio."""
         Reservation.objects.create(
             user=user, park=park, lodging=camping_spot,
             start_date=season_start, end_date=season_start + timedelta(days=4),
@@ -152,6 +156,7 @@ class TestLodgingAdminCapacityValidation:
     def test_admin_accepts_capacity_reduction_when_only_past_reservations(
         self, admin_client_superuser, user, park, cabin
     ):
+        """Solo hay una reserva con status PAST; superusuario reduce capacity de la cabaña a 1; verifica HTTP 302 y cambio en BD."""
         Reservation.objects.create(
             user=user, park=park, lodging=cabin,
             start_date=date(2026, 5, 20), end_date=date(2026, 5, 22),
@@ -165,6 +170,6 @@ class TestLodgingAdminCapacityValidation:
             "capacity": 1,
             "description": cabin.description,
         })
-        assert response.status_code == 302  # redirect tras guardar exitoso
+        assert response.status_code == 302
         cabin.refresh_from_db()
         assert cabin.capacity == 1

@@ -24,6 +24,7 @@ class _Response:
 
 
 def test_sendgrid_backend_builds_inline_image_payload(settings, monkeypatch):
+    """Construye un correo con imagen inline (CID) y verifica que el payload JSON enviado a SendGrid contiene los campos from, to, HTML y el adjunto en base64 con disposition inline."""
     settings.SENDGRID_API_KEY = "SG.test"
     captured = {}
 

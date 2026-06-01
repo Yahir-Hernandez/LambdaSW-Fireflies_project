@@ -1,3 +1,5 @@
+"""Fixtures compartidos para todas las pruebas del proyecto"""
+
 import os
 
 os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
@@ -10,6 +12,10 @@ from django.contrib.auth.models import User
 from sistema_app.models import Lodging, Park, Reservation, Service
 
 
+# ---------------------------------------------------------------------------
+# Fechas dentro de temporada 
+# ---------------------------------------------------------------------------
+
 @pytest.fixture
 def season_start():
     return date(2026, 6, 3) 
@@ -19,6 +25,10 @@ def season_start():
 def season_end_date():
     return date(2026, 6, 6)
 
+
+# ---------------------------------------------------------------------------
+# Usuarios
+# ---------------------------------------------------------------------------
 
 @pytest.fixture
 def user(db):
@@ -49,6 +59,10 @@ def staff_user(db):
         is_staff=True,
     )
 
+
+# ---------------------------------------------------------------------------
+# Parques y hospedajes
+# ---------------------------------------------------------------------------
 
 @pytest.fixture
 def park(db):
@@ -93,6 +107,10 @@ def camping_spot(db, park):
     )
 
 
+# ---------------------------------------------------------------------------
+# Reservaciones
+# ---------------------------------------------------------------------------
+
 @pytest.fixture
 def active_reservation(db, user, park, cabin, season_start, season_end_date):
     return Reservation.objects.create(
@@ -131,6 +149,10 @@ def cancelled_reservation(db, user, park, camping_spot, season_start):
         status=Reservation.Status.CANCELLED,
     )
 
+
+# ---------------------------------------------------------------------------
+# Cliente autenticado
+# ---------------------------------------------------------------------------
 
 @pytest.fixture
 def auth_client(client, user):
