@@ -76,7 +76,13 @@
     const nextBtn = document.querySelector('.btn-next');
     const dots = document.querySelectorAll('.festival-dot');
     const slides = document.querySelectorAll('.festival-slide');
-    
+
+    // Reveal del contenido al activarse cada slide (incluido el primero al cargar)
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => e.target.classList.toggle('is-revealed', e.isIntersecting));
+    }, { root: container, threshold: 0.5 });
+    slides.forEach(s => revealObs.observe(s));
+
     // Total slides
     const totalSlides = slides.length;
     
@@ -104,15 +110,34 @@
       window.requestAnimationFrame(updateDots);
     });
 
+    // Desplazamiento animado y suave (easeInOutCubic). Se desactiva el scroll-snap
+    // durante la animación para que no interrumpa el movimiento.
+    function animateScrollTo(targetLeft, duration = 900) {
+      const start = container.scrollLeft;
+      const change = targetLeft - start;
+      if (Math.abs(change) < 1) return;
+      const startTime = performance.now();
+      const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+      container.style.scrollSnapType = 'none';
+      function step(now) {
+        const t = Math.min((now - startTime) / duration, 1);
+        container.scrollLeft = start + change * ease(t);
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          container.style.scrollSnapType = '';
+          updateDots();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
     // Función para mover el scroll al slide N de manera circular
     function goToSlide(n) {
       if(n >= totalSlides) n = 0;
       if(n < 0) n = totalSlides - 1;
       const slideWidth = container.clientWidth;
-      container.scrollTo({
-        left: n * slideWidth,
-        behavior: 'smooth'
-      });
+      animateScrollTo(n * slideWidth);
     }
 
     // Eventos a botones Prev/Next
@@ -131,6 +156,14 @@
         goToSlide(index);
       });
     });
+
+    // Autoavance: el primer cambio ocurre a los 5 s; a partir de ahí, cada 14 s.
+    setTimeout(() => {
+      goToSlide(getCurrentSlide() + 1);
+      setInterval(() => {
+        goToSlide(getCurrentSlide() + 1);
+      }, 14000);
+    }, 5000);
   });
 </script>
 {% endblock %}

@@ -400,3 +400,26 @@ label {
   line-height: 1;
 }
 .pw-toggle:hover { color: var(--text); }
+
+/* Recuadros de error coherentes con el sitio (borde y fondo rojo tenue, tipografía Inter).
+   Se cargan después de Bootstrap, así que ganan sin !important. */
+.alert-danger {
+  background: rgba(244, 67, 54, 0.08);
+  border: 1px solid rgba(244, 67, 54, 0.35);
+  color: #ff5252; /* rojo más intenso en la tipografía */
+  font-family: var(--font-body);
+  border-radius: 0; /* borde totalmente rectangular */
+  padding: 12px 16px;
+  font-size: 0.92rem;
+  margin-bottom: 16px;
+}
+
+/* Errores de campo de crispy en el mismo tono */
+.invalid-feedback {
+  color: #ff5252;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+}
+.form-control.is-invalid {
+  border-color: rgba(244, 67, 54, 0.55) !important;
+}

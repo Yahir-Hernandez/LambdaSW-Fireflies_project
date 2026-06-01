@@ -21,20 +21,20 @@
       
       <img src="{% static 'img/logo_b.png' %}" alt="Logo del Festival" class="logo"/>
       <div class="hero__cta">
-        <p class="hero__calendar"><i class="fa-solid fa-calendar"></i> del 1 de junio al 31 de agosto de 2026</p>
+        <p class="hero__calendar">DEL 1 DE JUNIO AL 31 DE AGOSTO DE 2026</p>
         <div class="hero__actions">
           {% if user.is_authenticated %}
             <a href="{% url 'sistema_app:reservation_create' %}" class="btn btn--primary">
-              Reservar ahora <i class="fa-solid fa-right-long"></i>
+              Reservar ahora 
             </a>
           {% else %}
             <button type="button" class="btn btn--primary" id="reservar-ahora-btn">
-              Reservar ahora <i class="fa-solid fa-right-long"></i>
+              Reservar ahora 
             </button>
           {% endif %}
         </div>
         <a class="hero__scroll" href="#parques-destacados">
-          Descubre más <i class="fa-solid fa-angles-down"></i>
+          EXPLORAR MÁS <i class="fa-solid fa-angles-down"></i>
         </a>
       </div>
 
@@ -56,7 +56,7 @@
       <div class="parques__header">
         <div>
           <h2 class="section-title section-title--left section-title--system">Parques destacados</h2>
-          <p class="section-sub section-sub--left">Disponibilidad en tiempo real y acceso directo al mapa</p>
+          <p class="section-sub section-sub--left">Disfruta de la naturaleza en uno de los destinos más visitados de este año.</p>
         </div>
         <a href="{% url 'sistema_app:mapa' %}" class="link-arrow">Ver todos en el mapa</a>
       </div>
@@ -72,10 +72,11 @@
             <h3 class="parques-highlight__title">{{ featured_park.name }}</h3>
             <p class="parques-highlight__desc">  {{ featured_park.address }}</p>
             <p class="parques-highlight__desc">
-              Disfruta de la naturaleza en uno de nuestros parques oficiales.<br>
+              Rodeado de bosque templado y rutas montañosas, este<br>
+              parque hará de tu visita una para recordarse.<br><br>
 
-              <i class="fa-solid fa-campground"></i> Disponibilidad actual:
-              <strong>{{ featured_park.disponibilidad_actual }} lugares</strong>.
+              Quedan
+              <strong>{{ featured_park.disponibilidad_actual }} lugares </strong>para esta temporada.
             </p>
           {% else %}
             <h3 class="parques-highlight__title">Los parques oficiales</h3>
@@ -83,7 +84,7 @@
           {% endif %}
           <div class="parques-highlight__actions">
             <a href="{% url 'sistema_app:mapa' %}" class="btn btn--accent btn--sm">
-              <i class="fa-solid fa-location-dot"></i> Consultar parque
+              <i class="fa-solid fa-map-location-dot"></i> Consigue el tuyo
             </a>
           </div>
         </div>
@@ -98,17 +99,17 @@
           <p class="festival-card__eyebrow">El festival</p>
           <h3 class="festival-card__title">El festival de luciérnagas más grande del centro de México</h3>
           <p class="festival-card__desc">
-            Una experiencia nocturna entre bosques, música, naturaleza y miles de luces vivas que transforman el bosque en un espectáculo único.
+            Una experiencia nocturna entre bosques y miles de luces vivas que transforman el bosque en un espectáculo único.
           </p>
           <div class="festival-card__actions">
             <a href="{% url 'sistema_app:festival' %}" class="btn btn--accent btn--sm">
-                <i class="fa-solid fa-seedling"></i> Conoce más
-            </a>
+                Conoce más <i class="fa-solid fa-arrow-right"></i>
+            </a> 
           </div>
         </div>
         <div class="festival-card__media" aria-hidden="true" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url('{% static 'img/home/fireflies.jpg' %}') center/cover no-repeat;">
           <div class="festival-card__media-inner" style="background: transparent; border: none; align-items: flex-end; display: flex; padding: 16px;">
-            <span class="festival-card__media-caption">La noche cobra vida</span>
+            <span class="festival-card__media-caption">Un espectáculo natural</span>
           </div>
         </div>
       </div>

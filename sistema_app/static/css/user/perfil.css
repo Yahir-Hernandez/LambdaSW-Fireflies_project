@@ -1,5 +1,32 @@
 /* Estilos para la página de perfil */
 
+/* Modal de cancelación: icono de confirmación en amarillo distintivo (no verde) */
+#cancel-success-dialog .auth-dialog__icon {
+  background: rgba(255, 186, 10, 0.15);
+  border-color: rgba(255, 186, 10, 0.5);
+  color: var(--accent);
+}
+
+/* Animaciones de entrada de la página de usuario */
+@keyframes profileIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+.profile-section--info { animation: profileIn .5s ease both; }
+.profile-section:not(.profile-section--info) { animation: profileIn .5s ease both; animation-delay: .1s; }
+.reservation-card { animation: profileIn .45s ease both; }
+.reservation-card:nth-child(2) { animation-delay: .06s; }
+.reservation-card:nth-child(3) { animation-delay: .12s; }
+.reservation-card:nth-child(4) { animation-delay: .18s; }
+.reservation-card:nth-child(5) { animation-delay: .24s; }
+.reservation-card:nth-child(n+6) { animation-delay: .3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-section--info,
+  .profile-section:not(.profile-section--info),
+  .reservation-card { animation: none; }
+}
+
 /* Hero section específica para página de perfil */
 .hero.profile-page {
   min-height: 100vh;
@@ -203,7 +230,7 @@
 }
 
 .reservations-tabs {
-  margin: 8px 0 16px;
+  margin: 0 0 16px;
   display: flex;
   gap: 8px;
 }
@@ -344,7 +371,13 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
   justify-content: flex-end;
+  margin-top: 10px; /* separación entre los filtros y los botones */
+}
+/* Botón de cambiar entre reservas actuales/pasadas: al lado opuesto de Aplicar/Limpiar */
+.filters-actions .reservations-tabs-btn {
+  margin-right: auto;
 }
 
 .reservations-list {
@@ -353,8 +386,16 @@
   gap: 10px;
   flex: 1; /* Ocupa todo el espacio de la .profile-section en desktop */
   overflow-y: auto;
-  padding-right: 6px;
+  padding-right: 0;
   max-height: none;
+  /* Barra de scroll desactivada (oculta), conservando el desplazamiento */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.reservations-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .reservation-card {
@@ -377,6 +418,7 @@
   overflow: hidden;
   clip-path: polygon(0 2%, 100% 0, 75% 100%, 0% 100%);
   min-height: 0; /* Previene que la relación de aspecto de la imagen estire la fila */
+  background: var(--accent); /* franja diagonal amarilla que asoma por el corte */
 }
 
 .reservation__img {
@@ -385,6 +427,8 @@
   object-fit: cover;
   object-position: center;
   display: block;
+  /* Recorte 14px hacia dentro en la arista derecha: deja ver la diagonal amarilla, gruesa */
+  clip-path: polygon(0 2%, calc(100% - 14px) 0, calc(75% - 14px) 100%, 0% 100%);
 }
 
 #Luciernaga {
@@ -424,8 +468,8 @@
   align-items: center; /* evita que el botón se estire a todo lo alto de la fila */
 }
 
-/* Botón "Cancelar reserva": delgado, rectangular y con padding suave */
-.reservation-actions .js-cancel-btn {
+/* Botones de acción (Comprobante y Cancelar): idénticos, delgados y rectangulares */
+.reservation-actions .btn {
   padding: 7px 16px;
   font-size: .75rem;
   line-height: 1;        /* sin el line-height 1.65 heredado del body */
@@ -472,31 +516,19 @@
   font-weight: 600;
 }
 
-.reservation-status {
-  padding: 4px 12px;
-  border-radius: 0px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.reservation-status.confirmada,
-.reservation-status.activa {
-  background: rgba(49, 104, 51, 0.15);
-  color: #4caf50;
-}
-
-.reservation-status.pendiente {
-  background: rgba(255, 152, 0, 0.15);
-  color: #ff9800;
-}
-
-.reservation-status.cancelada {
-  background: rgba(244, 67, 54, 0.15);
-  color: #f44336;
-}
-
-.reservation-status.pasada {
-  background: rgba(255, 255, 255, 0.08);
+/* Banda de sección bajo los filtros: rectángulo transparente, delgado y a todo el ancho */
+.reservations-band {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 9px 16px;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.3); /* mismo borde que los botones .btn--outline */
+  border-radius: 2px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: .35em;
+  font-size: .78rem;
   color: var(--text-dim);
 }
 
@@ -638,7 +670,11 @@
     height: 100%;
     clip-path: none;
     border-right: 0;
-    border-bottom: 1px solid white;
+    border-bottom: 6px solid var(--accent);
+  }
+
+  .reservation__img {
+    clip-path: none;
   }
 
   .reservation-header {

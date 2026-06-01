@@ -435,6 +435,13 @@ def reservation_cancel(request, pk):
     return redirect("sistema_app:perfil")
 
 
+@login_required
+def reservation_comprobante(request, pk):
+    """Página imprimible con el QR y los datos de una reservación del usuario."""
+    reservation = get_object_or_404(Reservation, pk=pk, user=request.user)
+    return render(request, "user/comprobante.html", {"reserva": reservation})
+
+
 def disponibilidad_api(request):
     """Devuelve los hospedajes disponibles para un parque, tipo y rango de fechas."""
     park_id = request.GET.get("park_id")

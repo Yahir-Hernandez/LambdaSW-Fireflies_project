@@ -20,6 +20,7 @@ urlpatterns = [
     path('reservaciones/crear/', views.crear_reserva, name='crear_reserva'),
     path('reservaciones/<uuid:token>/qr.png', views.reservation_qr_png, name='reservation_qr_png'),
     path('reservaciones/<int:pk>/cancelar/', views.reservation_cancel, name='reservation_cancel'),
+    path('reservaciones/<int:pk>/comprobante/', views.reservation_comprobante, name='reservation_comprobante'),
     path('api/disponibilidad/', views.disponibilidad_api, name='disponibilidad_api'),
     path('recuperar-contrasena/', views.password_reset_request, name='password_reset_request'),
     path('recuperar-contrasena/verificar/', views.password_reset_verify, name='password_reset_verify'),

@@ -13,17 +13,171 @@
 }
 
 .park-list {
-  width: 20%;
+  flex: 0 0 clamp(230px, 22%, 300px);
+  width: auto;
   height: 100%;
   border-radius: 10px;
-  padding: 10px;
+  padding: 14px;
   box-sizing: border-box;
   background-color: var(--bg-card);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.park-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Filtro del mapa: botón-icono flotante que despliega un panel amplio sobre el mapa */
+.map-filter {
+  position: absolute;
+  top: 12px;
+  /* Anclado en la esquina superior del mapa, dejando libre el panel derecho */
+  right: calc(clamp(280px, 24%, 350px) + 30px);
+  z-index: 500;
+}
+.map-filter__toggle {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--bg-section);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: color .2s ease, border-color .2s ease, background .2s ease;
+}
+.map-filter__toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.map-filter.is-open .map-filter__toggle {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.map-filter__body {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(320px, 80vw);
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  padding: 18px;
+  opacity: 0;
+  transform: translateY(-8px) scale(.98);
+  transform-origin: top right;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+}
+.map-filter.is-open .map-filter__body {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.map-filter__title {
+  font-family: var(--font-body); /* misma tipografía que el título de las preview cards */
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.map-filter__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.map-filter__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.filter-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.filter-input {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.filter-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 186, 10, 0.2);
+}
+
+/* ── Animaciones de la página del mapa ───────────────────────────── */
+@keyframes mapCardIn   { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes mapDetailIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+@keyframes mapMarkerIn { from { opacity: 0; transform: translateY(-14px) scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes mapPanelIn  { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes mapFadeIn   { from { opacity: 0; } to { opacity: 1; } }
+
+/* Cards de la lista: entran escalonadas al filtrar/cargar (delay por JS) */
+.park-item { animation: mapCardIn .35s ease both; }
+
+/* Card de detalle: se desliza al desplegarse a la derecha */
+.park-details { animation: mapDetailIn .4s cubic-bezier(.2, .7, .3, 1) both; }
+
+/* Marcadores: pop-in (delay inline por marcador) */
+.marker-icon { animation: mapMarkerIn .4s ease both; }
+
+/* Despliegue del mapa al cargar: paneles escalonados */
+.park-list  { animation: mapPanelIn .5s ease both; }
+#map        { animation: mapFadeIn .6s ease both; animation-delay: .1s; }
+.park-info  { animation: mapPanelIn .5s ease both; animation-delay: .15s; }
+.map-filter { animation: mapFadeIn .5s ease both; animation-delay: .25s; }
+
+/* Campos del filtro: leve escalonado al abrir el panel */
+.map-filter__body .filter-field,
+.map-filter__body .map-filter__actions {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+.map-filter.is-open .map-filter__body .filter-field,
+.map-filter.is-open .map-filter__body .map-filter__actions {
+  opacity: 1;
+  transform: none;
+}
+.map-filter.is-open .map-filter__body .filter-field:nth-child(1) { transition-delay: .06s; }
+.map-filter.is-open .map-filter__body .filter-field:nth-child(2) { transition-delay: .12s; }
+.map-filter.is-open .map-filter__body .filter-field:nth-child(3) { transition-delay: .18s; }
+.map-filter.is-open .map-filter__body .map-filter__actions { transition-delay: .24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .park-item, .park-details, .marker-icon,
+  .park-list, #map, .park-info, .map-filter { animation: none; }
+  .map-filter__body .filter-field,
+  .map-filter__body .map-filter__actions { opacity: 1; transform: none; transition: none; }
 }
 
 .park-info {
-  width: 20%;
+  flex: 0 0 clamp(280px, 24%, 350px);
+  width: auto;
   height: 100%;
   border-radius: 10px;
   padding: 10px;
@@ -34,7 +188,8 @@
 
 #map {
   height: 100%;
-  width: 80%;
+  flex: 1 1 auto;
+  width: auto;
   border-radius: 10px;
   border: 2px solid var(--text-dim);
 }
@@ -67,6 +222,11 @@
     padding-bottom: 20px; /* Margen inferior para que no quede pegado al final */
   }
   
+  .park-list, .park-info { flex: 0 0 auto; }
+
+  /* El mapa ocupa todo el ancho: el filtro flotante vuelve a la esquina derecha */
+  .map-filter { top: 12px; right: 12px; }
+
   .park-list {
     display: none; /* Oculta la lista de parques en móviles */
   }
@@ -536,80 +696,100 @@
 
 /* Estilos para la lista de parques */
 .park-item {
-    padding: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 0; /* el gap del contenedor maneja la separación */
+    padding: 14px 16px;
     background: var(--bg-section);
+    border-radius: 10px;
     border: 1px solid var(--border);
+    border-left: 3px solid transparent; /* reserva el grosor: el hover/selected no desplaza */
     cursor: pointer;
-    transition: all 0.2s;
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
 
 .park-item:hover {
-    border-left: solid 3px var(--text-dim);
+    border-left-color: var(--text-dim);
     transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 .park-item.selected {
     background: rgba(255, 186, 10, 0.05);
-    border-left: solid 3px var(--accent);
+    border-left-color: var(--accent);
 }
 
 .park-item-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 8px;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
 .park-item-header h4 {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.98rem;
+    line-height: 1.35;
     color: var(--text);
     flex: 1;
 }
 
+.park-availability-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.park-availability-label {
+    margin: 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
 .availability-badge {
-    padding: 2px 8px;
-    border-radius: 12px;
+    display: inline-block;
+    margin-top: 0;
+    padding: 3px 10px;
+    border-radius: 6px; /* ligero, sin llegar a ser esfera */
+    border: 1px solid rgba(0, 0, 0, 0.3); /* borde ligero */
     font-size: 0.75rem;
     font-weight: 600;
-    margin-left: 8px;
+    white-space: nowrap;
+    background: var(--accent);
+    color: #0a1208; /* letras negras */
 }
 
-.availability-badge.high {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4caf50;
-}
-
-.availability-badge.medium {
-    background: rgba(255, 152, 0, 0.2);
-    color: #ff9800;
-}
-
+/* Cupo siempre en amarillo distintivo, sin verde/naranja/rojo */
+.availability-badge.high,
+.availability-badge.medium,
 .availability-badge.low {
-    background: rgba(244, 67, 54, 0.2);
-    color: #f44336;
+    background: var(--accent);
+    color: #0a1208;
 }
 
 .park-location {
     font-size: 0.8rem;
     color: var(--text-dim);
-    margin: 0 0 8px 0;
-    line-height: 1.4;
+    margin: 0 0 10px 0;
+    line-height: 1.5;
 }
 
 .park-services {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
 }
 
 .service-tag {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-dim);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.7rem;
+    background: transparent;
+    border: 1px solid rgba(212, 232, 224, 0.22);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 4px; /* rectángulo con bordes ligeros */
+    font-size: 0.72rem;
+    letter-spacing: .02em;
 }
 
 .no-parks {
@@ -620,17 +800,17 @@
 
 /* Estilos para información detallada del parque */
 .park-details {
-    padding: 16px;
-    padding-top: 5px; /* Reducimos el padding superior para acercar la imagen al borde */
+    padding: 16px 18px;
+    padding-top: 8px; /* Reducimos el padding superior para acercar la imagen al borde */
 }
 
 .park-header-img {
     width: 100%;
-    height: 180px;
+    height: 175px;
     background-size: cover;
     background-position: center;
     border-radius: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -638,7 +818,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
 }
@@ -662,33 +842,29 @@
 }
 
 .availability-value {
-    padding: 4px 10px;
-    border-radius: 12px;
+    padding: 3px 10px;
+    border-radius: 6px; /* mismo estilo que el cupo de la preview */
+    border: 1px solid rgba(0, 0, 0, 0.3);
     font-size: 0.85rem;
     font-weight: 600;
+    background: var(--accent);
+    color: #0a1208; /* letras negras */
 }
 
-.availability-value.high {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4caf50;
-}
-
-.availability-value.medium {
-    background: rgba(255, 152, 0, 0.2);
-    color: #ff9800;
-}
-
+/* Cupo siempre en amarillo distintivo, sin verde/naranja/rojo */
+.availability-value.high,
+.availability-value.medium,
 .availability-value.low {
-    background: rgba(244, 67, 54, 0.2);
-    color: #f44336;
+    background: var(--accent);
+    color: #0a1208;
 }
 
 .park-section {
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 
 .park-section h4 {
-    margin: 0 0 8px 0;
+    margin: 0 0 10px 0;
     color: var(--text);
     font-size: 1rem;
     display: flex;

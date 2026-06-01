@@ -31,8 +31,96 @@ function initMap() {
     }).addTo(map);
     
     createMarkers();
-    
+
     populateParkList();
+
+    populateServiceFilter();
+    setupFilters();
+}
+
+/**
+ * Devuelve los parques que cumplen los filtros activos (búsqueda, servicio, cabañas).
+ * El filtrado es client-side sobre data_parks.
+ */
+function getFilteredParks() {
+    const queryEl = document.getElementById('filterQuery');
+    const serviceEl = document.getElementById('filterService');
+    const cabinsEl = document.getElementById('filterCabins');
+
+    const query = (queryEl?.value || '').trim().toLowerCase();
+    const service = serviceEl?.value || '';
+    const cabins = cabinsEl?.value || '';
+
+    return data_parks.filter(parque => {
+        if (query && !parque.nombre.toLowerCase().includes(query)) return false;
+        if (service && !parque.servicios.includes(service)) return false;
+        if (cabins === 'yes' && !parque.has_cabins) return false;
+        if (cabins === 'no' && parque.has_cabins) return false;
+        return true;
+    });
+}
+
+/**
+ * Llena el desplegable de servicios con la unión de servicios de todos los parques.
+ */
+function populateServiceFilter() {
+    const select = document.getElementById('filterService');
+    if (!select) return;
+
+    const servicios = new Set();
+    data_parks.forEach(parque => parque.servicios.forEach(s => servicios.add(s)));
+
+    Array.from(servicios).sort((a, b) => a.localeCompare(b)).forEach(servicio => {
+        const option = document.createElement('option');
+        option.value = servicio;
+        option.textContent = servicio;
+        select.appendChild(option);
+    });
+}
+
+/**
+ * Re-renderiza marcadores y lista según los filtros actuales.
+ */
+function applyFilters() {
+    createMarkers();
+    populateParkList();
+}
+
+/**
+ * Enlaza los controles del filtro a applyFilters() y el botón de limpiar.
+ */
+function setupFilters() {
+    const queryEl = document.getElementById('filterQuery');
+    const serviceEl = document.getElementById('filterService');
+    const cabinsEl = document.getElementById('filterCabins');
+    const clearEl = document.getElementById('filterClear');
+    const toggleEl = document.getElementById('filterToggle');
+    const filterEl = document.getElementById('mapFilter');
+
+    toggleEl?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = filterEl.classList.toggle('is-open');
+        toggleEl.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    // Cerrar el panel al hacer clic fuera de él
+    document.addEventListener('click', (e) => {
+        if (filterEl && filterEl.classList.contains('is-open') && !filterEl.contains(e.target)) {
+            filterEl.classList.remove('is-open');
+            toggleEl?.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    queryEl?.addEventListener('input', applyFilters);
+    serviceEl?.addEventListener('change', applyFilters);
+    cabinsEl?.addEventListener('change', applyFilters);
+
+    clearEl?.addEventListener('click', () => {
+        if (queryEl) queryEl.value = '';
+        if (serviceEl) serviceEl.value = '';
+        if (cabinsEl) cabinsEl.value = '';
+        applyFilters();
+    });
 }
 
 /**
@@ -41,15 +129,16 @@ function initMap() {
 function createMarkers() {
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
-    
-    const parkIcon = L.divIcon({
-        className: 'park-marker',
-        html: `<div class="marker-icon"><img src="${parkIconUrl}" alt="Luciérnaga" class="marker-image logo--mini"/></div>`,
-        iconSize: [40, 40],
-        iconAnchor: [20, 40]
-    });
-    
-    data_parks.forEach(parque => {
+
+    getFilteredParks().forEach((parque, i) => {
+        // Icono por marcador para escalonar la animación de aparición
+        const parkIcon = L.divIcon({
+            className: 'park-marker',
+            html: `<div class="marker-icon" style="animation-delay:${(i * 0.03).toFixed(2)}s"><img src="${parkIconUrl}" alt="Luciérnaga" class="marker-image logo--mini"/></div>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40]
+        });
+
         const marker = L.marker([parque.latitud, parque.longitud], {
             icon: parkIcon,
             title: parque.nombre
@@ -72,41 +161,48 @@ function createMarkers() {
 }
 
 function populateParkList() {
-    const parkList = document.getElementById('park-list');
+    const parkList = document.getElementById('park-items');
     parkList.innerHTML = '';
-    
+
     if (data_parks.length === 0) {
         parkList.innerHTML = '<div class="no-parks"><p>No hay parques registrados.</p></div>';
         return;
     }
-    
-    // Crear elemento para cada parque
-    data_parks.forEach(parque => {
+
+    const parques = getFilteredParks();
+
+    if (parques.length === 0) {
+        parkList.innerHTML = '<div class="no-parks"><p>Ningún parque coincide con los filtros.</p></div>';
+        return;
+    }
+
+    // Crear elemento para cada parque (los servicios solo se muestran al desplegar el detalle)
+    parques.forEach((parque, i) => {
         const parkItem = document.createElement('div');
         parkItem.className = `park-item ${selectedParkId === parque.id ? 'selected' : ''}`;
         parkItem.dataset.parkId = parque.id;
-        
+        parkItem.style.animationDelay = (i * 0.04) + 's';
+
         // Calcular porcentaje de disponibilidad
         const availabilityPercent = (parque.disponibilidad_actual / parque.maximo_visitantes) * 100;
-        
+
         parkItem.innerHTML = `
             <div class="park-item-header">
                 <h4>${parque.nombre}</h4>
+            </div>
+            <p class="park-location">${parque.direccion}</p>
+            <div class="park-availability-row">
+                <span class="park-availability-label">Disponibilidad</span>
                 <span class="availability-badge ${availabilityPercent > 50 ? 'high' : availabilityPercent > 20 ? 'medium' : 'low'}">
                     ${parque.disponibilidad_actual}/${parque.maximo_visitantes}
                 </span>
-            </div>
-            <p class="park-location">${parque.direccion}</p>
-            <div class="park-services">
-                ${parque.servicios.map(servicio => `<span class="service-tag">${servicio}</span>`).join('')}
-            </div>
-        `;
-        
+            </div>`;
+
         // Evento al hacer clic en el item
         parkItem.addEventListener('click', function() {
             selectPark(parque.id);
         });
-        
+
         parkList.appendChild(parkItem);
     });
 }
@@ -116,10 +212,12 @@ function selectPark(parkId) {
     const parque = data_parks.find(p => p.id === parkId);
     
     if (!parque) return;
-    
-    // Actualizar la lista para mostrar el seleccionado
-    populateParkList();
-    
+
+    // Resaltar el seleccionado sin reconstruir la lista (evita re-animar las cards)
+    document.querySelectorAll('.park-item').forEach(item => {
+        item.classList.toggle('selected', Number(item.dataset.parkId) === parkId);
+    });
+
     // Mostrar información detallada
     showParkInfo(parque);
     

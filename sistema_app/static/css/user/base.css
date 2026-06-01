@@ -155,7 +155,6 @@ ul { list-style: none; }
 .nav__links li.active {
   position: relative;
   background: var(--accent);
-  box-shadow: 0 4px 15px rgba(200, 255, 0, 0.2);
   transform: translateY(-1px);
 }
 
@@ -253,10 +252,12 @@ ul { list-style: none; }
   justify-content: space-between;
 }
 .nav-sidebar__title {
-  font-family: var(--font-title);
-  font-size: 1.2rem;
-  color: var(--text);
-  letter-spacing: .04em;
+  font-family: 'Anton', sans-serif;
+  text-transform: uppercase;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  letter-spacing: .22em;
 }
 .nav-sidebar__close {
   width: 36px;
@@ -294,6 +295,40 @@ ul { list-style: none; }
   font-weight: bolder;
   margin-left: 0; /* Elimina separación extra, el gap se encarga */
 }
+/* Despliegue escalonado de las opciones al abrir el menu.
+   El panel desliza rapido (.25s) y luego las opciones entran una a una. */
+.nav-sidebar .nav__links li {
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity .22s ease, transform .22s ease;
+}
+.nav-sidebar.is-open .nav__links li { opacity: 1; transform: translateX(0); }
+.nav-sidebar.is-open .nav__links li:nth-child(1) { transition-delay: .18s; }
+.nav-sidebar.is-open .nav__links li:nth-child(2) { transition-delay: .28s; }
+.nav-sidebar.is-open .nav__links li:nth-child(3) { transition-delay: .38s; }
+.nav-sidebar.is-open .nav__links li:nth-child(4) { transition-delay: .48s; }
+.nav-sidebar.is-open .nav__links li:nth-child(5) { transition-delay: .58s; }
+/* Opciones del menu desplegable: tipografia Anton en mayusculas, sin recuadro en hover */
+.nav-sidebar .nav__links a {
+  font-family: 'Anton', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-size: 1.5rem;
+  font-weight: 400;
+  gap: 0; /* ya no hay icono que separar */
+  color: var(--text-dim);
+  transition: color .2s ease;
+}
+.nav-sidebar .nav__links a span {
+  display: inline-block;
+  transform-origin: left center;
+  transition: transform .2s ease, color .2s ease;
+}
+/* Hover: SOLO las letras en amarillo y un poco mas grandes, sin iluminar el recuadro */
+.nav-sidebar .nav__links li:hover { background: transparent; }
+.nav-sidebar .nav__links a:hover,
+.nav-sidebar .nav__links a:hover span { color: var(--accent); }
+.nav-sidebar .nav__links a:hover span { transform: scale(1.08); }
 .nav-sidebar__auth {
   display: flex;
   flex-direction: column;
@@ -1126,4 +1161,20 @@ ul { list-style: none; }
 }
 @keyframes appSpin {
   to { transform: rotate(360deg); }
+}
+
+/* Respetar la preferencia de movimiento reducido del usuario */
+@media (prefers-reduced-motion: reduce) {
+  .parques-highlight,
+  .festival-card,
+  .nav-sidebar .nav__links li {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+  .nav-sidebar .nav__links a span { transition: none; transform: none; }
+  .hero__actions .btn--primary::before {
+    animation: none;
+    display: none;
+  }
 }

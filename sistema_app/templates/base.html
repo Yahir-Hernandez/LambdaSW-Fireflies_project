@@ -10,7 +10,7 @@
 	<link rel="stylesheet" href="{% static 'css/user/base.css' %}" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet">
@@ -114,7 +114,7 @@
 					</div>
 				{% endwith %}
 			{% else %}
-				{% with nav_title='Perfil' prev_url='' next_url='' %}
+				{% with nav_title='Perfil' prev_url=home_url next_url='' %}
 					<div class="nav__dock">
 						<div class="nav-dock" aria-live="polite">
 							{% if prev_url %}
@@ -174,13 +174,13 @@
 			<div class="nav-sidebar__links">
 				<ul class="nav__links">
 					<li class="home_link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" >
-						<a href="{% url 'sistema_app:home' %}"><i class="fa-solid fa-house"></i> <span>Inicio</span></a>
+						<a href="{% url 'sistema_app:home' %}"><span>Inicio</span></a>
 					</li>
 					<li class="park_link {% if request.resolver_match.url_name == 'mapa' %}active{% endif %}">
-						<a href="{% url 'sistema_app:mapa' %}"><i class="fa-solid fa-location-dot"></i> <span>Mapa de parques</span></a>
+						<a href="{% url 'sistema_app:mapa' %}"><span>Mapa de parques</span></a>
 					</li>
 					<li class="party_link {% if request.resolver_match.url_name == 'festival' %}active{% endif %}">
-						<a href="{{ festival_url }}"><i class="fa-solid fa-circle-info"></i> <span>El Festival</span></a>
+						<a href="{{ festival_url }}"><span>El Festival</span></a>
 					</li>
 				</ul>
 			</div>
@@ -258,14 +258,14 @@
 		<div class="footer__main">
 			<div class="footer__brand">
 				<p class="footer__brand-name">Festival Internacional de las<br><strong class="accent">LUCIERNAGAS 2026</strong></p>
-				<p class="footer__brand-desc">Una experiencia unica donde la naturaleza se convierte en espectaculo. Descubre los parques oficiales y vive la magia del fenomeno de las luciernagas en Mexico, de junio a agosto 2026.</p>
+				<p class="footer__brand-desc">Reúne en un solo lugar los principales parques y reservas que participan en la temporada de luciérnagas. Consulta información, disponibilidad y opciones de hospedaje para planear tu visita.</p>
 			</div>
 			<div class="footer__nav">
 				<h4>Navegacion</h4>
 				<ul>
 					<li><a href="{% url 'sistema_app:home' %}">Inicio</a></li>
 					<li><a href="{% url 'sistema_app:mapa' %}">Mapa de parques</a></li>
-					<li><a href="#fest">El Festival</a></li>
+					<li><a href="{% url 'sistema_app:festival' %}">El Festival</a></li>
 				</ul>
 			</div>
 			<div class="footer__contact">

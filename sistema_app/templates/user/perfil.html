@@ -82,29 +82,13 @@
       <div class="profile-section">
         <h2 class="section-title">
           <i class="fa-solid fa-calendar-check"></i>
-          {% if show_past %}Reservas pasadas{% else %}Reservas actuales{% endif %}
+          Tus reservaciones
         </h2>
-
-        <div class="reservations-tabs">
-          {% if show_past %}
-            <a class="btn btn--outline btn--sm" href="{% url 'sistema_app:perfil' %}">
-              <i class="fa-solid fa-arrow-left"></i> Ver reservas actuales
-            </a>
-          {% else %}
-            <a class="btn btn--outline btn--sm" href="{% url 'sistema_app:perfil' %}?show=past">
-              <i class="fa-solid fa-clock-rotate-left"></i> Ver reservas pasadas
-            </a>
-          {% endif %}
-        </div>
 
         <div class="reservations-toolbar">
           <form class="reservations-filters" method="get" action="">
             {% if show_past %}<input type="hidden" name="show" value="past" />{% endif %}
             <div class="filters-grid">
-              <label class="filter-field">
-                <span class="filter-label">Buscar</span>
-                <input type="search" name="q" class="filter-input" placeholder="Parque u hospedaje" value="{{ filters.q }}">
-              </label>
               <label class="filter-field">
                 <span class="filter-label">Desde</span>
                 <input type="date" name="from" class="filter-input" value="{{ filters.from }}">
@@ -123,11 +107,22 @@
               </label>
             </div>
             <div class="filters-actions">
+              {% if show_past %}
+                <a class="btn btn--ghost btn--sm reservations-tabs-btn" href="{% url 'sistema_app:perfil' %}">
+                  <i class="fa-solid fa-arrow-left"></i> Ver reservas actuales
+                </a>
+              {% else %}
+                <a class="btn btn--ghost btn--sm reservations-tabs-btn" href="{% url 'sistema_app:perfil' %}?show=past">
+                  <i class="fa-solid fa-clock-rotate-left"></i> Ver reservas pasadas
+                </a>
+              {% endif %}
               <button type="submit" class="btn btn--primary btn--sm">Aplicar</button>
               <a class="btn btn--ghost btn--sm" href="{% if show_past %}{% url 'sistema_app:perfil' %}?show=past{% else %}{% url 'sistema_app:perfil' %}{% endif %}">Limpiar</a>
             </div>
           </form>
         </div>
+
+        <div class="reservations-band">{% if show_past %}Reservas pasadas{% else %}Reservas activas{% endif %}</div>
 
         <div class="reservations-list">
           {% if reservas %}
@@ -139,11 +134,17 @@
               <div class="reservation-info">
                 <div class="reservation-header">
                   <h3 class="reservation-park">{{ reserva.park.name }}</h3>
-                  <span class="reservation-status {% if reserva.status == 'ACTIVE' %}activa{% elif reserva.status == 'USED' %}pasada{% elif reserva.status == 'PAST' %}pasada{% elif reserva.status == 'CANCELLED' %}cancelada{% endif %}">
-                    {{ reserva.get_status_display }}
-                  </span>
                 </div>
                 <div class="reservation-actions">
+                  {% if reserva.status != 'CANCELLED' %}
+                    <a
+                      class="btn btn--outline btn--sm js-print-btn"
+                      href="{% url 'sistema_app:reservation_comprobante' reserva.pk %}"
+                      target="_blank" rel="noopener"
+                    >
+                      <i class="fa-solid fa-print"></i> Comprobante
+                    </a>
+                  {% endif %}
                   {% if reserva.is_cancellable %}
                     <button
                       type="button"
@@ -186,11 +187,6 @@
       </div>
     </div>
 
-    <div class="profile-actions">
-      <a href="{% url 'sistema_app:home' %}" class="btn btn--outline">
-        <i class="fa-solid fa-arrow-left"></i> Volver al inicio
-      </a>
-    </div>
   </div>
 </section>
 
@@ -220,10 +216,10 @@
 <dialog id="cancel-success-dialog" class="auth-dialog auth-dialog--success" aria-labelledby="cancel-success-title">
   <div class="auth-dialog__body">
     <div class="auth-dialog__icon" aria-hidden="true">
-      <i class="fa-solid fa-check"></i>
+      <i class="fa-solid fa-circle-check"></i>
     </div>
     <h3 class="auth-dialog__title" id="cancel-success-title">Reserva cancelada</h3>
-    <p class="auth-dialog__desc">Actualizando tu lista de reservas…</p>
+    <p class="auth-dialog__desc">Lamentamos que no nos puedas acompañar esta vez.</p>
   </div>
 </dialog>
 {% endblock %}

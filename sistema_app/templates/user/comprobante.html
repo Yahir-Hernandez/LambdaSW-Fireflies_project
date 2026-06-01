@@ -1,0 +1,253 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comprobante de reservación · {{ reserva.park.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #ffba0a;
+      --ink: #0a1208;
+      --ink-soft: #555;
+      --line: #e3e3e3;
+      --header-bg: #080e10;
+    }
+
+    html, body {
+      background: #f2f2f2;
+      font-family: 'Inter', Arial, sans-serif;
+      color: var(--ink);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 16px 60px;
+    }
+
+    .voucher {
+      width: 100%;
+      max-width: 640px;
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+      /* Asegura que la cabecera oscura se imprima */
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .voucher__header {
+      background: var(--header-bg);
+      padding: 26px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 5px solid var(--accent);
+    }
+
+    .voucher__header img {
+      height: 46px;
+      width: auto;
+      display: block;
+    }
+
+    .voucher__header-tag {
+      text-transform: uppercase;
+      letter-spacing: .22em;
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-align: right;
+    }
+
+    .voucher__body {
+      padding: 30px 32px 34px;
+    }
+
+    .voucher__title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .voucher__subtitle {
+      color: var(--ink-soft);
+      font-size: .9rem;
+      margin-bottom: 26px;
+    }
+
+    .voucher__grid {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+    }
+
+    .voucher__details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .detail-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .detail-row:last-child { border-bottom: 0; }
+
+    .detail-label {
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: .66rem;
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+    .detail-value {
+      font-size: .98rem;
+      color: var(--ink);
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    .voucher__qr {
+      flex: 0 0 auto;
+      text-align: center;
+    }
+    .voucher__qr img {
+      width: 180px;
+      height: 180px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+    }
+    .voucher__qr-caption {
+      margin-top: 10px;
+      font-size: .72rem;
+      color: var(--ink-soft);
+      max-width: 180px;
+    }
+
+    .voucher__folio {
+      margin-top: 26px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--line);
+      font-size: .72rem;
+      color: var(--ink-soft);
+      letter-spacing: .04em;
+      word-break: break-all;
+    }
+
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+    }
+    .actions button {
+      font-family: inherit;
+      font-size: .85rem;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .actions .btn-print {
+      background: var(--accent);
+      color: var(--ink);
+    }
+    .actions .btn-close {
+      background: transparent;
+      color: var(--ink);
+      border-color: rgba(0, 0, 0, .25);
+    }
+
+    @media (max-width: 560px) {
+      .voucher__grid { flex-direction: column; align-items: center; text-align: center; }
+      .voucher__details { width: 100%; }
+      .detail-row { align-items: center; }
+    }
+
+    @media print {
+      html, body { background: #fff; padding: 0; }
+      .voucher {
+        max-width: 100%;
+        box-shadow: none;
+        border-radius: 0;
+      }
+      .no-print { display: none !important; }
+      @page { margin: 12mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="voucher">
+    <div class="voucher__header">
+      <img src="{% static 'img/logo_text.png' %}" alt="Festival Internacional de las Luciérnagas" />
+      <span class="voucher__header-tag">Comprobante de<br />reservación</span>
+    </div>
+
+    <div class="voucher__body">
+      <h1 class="voucher__title">{{ reserva.park.name }}</h1>
+      <p class="voucher__subtitle">A nombre de {{ reserva.user.get_full_name|default:reserva.user.username }}</p>
+
+      <div class="voucher__grid">
+        <div class="voucher__details">
+          <div class="detail-row">
+            <span class="detail-label">Hospedaje</span>
+            <span class="detail-value">{{ reserva.lodging.get_kind_display }} · {{ reserva.lodging.name }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Entrada</span>
+            <span class="detail-value">{{ reserva.start_date|date:"d/m/Y" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Salida</span>
+            <span class="detail-value">{{ reserva.end_date|date:"d/m/Y" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Personas</span>
+            <span class="detail-value">{{ reserva.people }} {{ reserva.people|pluralize:"persona,personas" }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Estado</span>
+            <span class="detail-value">{{ reserva.get_status_display }}</span>
+          </div>
+        </div>
+
+        <div class="voucher__qr">
+          <img src="{% url 'sistema_app:reservation_qr_png' reserva.checkin_token %}" alt="Código QR de la reservación" />
+          <p class="voucher__qr-caption">Presenta este código en el acceso para tu check-in.</p>
+        </div>
+      </div>
+
+      <p class="voucher__folio">Folio: {{ reserva.checkin_token }}</p>
+    </div>
+  </div>
+
+  <div class="actions no-print">
+    <button type="button" class="btn-print" onclick="window.print()">
+      Imprimir comprobante
+    </button>
+    <button type="button" class="btn-close" onclick="window.close()">
+      Cerrar
+    </button>
+  </div>
+
+  <script>
+    // Abrir el diálogo de impresión automáticamente al cargar (tras renderizar el QR).
+    window.addEventListener('load', function () {
+      setTimeout(function () { window.print(); }, 350);
+    });
+  </script>
+</body>
+</html>

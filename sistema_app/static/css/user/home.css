@@ -22,7 +22,28 @@
   transition: color .2s ease, transform .2s ease;
   animation: hero-bounce 2.2s ease-in-out infinite;
   align-self: center;
-  margin: 0 auto;
+  margin: 28px auto 0;
+}
+/* Brillo que barre por encima de "Reservar ahora" para invitar al clic (solo en el hero) */
+.hero__actions .btn--primary {
+  position: relative;
+  overflow: hidden;
+}
+.hero__actions .btn--primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
+  transform: skewX(-20deg);
+  animation: ctaShine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ctaShine {
+  0% { left: -75%; }
+  55%, 100% { left: 130%; }
 }
 .hero__scroll:hover {
   color: var(--accent);
@@ -172,6 +193,15 @@
   overflow: hidden;
   box-shadow: 0 18px 48px rgba(0,0,0,.35);
 }
+/* Reveal al hacer scroll (mismo patron que .why__card / logo heroIn) */
+.parques-highlight,
+.festival-card {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.parques-highlight.visible,
+.festival-card.visible { opacity: 1; transform: translateY(0); }
 .parques-highlight__media {
   min-height: 220px;
   background:

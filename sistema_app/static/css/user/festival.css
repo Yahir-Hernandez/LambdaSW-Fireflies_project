@@ -204,3 +204,36 @@
   margin-bottom: 16px;
   font-size: 1rem;
 }
+
+/* ── Reveal del contenido al activarse cada slide ─────────────────── */
+.festival-header,
+.festival-image-wrapper,
+.festival-content {
+  opacity: 0;
+  transition: opacity .7s ease, transform .7s ease;
+}
+.festival-header        { transform: translateY(28px); }
+.festival-image-wrapper { transform: translateX(-30px); }
+.festival-content       { transform: translateX(30px); }
+
+.festival-slide.is-revealed .festival-header,
+.festival-slide.is-revealed .festival-image-wrapper,
+.festival-slide.is-revealed .festival-content {
+  opacity: 1;
+  transform: none;
+}
+.festival-slide.is-revealed .festival-content { transition-delay: .15s; }
+
+/* En el slide invertido, intercambiar el sentido del desplazamiento */
+.festival-section--reverse .festival-image-wrapper { transform: translateX(30px); }
+.festival-section--reverse .festival-content       { transform: translateX(-30px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .festival-header,
+  .festival-image-wrapper,
+  .festival-content {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

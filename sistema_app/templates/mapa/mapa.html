@@ -39,8 +39,41 @@
 
     <!-- Mapa de parques -->
     <div class="map-container">
+      <div class="map-filter" id="mapFilter">
+        <button type="button" class="map-filter__toggle" id="filterToggle" aria-expanded="false" aria-controls="filterBody" title="Filtrar parques" aria-label="Filtrar parques">
+          <i class="fa-solid fa-filter"></i>
+        </button>
+        <div class="map-filter__body" id="filterBody">
+          <div class="map-filter__title">Filtrar parques</div>
+          <div class="map-filter__grid">
+            <label class="filter-field">
+              <span class="filter-label">Buscar</span>
+              <input type="search" id="filterQuery" class="filter-input" placeholder="Nombre del parque" />
+            </label>
+            <label class="filter-field">
+              <span class="filter-label">Servicio</span>
+              <select id="filterService" class="filter-input">
+                <option value="">Todos</option>
+              </select>
+            </label>
+            <label class="filter-field">
+              <span class="filter-label">Cabañas</span>
+              <select id="filterCabins" class="filter-input">
+                <option value="">Todas</option>
+                <option value="yes">Con cabañas</option>
+                <option value="no">Sin cabañas</option>
+              </select>
+            </label>
+          </div>
+          <div class="map-filter__actions">
+            <button type="button" id="filterClear" class="btn btn--ghost btn--sm">Limpiar</button>
+          </div>
+        </div>
+      </div>
       <div class="park-list" id="park-list">
-        <!-- Lista de parques se llenará con JavaScript -->
+        <div class="park-items" id="park-items">
+          <!-- Lista de parques se llenará con JavaScript -->
+        </div>
       </div>
       <div id="map"></div>
       <div class="park-info" id="park-info">
