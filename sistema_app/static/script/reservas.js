@@ -55,6 +55,9 @@
 		if (new Date(end) <= new Date(start)) {
 			return 'La fecha de término debe ser posterior a la fecha de inicio.';
 		}
+		if ((new Date(end) - new Date(start)) / 86400000 > 5) {
+			return 'La estancia no puede exceder 5 días.';
+		}
 		if (isTuesday(start)) {
 			return 'No se permiten reservas con inicio en martes.';
 		}

@@ -33,11 +33,30 @@
 
   let currentCancelUrl = null;
 
-  // Función auxiliar para mostrar el diálogo de error.
+  // Muestra el diálogo de error global. Al descartarlo (Entendido / ✕ / clic
+  // fuera / Esc) recarga la página, porque la pestaña estaba desactualizada
+  // respecto al estado real de la reserva. La recarga se dispara directamente
+  // desde cada acción para que "Entendido" funcione siempre.
   function showError(msg) {
+    if (window.AppLoader) window.AppLoader.hide(); // por si el overlay quedó visible
     const msgEl = document.getElementById('error-dialog-message');
     if (msgEl) msgEl.textContent = msg;
-    if (errorDialog) errorDialog.showModal();
+
+    const reload = () => window.location.reload();
+    if (!errorDialog || typeof errorDialog.showModal !== 'function') {
+      alert(msg);
+      reload();
+      return;
+    }
+
+    document.getElementById('error-dialog-ok')?.addEventListener('click', reload, { once: true });
+    document.getElementById('error-dialog-close')?.addEventListener('click', reload, { once: true });
+    errorDialog.addEventListener('click', (e) => {
+      if (e.target === errorDialog) reload();
+    }, { once: true });
+    errorDialog.addEventListener('cancel', reload, { once: true }); // tecla Esc
+
+    if (!errorDialog.open) errorDialog.showModal();
   }
 
   // Evento en todos los botones "Cancelar reserva".

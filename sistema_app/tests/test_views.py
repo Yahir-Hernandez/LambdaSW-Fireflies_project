@@ -424,13 +424,13 @@ class TestPerfilView:
         assert past_reservation in reservas
         assert used in reservas
 
-    def test_perfil_renders_status_badge_class(
+    def test_perfil_renders_reservation_card_and_band(
         self, auth_client, active_reservation
     ):
-        """Usuario con reserva activa hace GET a perfil; verifica que el HTML contiene el elemento 'reservation-status' y el texto 'activa'."""
+        """Usuario con reserva activa hace GET a perfil; verifica que el HTML contiene la card de reserva y la banda 'Reservas activas'."""
         response = auth_client.get(url("perfil"))
-        assert b'reservation-status' in response.content
-        assert b'activa' in response.content
+        assert b'reservation-card' in response.content
+        assert "Reservas activas".encode() in response.content
 
 
 # ===========================================================================
@@ -522,23 +522,36 @@ class TestCrearReservaView:
 
 @pytest.mark.django_db
 class TestReservationCancelView:
-    def test_owner_can_cancel_and_redirects_to_perfil(self, auth_client, active_reservation, settings):
-        """El dueño de la reserva realiza POST a reservation_cancel; verifica que redirige al perfil y la reserva es eliminada de BD."""
+    def test_owner_can_cancel_returns_ok(self, auth_client, active_reservation, settings):
+        """El dueño realiza POST a reservation_cancel; verifica que responde 200 {ok:true} y la reserva se elimina de BD."""
         settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
         pk = active_reservation.pk
         response = auth_client.post(url("reservation_cancel", pk=pk))
-        assert response.status_code == 302
-        assert "perfil" in response["Location"]
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
         assert not Reservation.objects.filter(pk=pk).exists()
 
     def test_other_user_cannot_cancel(self, client, other_user, active_reservation, settings):
-        """Otro usuario intenta cancelar la reserva de alguien más; verifica que redirige pero la reserva permanece ACTIVE en BD."""
+        """Otro usuario intenta cancelar la reserva de alguien más; verifica que responde 409 y la reserva permanece ACTIVE en BD."""
         settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
         client.force_login(other_user)
         response = client.post(url("reservation_cancel", pk=active_reservation.pk))
-        assert response.status_code == 302
+        assert response.status_code == 409
+        assert "error" in response.json()
         active_reservation.refresh_from_db()
         assert active_reservation.status == Reservation.Status.ACTIVE
+
+    def test_cancel_used_reservation_returns_409(self, auth_client, active_reservation, settings):
+        """Reserva marcada como USED (p. ej. check-in en otra pestaña); cancelar responde 409 y la reserva no se elimina."""
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        active_reservation.status = Reservation.Status.USED
+        active_reservation.save(update_fields=["status"])
+        pk = active_reservation.pk
+        response = auth_client.post(url("reservation_cancel", pk=pk))
+        assert response.status_code == 409
+        assert "error" in response.json()
+        active_reservation.refresh_from_db()
+        assert active_reservation.status == Reservation.Status.USED
 
     def test_cancel_nonexistent_returns_404(self, auth_client):
         """Realiza POST a reservation_cancel con pk=99999 (no existe en BD); verifica que responde HTTP 404."""

@@ -425,14 +425,18 @@ def crear_reserva(request):
 @login_required
 @require_POST
 def reservation_cancel(request, pk):
-    """Cancela una reservación del usuario y muestra el resultado como mensaje flash."""
+    """Cancela una reservación del usuario; responde JSON para el flujo AJAX.
+
+    Devuelve 200 {"ok": true} si se cancela, o 409 {"error": ...} si la
+    reserva ya no es cancelable (p. ej. fue marcada como usada en otra
+    pestaña). El front muestra el diálogo de error y recarga la página.
+    """
     reservation = get_object_or_404(Reservation, pk=pk)
     try:
         ReservationService.cancel_reservation(request.user, reservation)
-        messages.success(request, f"Reservación #{reservation.pk} cancelada.")
     except ValidationError as exc:
-        messages.error(request, "; ".join(exc.messages))
-    return redirect("sistema_app:perfil")
+        return JsonResponse({"error": " ".join(exc.messages)}, status=409)
+    return JsonResponse({"ok": True})
 
 
 @login_required

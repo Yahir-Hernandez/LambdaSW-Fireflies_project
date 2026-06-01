@@ -13,10 +13,12 @@ SEASON_END: date = date(2026, 8, 31)
 MIN_PEOPLE: int = 1
 MAX_PEOPLE: int = 20
 TUESDAY: int = 1
+# Estancia máxima permitida por reservación (días), por disponibilidad de los parques.
+MAX_DURATION_DAYS: int = 5
 
 
 class ReservationValidator:
-    """Aplica las cuatro reglas de negocio sobre una posible reservación.
+    """Aplica las reglas de negocio sobre una posible reservación.
 
     Cada regla puede ejecutarse por separado o todas en bloque mediante el
     método validate.
@@ -53,6 +55,14 @@ class ReservationValidator:
         if end_date > SEASON_END + timedelta(days=1):
             raise ValidationError(
                 "La fecha de término no puede exceder el cierre del festival."
+            )
+
+    @classmethod
+    def validate_max_duration(cls, start_date: date, end_date: date) -> None:
+        """Rechaza estancias de más de MAX_DURATION_DAYS días por disponibilidad."""
+        if (end_date - start_date).days > MAX_DURATION_DAYS:
+            raise ValidationError(
+                f"La estancia no puede exceder {MAX_DURATION_DAYS} días."
             )
 
     @classmethod
@@ -95,12 +105,13 @@ class ReservationValidator:
         n_people: int,
     ) -> None:
         """
-        Aplica en orden las cuatro validaciones.
+        Aplica en orden todas las validaciones.
 
         Raises:
             ValidationError: Si alguna de las validaciones individuales falla.
         """
         cls.validate_date(start_date, end_date)
+        cls.validate_max_duration(start_date, end_date)
         cls.validate_tuesday(start_date)
         cls.validate_people(n_people)
         cls.validate_lodging(lodging, park, n_people)

@@ -139,6 +139,21 @@ class TestReservationValidatorDate:
 
 
 # ===========================================================================
+# ReservationValidator — duración máxima (5 días)
+# ===========================================================================
+
+class TestReservationValidatorMaxDuration:
+    def test_five_days_passes(self):
+        """Llama validate_max_duration() con un rango de 5 días; verifica que no lanza excepción."""
+        ReservationValidator.validate_max_duration(date(2026, 6, 1), date(2026, 6, 6))
+
+    def test_six_days_raises(self):
+        """Llama validate_max_duration() con un rango de 6 días; verifica que lanza ValidationError con '5 días'."""
+        with pytest.raises(ValidationError, match="5 días"):
+            ReservationValidator.validate_max_duration(date(2026, 6, 1), date(2026, 6, 7))
+
+
+# ===========================================================================
 # ReservationValidator — martes
 # ===========================================================================
 
