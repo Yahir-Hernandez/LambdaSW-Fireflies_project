@@ -1178,3 +1178,7 @@ ul { list-style: none; }
     display: none;
   }
 }
+/* ── Estrellas (reseñas) ─────────────────────────────────────────────── */
+.stars { display: inline-flex; gap: 2px; color: var(--accent); font-size: .85rem; }
+.stars--sm { font-size: .75rem; }
+.stars .fa-regular { color: var(--text-dim); }

@@ -150,6 +150,19 @@ def cancelled_reservation(db, user, park, camping_spot, season_start):
     )
 
 
+@pytest.fixture
+def used_reservation(db, user, park, cabin):
+    return Reservation.objects.create(
+        user=user,
+        park=park,
+        lodging=cabin,
+        start_date=date(2026, 6, 1),
+        end_date=date(2026, 6, 3),
+        people=1,
+        status=Reservation.Status.USED,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Cliente autenticado
 # ---------------------------------------------------------------------------

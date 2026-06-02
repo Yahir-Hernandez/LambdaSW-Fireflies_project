@@ -155,6 +155,31 @@
                       <i class="fa-solid fa-xmark"></i> Cancelar reserva
                     </button>
                   {% endif %}
+                  {% if reserva.status == 'USED' %}
+                    {% if not reserva.has_review %}
+                      <button
+                        type="button"
+                        class="btn btn--outline btn--sm js-review-btn"
+                        data-reserva-id="{{ reserva.id }}"
+                        data-reserva-park="{{ reserva.park.name|escapejs }}"
+                      >
+                        <i class="fa-solid fa-star" aria-hidden="true"></i> Calificar parque
+                      </button>
+                    {% else %}
+                      <div class="reservation-rated">
+                        <span class="stars stars--sm">
+                          {% for i in "12345" %}
+                            {% if forloop.counter <= reserva.review.rating %}
+                              <i class="fa-solid fa-star"></i>
+                            {% else %}
+                              <i class="fa-regular fa-star"></i>
+                            {% endif %}
+                          {% endfor %}
+                        </span>
+                        <span class="reservation-rated__label">Reseñada</span>
+                      </div>
+                    {% endif %}
+                  {% endif %}
                 </div>
                 <div class="reservation-details">
                   <div class="detail-item">
@@ -222,10 +247,46 @@
     <p class="auth-dialog__desc">Lamentamos que no nos puedas acompañar esta vez.</p>
   </div>
 </dialog>
+{# ── Modal de calificar parque ─────────────────────────────────────────── #}
+<dialog id="review-dialog" class="auth-dialog" aria-labelledby="review-dialog-title">
+  <div class="auth-dialog__body">
+    <div class="auth-dialog__icon" aria-hidden="true">
+      <i class="fa-solid fa-star"></i>
+    </div>
+    <h3 class="auth-dialog__title" id="review-dialog-title">Califica tu experiencia</h3>
+    <p class="auth-dialog__desc" id="review-dialog-park"></p>
+    <div class="rating-input" role="group" aria-label="Selecciona una calificación">
+      {% for i in "12345" %}
+        <button type="button" class="rating-star" data-value="{{ forloop.counter }}"
+                aria-label="{{ forloop.counter }} estrella{% if forloop.counter > 1 %}s{% endif %}">
+          <i class="fa-regular fa-star"></i>
+        </button>
+      {% endfor %}
+    </div>
+    <textarea id="review-comment" class="review-comment" placeholder="Comentario (opcional)" maxlength="500" rows="3"></textarea>
+    <div class="auth-dialog__actions">
+      <button type="button" class="btn btn--ghost" id="review-dialog-cancel">Cancelar</button>
+      <button type="button" class="btn btn--accent" id="review-dialog-submit">Enviar reseña</button>
+    </div>
+    <p class="review-error" id="review-error" role="alert" hidden></p>
+  </div>
+</dialog>
+
+{# ── Modal de éxito tras reseñar ───────────────────────────────────────── #}
+<dialog id="review-success-dialog" class="auth-dialog auth-dialog--success">
+  <div class="auth-dialog__body">
+    <div class="auth-dialog__icon" aria-hidden="true">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <h3 class="auth-dialog__title">¡Gracias por tu reseña!</h3>
+    <p class="auth-dialog__desc">Tu calificación ha sido registrada.</p>
+  </div>
+</dialog>
 {% endblock %}
 
 {% block extra_js %}
   <script src="{% static 'script/perfil.js' %}"></script>   <!-- Solo para las imágenes de fondo -->
   <script src="{% static 'script/luciernagas.js' %}"></script>
   <script src="{% static 'script/reservation_cancel.js' %}"></script>
+  <script src="{% static 'script/reviews.js' %}"></script>
 {% endblock %}

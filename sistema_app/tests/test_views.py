@@ -563,3 +563,78 @@ class TestReservationCancelView:
         response = client.post(url("reservation_cancel", pk=active_reservation.pk))
         assert response.status_code == 302
         assert "login" in response["Location"]
+
+
+# ===========================================================================
+# crear_resena & park_reviews_api
+# ===========================================================================
+
+@pytest.mark.django_db
+class TestCrearResenaView:
+    def test_create_review_success(self, auth_client, used_reservation):
+        response = auth_client.post(
+            url("crear_resena", pk=used_reservation.pk),
+            {"rating": 4, "comment": "Muy bueno"},
+        )
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
+
+    def test_duplicate_returns_409(self, auth_client, used_reservation):
+        auth_client.post(
+            url("crear_resena", pk=used_reservation.pk), {"rating": 4}
+        )
+        response = auth_client.post(
+            url("crear_resena", pk=used_reservation.pk), {"rating": 5}
+        )
+        assert response.status_code == 409
+        assert "error" in response.json()
+
+    def test_non_used_returns_409(self, auth_client, active_reservation):
+        response = auth_client.post(
+            url("crear_resena", pk=active_reservation.pk), {"rating": 3}
+        )
+        assert response.status_code == 409
+
+    def test_requires_authentication(self, client, used_reservation):
+        response = client.post(
+            url("crear_resena", pk=used_reservation.pk), {"rating": 4}
+        )
+        assert response.status_code == 302
+        assert "login" in response["Location"]
+
+
+@pytest.mark.django_db
+class TestParkReviewsApiView:
+    def test_returns_structure(self, client, park):
+        response = client.get(url("park_reviews_api") + f"?park_id={park.pk}")
+        assert response.status_code == 200
+        data = response.json()
+        assert "average" in data
+        assert "count" in data
+        assert "reviews" in data
+
+    def test_reflects_created_review(self, client, used_reservation, user, park):
+        from sistema_app.models import Review
+        Review.objects.create(
+            user=user, park=park, reservation=used_reservation, rating=4, comment="Bien"
+        )
+        response = client.get(url("park_reviews_api") + f"?park_id={park.pk}")
+        data = response.json()
+        assert data["count"] == 1
+        assert data["average"] == 4.0
+        assert data["reviews"][0]["rating"] == 4
+
+    def test_missing_park_id_returns_400(self, client):
+        response = client.get(url("park_reviews_api"))
+        assert response.status_code == 400
+
+
+@pytest.mark.django_db
+class TestMapaAndPerfilWithReviews:
+    def test_mapa_returns_200(self, client):
+        response = client.get(url("mapa"))
+        assert response.status_code == 200
+
+    def test_perfil_returns_200(self, auth_client):
+        response = auth_client.get(url("perfil"))
+        assert response.status_code == 200

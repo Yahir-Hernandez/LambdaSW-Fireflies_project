@@ -95,8 +95,10 @@
 
 <script>
     const parkIconUrl = "{% static 'img/luciernaga.png' %}";
+    const googleMapsLogoUrl = "{% static 'img/google-maps-2020-icon.svg' %}";
     const reservationUrl = "{% url 'sistema_app:reservation_create' %}";
     const availabilityUrl = "{% url 'sistema_app:disponibilidad_api' %}";
+    const reviewsApiUrl = "{% url 'sistema_app:park_reviews_api' %}";
     const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
     const loginUrl = "{% url 'sistema_app:login' %}";
     const forestImages = [
@@ -127,6 +129,8 @@
         maximo_visitantes: {{ parque.camping_capacity }},
         disponibilidad_actual: {{ parque.disponibilidad_actual }},
         has_cabins: {{ parque.has_cabins|yesno:"true,false" }},
+        calificacion: {{ parque.avg_rating|default:0|floatformat:1 }},
+        num_resenas: {{ parque.review_count|default:0 }},
         telefono_contacto: "{{ parque.contact_phone|escapejs }}",
         email_contacto: "{{ parque.contact_email|escapejs }}",
         servicios: [
@@ -223,5 +227,23 @@
   </div>
 </div>
 <script src="{% static 'script/reservas.js' %}"></script>
+
+{# ── Modal de reseñas del parque ──────────────────────────────────────── #}
+<dialog id="reviews-modal" class="reviews-modal" aria-labelledby="reviews-modal-title">
+  <div class="reviews-modal__inner">
+    <div class="reviews-modal__header">
+      <div class="reviews-modal__title-block">
+        <h3 class="reviews-modal__title" id="reviews-modal-title"></h3>
+        <div id="reviews-modal-summary"></div>
+      </div>
+      <button type="button" class="reviews-modal__close" id="reviews-modal-close" aria-label="Cerrar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="reviews-modal__body" id="reviews-modal-list">
+      <p class="text-dim reviews-modal__loading">Cargando reseñas…</p>
+    </div>
+  </div>
+</dialog>
 
 {% endblock %}

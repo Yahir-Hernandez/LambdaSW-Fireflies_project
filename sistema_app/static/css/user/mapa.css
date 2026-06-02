@@ -889,6 +889,73 @@
     gap: 6px;
 }
 
+/* Sección desplegable (Servicios): conserva el look del resto de la card */
+.park-section__toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+}
+.park-section__toggle h4 { margin: 0; }
+.park-section__chevron {
+    color: var(--text-dim);
+    transition: transform .4s cubic-bezier(.34, 1.56, .64, 1); /* leve rebote */
+}
+.park-section--collapsible.is-open .park-section__chevron {
+    transform: rotate(180deg);
+    color: var(--accent);
+}
+.park-section__body {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-6px);
+    transition: max-height .4s cubic-bezier(.4, 0, .2, 1),
+                opacity .35s ease,
+                transform .4s cubic-bezier(.4, 0, .2, 1),
+                margin-top .4s ease;
+}
+.park-section--collapsible.is-open .park-section__body {
+    max-height: 400px;
+    opacity: 1;
+    transform: translateY(0);
+    margin-top: 10px;
+}
+
+/* Los servicios entran escalonados al desplegar */
+.park-section__body .service-tag {
+    opacity: 0;
+    transform: translateY(8px) scale(.97);
+    transition: opacity .3s ease, transform .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+.park-section--collapsible.is-open .service-tag {
+    opacity: 1;
+    transform: none;
+}
+.park-section--collapsible.is-open .service-tag:nth-child(1) { transition-delay: .10s; }
+.park-section--collapsible.is-open .service-tag:nth-child(2) { transition-delay: .15s; }
+.park-section--collapsible.is-open .service-tag:nth-child(3) { transition-delay: .20s; }
+.park-section--collapsible.is-open .service-tag:nth-child(4) { transition-delay: .25s; }
+.park-section--collapsible.is-open .service-tag:nth-child(5) { transition-delay: .30s; }
+.park-section--collapsible.is-open .service-tag:nth-child(6) { transition-delay: .35s; }
+.park-section--collapsible.is-open .service-tag:nth-child(n+7) { transition-delay: .40s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .park-section__body,
+    .park-section__chevron,
+    .park-section__body .service-tag {
+        transition: none;
+        transform: none;
+    }
+}
+
 .contact-info p {
     margin: 4px 0;
 }
@@ -900,6 +967,13 @@
     margin-top: 24px;
     padding-top: 20px;
     border-top: 1px solid var(--border);
+}
+
+/* Logo de Google Maps dentro del botón "Ver en Google Maps" */
+.gmaps-logo {
+    width: 16px;
+    height: 16px;
+    vertical-align: -3px;
 }
 
 .park-info-default {
@@ -941,3 +1015,151 @@
 }
 
  
+/* ── Rating en preview de la lista de parques ────────────────────────── */
+.park-rating { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: .8rem; color: var(--text-dim); margin-top: 2px; }
+.park-rating__count { font-size: .78rem; }
+.text-dim { color: var(--text-dim); }
+
+/* ── Sección "Reseñas" integrada en la card de detalle ──────────────── */
+.park-section--reviews { padding: 0; }
+.park-section__reviews-btn {
+  width: 100%; background: none; border: none; cursor: pointer;
+  padding: 0; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; color: inherit;
+}
+.park-section__reviews-heading {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0; font-size: inherit;
+  transform-origin: left center;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.park-section__reviews-btn:hover .park-section__reviews-heading {
+  transform: scale(1.06);
+}
+.park-section__reviews-icon {
+  font-size: .75rem; opacity: .5;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+.park-section__reviews-btn:hover .park-section__reviews-icon {
+  opacity: 1; transform: translate(2px, -2px);
+}
+.reviews-count-badge {
+  background: var(--accent);
+  color: #000; font-size: .72rem; font-weight: 700;
+  border-radius: 10px; padding: 1px 7px;
+  line-height: 1.4;
+}
+
+/* ── Animaciones del modal de reseñas ────────────────────────────────── */
+@keyframes reviews-modal-in {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.94); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes reviews-modal-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to   { opacity: 0; transform: translate(-50%, -46%) scale(0.94); }
+}
+@keyframes reviews-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes reviews-backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ── Modal de reseñas ────────────────────────────────────────────────── */
+.reviews-modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0; border: none; padding: 0;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #101a26 0%, #0b1218 100%);
+  color: var(--text);
+  width: min(520px, 94vw);
+  max-height: 80vh;
+  box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  outline: none;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.reviews-modal[open] {
+  animation: reviews-modal-in 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+.reviews-modal.is-closing {
+  animation: reviews-modal-out 0.2s ease-in forwards;
+}
+.reviews-modal::backdrop {
+  background: rgba(5, 10, 15, .75);
+  backdrop-filter: blur(4px);
+  animation: reviews-backdrop-in 0.28s ease forwards;
+}
+.reviews-modal.is-closing::backdrop {
+  animation: reviews-backdrop-out 0.2s ease-in forwards;
+}
+.reviews-modal__inner {
+  display: flex; flex-direction: column;
+  height: 100%; overflow: hidden;
+}
+.reviews-modal__header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.reviews-modal__title-block { flex: 1; min-width: 0; }
+.reviews-modal__title {
+  font-family: var(--font-title);
+  font-size: 1.15rem; font-weight: 700;
+  margin: 0 0 6px; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.reviews-summary { display: flex; align-items: center; gap: 6px; font-size: .9rem; }
+.reviews-modal__close {
+  background: rgba(255,255,255,.07);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: .9rem;
+  transition: background var(--transition), color var(--transition);
+  flex-shrink: 0;
+}
+.reviews-modal__close:hover { background: rgba(255,255,255,.14); color: #fff; }
+.reviews-modal__body {
+  overflow-y: auto;
+  padding: 12px 24px 20px;
+  flex: 1;
+}
+.reviews-modal__loading { padding: 20px 0; text-align: center; }
+
+/* ── Cada reseña dentro del modal ────────────────────────────────────── */
+.review-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  border-top: 1px solid rgba(255,255,255,.15); padding: 14px 0;
+}
+.review-item:first-child { border-top: none; padding-top: 4px; }
+.review-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--bg-section);
+  border: 3px solid rgba(255,255,255,.08);
+  box-shadow: 0 3px 8px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,186,10,.41);
+  color: var(--accent);
+  font-family: var(--font-title);
+  font-size: 1rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.review-content { flex: 1; min-width: 0; }
+.review-item__header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap; margin-bottom: 3px;
+}
+.review-item__user { font-weight: 600; font-size: .85rem; color: #fff; }
+.review-item__date { font-size: .75rem; }
+.review-item__comment { font-size: .875rem; color: var(--text); margin: 5px 0 0; line-height: 1.5; }

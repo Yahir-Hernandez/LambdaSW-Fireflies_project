@@ -283,3 +283,43 @@ class TestPendingRegistrationModel:
             created_at=past,
         )
         assert pending.seconds_elapsed() >= 60
+
+
+# ===========================================================================
+# Review
+# ===========================================================================
+
+@pytest.mark.django_db
+class TestReviewModel:
+    def test_create_review(self, used_reservation, user, park):
+        from sistema_app.models import Review
+        review = Review.objects.create(
+            user=user, park=park, reservation=used_reservation, rating=4, comment="Excelente"
+        )
+        assert review.pk is not None
+        assert str(review) == f"Reseña de {user} en {park} (4★)"
+
+    def test_unique_per_reservation(self, used_reservation, user, park):
+        from django.db import IntegrityError
+        from sistema_app.models import Review
+        Review.objects.create(user=user, park=park, reservation=used_reservation, rating=3)
+        with pytest.raises(IntegrityError):
+            Review.objects.create(user=user, park=park, reservation=used_reservation, rating=5)
+
+    def test_ordering_newest_first(self, user, park, cabin, db):
+        from datetime import date
+        from sistema_app.models import Reservation, Review
+        r1 = Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=date(2026, 6, 1), end_date=date(2026, 6, 2),
+            people=1, status=Reservation.Status.USED,
+        )
+        r2 = Reservation.objects.create(
+            user=user, park=park, lodging=cabin,
+            start_date=date(2026, 6, 3), end_date=date(2026, 6, 4),
+            people=1, status=Reservation.Status.USED,
+        )
+        rev1 = Review.objects.create(user=user, park=park, reservation=r1, rating=3)
+        rev2 = Review.objects.create(user=user, park=park, reservation=r2, rating=5)
+        qs = list(Review.objects.filter(park=park))
+        assert qs[0].pk == rev2.pk

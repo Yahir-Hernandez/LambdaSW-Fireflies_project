@@ -10,6 +10,17 @@
 let map;
 let markers = [];
 let selectedParkId = null;
+
+function renderStars(value) {
+    const full = Math.floor(value);
+    const half = (value - full) >= 0.5 ? 1 : 0;
+    const empty = 5 - full - half;
+    return '<span class="stars">' +
+        '<i class="fa-solid fa-star"></i>'.repeat(full) +
+        (half ? '<i class="fa-solid fa-star-half-stroke"></i>' : '') +
+        '<i class="fa-regular fa-star"></i>'.repeat(empty) +
+        '</span>';
+}
 /**
  * Inicializa el mapa con los parques y los marcadores
  */
@@ -190,6 +201,10 @@ function populateParkList() {
             <div class="park-item-header">
                 <h4>${parque.nombre}</h4>
             </div>
+            <div class="park-rating">
+                ${renderStars(parque.calificacion)}
+                <span class="park-rating__count">(${parque.num_resenas})</span>
+            </div>
             <p class="park-location">${parque.direccion}</p>
             <div class="park-availability-row">
                 <span class="park-availability-label">Disponibilidad</span>
@@ -220,7 +235,7 @@ function selectPark(parkId) {
 
     // Mostrar información detallada
     showParkInfo(parque);
-    
+
     // Centrar el mapa en el parque seleccionado
     map.setView([parque.latitud, parque.longitud], 13);
     
@@ -264,33 +279,98 @@ function showParkInfo(parque) {
             </div>
             
             <div class="park-section">
-                <h4><i class="fa-solid fa-concierge-bell"></i> Servicios</h4>
-                <div class="services-list">
-                    ${parque.servicios.length > 0 
-                        ? parque.servicios.map(servicio => `<span class="service-tag">${servicio}</span>`).join('')
-                        : '<p>No hay servicios registrados.</p>'
-                    }
-                </div>
-            </div>
-            
-            <div class="park-section">
                 <h4><i class="fa-solid fa-phone"></i> Contacto</h4>
                 <div class="contact-info">
                     ${parque.telefono_contacto ? `<p><strong>Teléfono:</strong> ${parque.telefono_contacto}</p>` : ''}
                     ${parque.email_contacto ? `<p><strong>Email:</strong> ${parque.email_contacto}</p>` : ''}
                 </div>
             </div>
-            
+
+            <div class="park-section park-section--collapsible">
+                <button type="button" class="park-section__toggle" onclick="toggleParkSection(this)" aria-expanded="false">
+                    <h4><i class="fa-solid fa-concierge-bell"></i> Servicios</h4>
+                    <i class="fa-solid fa-chevron-down park-section__chevron"></i>
+                </button>
+                <div class="park-section__body">
+                    <div class="services-list">
+                        ${parque.servicios.length > 0
+                            ? parque.servicios.map(servicio => `<span class="service-tag">${servicio}</span>`).join('')
+                            : '<p>No hay servicios registrados.</p>'
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="park-section park-section--reviews">
+                <button type="button" class="park-section__toggle park-section__reviews-btn"
+                        onclick="openReviewsModal(${parque.id}, '${parque.nombre.replace(/'/g, "\\'")}')">
+                    <h4 class="park-section__reviews-heading">
+                        <i class="fa-solid fa-star"></i> Reseñas
+                        ${parque.num_resenas > 0
+                            ? `<span class="reviews-count-badge">${parque.num_resenas}</span>`
+                            : ''}
+                    </h4>
+                    <i class="fa-solid fa-arrow-up-right-from-square park-section__reviews-icon"></i>
+                </button>
+            </div>
+
             <div class="park-actions">
                 <button class="btn btn--primary" onclick="reservarParque(${parque.id})">
                     <i class="fa-solid fa-calendar-check"></i> Reservar
                 </button>
-                <button class="btn btn--outline" onclick="verEnMapa(${parque.id})">
-                    <i class="fa-solid fa-map-location-dot"></i> Ver en mapa
-                </button>
+                <a class="btn btn--outline" href="https://www.google.com/maps/search/?api=1&query=${parque.latitud},${parque.longitud}" target="_blank" rel="noopener">
+                    <img src="${googleMapsLogoUrl}" alt="Google Maps" class="gmaps-logo"> Ver en Google Maps
+                </a>
             </div>
         </div>
     `;
+}
+
+function openReviewsModal(parkId, parkName) {
+    const modal = document.getElementById('reviews-modal');
+    const titleEl = document.getElementById('reviews-modal-title');
+    const listEl = document.getElementById('reviews-modal-list');
+    const summaryEl = document.getElementById('reviews-modal-summary');
+    if (!modal) return;
+    if (titleEl) titleEl.textContent = parkName;
+    if (summaryEl) summaryEl.innerHTML = '';
+    if (listEl) listEl.innerHTML = '<p class="text-dim reviews-modal__loading">Cargando reseñas…</p>';
+    modal.showModal();
+    loadParkReviews(parkId);
+}
+
+function loadParkReviews(parkId) {
+    fetch(reviewsApiUrl + '?park_id=' + parkId)
+        .then(r => r.json())
+        .then(data => {
+            const summary = document.getElementById('reviews-modal-summary');
+            const list = document.getElementById('reviews-modal-list');
+            if (!summary || !list) return;
+            summary.innerHTML = data.count > 0
+                ? `<div class="reviews-summary">${renderStars(data.average)} <strong>${data.average}</strong> / 5 · <span class="text-dim">${data.count} reseña${data.count !== 1 ? 's' : ''}</span></div>`
+                : '<p class="text-dim" style="margin:0">Sin reseñas aún.</p>';
+            list.innerHTML = data.reviews.length
+                ? data.reviews.map(r => {
+                    const initial = (r.user || '?')[0].toUpperCase();
+                    return `
+                    <div class="review-item">
+                      <div class="review-avatar" aria-hidden="true">${initial}</div>
+                      <div class="review-content">
+                        <div class="review-item__header">
+                          <span class="review-item__user">${r.user}</span>
+                          <span class="review-item__date text-dim">${r.date}</span>
+                        </div>
+                        ${renderStars(r.rating)}
+                        ${r.comment ? `<p class="review-item__comment">${r.comment}</p>` : ''}
+                      </div>
+                    </div>`;
+                  }).join('')
+                : '<p class="text-dim">Aún no hay reseñas para este parque.</p>';
+        })
+        .catch(() => {
+            const list = document.getElementById('reviews-modal-list');
+            if (list) list.innerHTML = '<p class="text-dim">No se pudieron cargar las reseñas.</p>';
+        });
 }
 
 // Navegar al formulario de nueva reservación con el parque preseleccionado.
@@ -313,15 +393,36 @@ function reservarParque(parkId) {
     alert(`Función de reserva para el parque ID: ${parkId}\nEsta funcionalidad se implementará más adelante.`);
 }
 
-// Función para centrar en el mapa (placeholder)
-function verEnMapa(parkId) {
-    const parque = data_parks.find(p => p.id === parkId);
-    if (parque) {
-        map.setView([parque.latitud, parque.longitud], 15);
-    }
+// Despliega/colapsa una sección de la card de detalle (p. ej. Servicios)
+function toggleParkSection(btn) {
+    const section = btn.closest('.park-section--collapsible');
+    if (!section) return;
+    const open = section.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
 // Inicializar el mapa cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', initMap);
+document.addEventListener('DOMContentLoaded', function () {
+    initMap();
+    const reviewsModal = document.getElementById('reviews-modal');
+    const closeBtn = document.getElementById('reviews-modal-close');
+
+    function closeReviewsModal() {
+        if (!reviewsModal || !reviewsModal.open) return;
+        reviewsModal.classList.add('is-closing');
+        reviewsModal.addEventListener('animationend', function handler() {
+            reviewsModal.classList.remove('is-closing');
+            reviewsModal.close();
+            reviewsModal.removeEventListener('animationend', handler);
+        }, { once: true });
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeReviewsModal);
+    if (reviewsModal) {
+        reviewsModal.addEventListener('click', function (e) {
+            if (e.target === reviewsModal) closeReviewsModal();
+        });
+    }
+});
 
 
