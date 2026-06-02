@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from django.core.exceptions import ValidationError
-from ..models import Lodging, Park
+from ..models import Lodging, Park, Reservation
 
 # Constantes que definen la temporada del festival y los límites por reserva.
 SEASON_START: date = date(2026, 6, 1)
@@ -115,3 +115,30 @@ class ReservationValidator:
         cls.validate_tuesday(start_date)
         cls.validate_people(n_people)
         cls.validate_lodging(lodging, park, n_people)
+
+
+REVIEW_RATING_MIN = 1
+REVIEW_RATING_MAX = 5
+
+
+class ReviewValidator:
+    """Valida las reglas de negocio sobre una reseña de parque."""
+
+    @classmethod
+    def validate_rating(cls, rating) -> None:
+        if not isinstance(rating, int) or rating < REVIEW_RATING_MIN or rating > REVIEW_RATING_MAX:
+            raise ValidationError(
+                f"La calificación debe estar entre {REVIEW_RATING_MIN} y {REVIEW_RATING_MAX} estrellas."
+            )
+
+    @classmethod
+    def validate_reviewable(cls, reservation) -> None:
+        if reservation.status != Reservation.Status.USED:
+            raise ValidationError(
+                "Solo puedes reseñar un parque después de usar tu reservación."
+            )
+
+    @classmethod
+    def validate(cls, reservation, rating) -> None:
+        cls.validate_reviewable(reservation)
+        cls.validate_rating(rating)

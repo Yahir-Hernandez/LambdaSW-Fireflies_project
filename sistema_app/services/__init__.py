@@ -30,7 +30,8 @@ from .checkin import ReservationCheckinService
 from .lodging_validation import LodgingCapacityValidator
 from .notification import NotificationService
 from .reservations import ReservationService
-from .validation import ReservationValidator
+from .reviews import ReviewService
+from .validation import ReservationValidator, ReviewValidator
 
 __all__ = [
     "AvailabilityService",
@@ -39,6 +40,8 @@ __all__ = [
     "ReservationCheckinService",
     "ReservationService",
     "ReservationValidator",
+    "ReviewService",
+    "ReviewValidator",
     "generate_verification_code",
     "mask_email",
 ]

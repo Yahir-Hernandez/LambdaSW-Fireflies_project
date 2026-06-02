@@ -22,7 +22,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from django.utils import timezone
 
-from .models import Lodging, Park, Reservation, Service
+from .models import Lodging, Park, Reservation, Review, Service
 from .services import ReservationCheckinService, ReservationService
 from .utils import generate_qr_png
 
@@ -480,3 +480,11 @@ class ReservationAdmin(admin.ModelAdmin):
 
         wb.save(response)
         return response
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "park", "rating", "created_at")
+    list_filter = ("rating", "park")
+    search_fields = ("user__username", "park__name", "comment")
+    readonly_fields = ("user", "park", "reservation", "created_at")

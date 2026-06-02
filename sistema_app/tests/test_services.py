@@ -703,3 +703,61 @@ class TestLodgingCapacityValidator:
         with pytest.raises(ValidationError, match="9"):
             LodgingCapacityValidator.validate_capacity_reduction(camping_spot, 8)
         LodgingCapacityValidator.validate_capacity_reduction(camping_spot, 9)
+
+
+# ===========================================================================
+# ReviewValidator & ReviewService
+# ===========================================================================
+
+@pytest.mark.django_db
+class TestReviewValidator:
+    def test_valid_rating(self):
+        from sistema_app.services.validation import ReviewValidator
+        ReviewValidator.validate_rating(3)
+
+    def test_rating_below_min(self):
+        from django.core.exceptions import ValidationError
+        from sistema_app.services.validation import ReviewValidator
+        with pytest.raises(ValidationError, match="estrellas"):
+            ReviewValidator.validate_rating(0)
+
+    def test_rating_above_max(self):
+        from django.core.exceptions import ValidationError
+        from sistema_app.services.validation import ReviewValidator
+        with pytest.raises(ValidationError, match="estrellas"):
+            ReviewValidator.validate_rating(6)
+
+    def test_not_used_reservation(self, active_reservation):
+        from django.core.exceptions import ValidationError
+        from sistema_app.services.validation import ReviewValidator
+        with pytest.raises(ValidationError, match="usar tu reservación"):
+            ReviewValidator.validate_reviewable(active_reservation)
+
+
+@pytest.mark.django_db
+class TestReviewService:
+    def test_create_review_success(self, used_reservation, user):
+        from sistema_app.models import Review
+        from sistema_app.services.reviews import ReviewService
+        review = ReviewService.create_review(user, used_reservation, 5, "Perfecto")
+        assert isinstance(review, Review)
+        assert review.rating == 5
+
+    def test_rejects_non_used_reservation(self, active_reservation, user):
+        from django.core.exceptions import ValidationError
+        from sistema_app.services.reviews import ReviewService
+        with pytest.raises(ValidationError, match="usar tu reservación"):
+            ReviewService.create_review(user, active_reservation, 4)
+
+    def test_rejects_duplicate(self, used_reservation, user):
+        from django.core.exceptions import ValidationError
+        from sistema_app.services.reviews import ReviewService
+        ReviewService.create_review(user, used_reservation, 3)
+        with pytest.raises(ValidationError, match="Ya enviaste"):
+            ReviewService.create_review(user, used_reservation, 5)
+
+    def test_rejects_other_user(self, used_reservation, other_user):
+        from django.core.exceptions import ValidationError
+        from sistema_app.services.reviews import ReviewService
+        with pytest.raises(ValidationError, match="No puedes reseñar"):
+            ReviewService.create_review(other_user, used_reservation, 4)

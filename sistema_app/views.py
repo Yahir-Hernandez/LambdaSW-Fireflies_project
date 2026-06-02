@@ -16,20 +16,22 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import Avg, Count, Exists, OuterRef, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, resolve_url
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
 
 from .forms import CustomPasswordChangeForm, CustomUserCreationForm
-from .models import Lodging, LoginAttempt, Park, PendingRegistration, PasswordResetToken, Reservation
+from .models import Lodging, LoginAttempt, Park, PendingRegistration, PasswordResetToken, Reservation, Review
 from .services import (
     AvailabilityService,
     NotificationService,
     ReservationService,
+    ReviewService,
     generate_verification_code,
     mask_email,
 )
@@ -71,6 +73,13 @@ def home(request):
 def festival(request):
     """Renderiza la página informativa del festival."""
     return render(request, "festival.html")
+
+
+def favicon(request):
+    """Sirve el favicon en /favicon.ico para todas las vistas, incluidas las
+    standalone (login, registro, etc.) que no extienden base.html y por tanto
+    no declaran <link rel="icon"> en su <head>."""
+    return redirect(static("img/luciernaga.png"), permanent=True)
 
 
 @require_GET
@@ -284,7 +293,12 @@ def logout_view(request):
 def mapa(request):
     """Renderiza el mapa con los parques activos y su disponibilidad actual."""
     parques = list(
-        Park.objects.active().prefetch_related("services", "lodgings")
+        Park.objects.active()
+        .prefetch_related("services", "lodgings")
+        .annotate(
+            avg_rating=Avg("reviews__rating"),
+            review_count=Count("reviews", distinct=True),
+        )
     )
     today = date.today()
     for parque in parques:
@@ -321,6 +335,9 @@ def perfil(request):
 
     show_past = request.GET.get("show") == "past"
     reservas = ReservationService.get_user_reservations(request.user)
+    reservas = reservas.select_related("review").annotate(
+        has_review=Exists(Review.objects.filter(reservation=OuterRef("pk")))
+    )
 
     reservas = reservas.exclude(status=Reservation.Status.CANCELLED)
     if show_past:
@@ -437,6 +454,52 @@ def reservation_cancel(request, pk):
     except ValidationError as exc:
         return JsonResponse({"error": " ".join(exc.messages)}, status=409)
     return JsonResponse({"ok": True})
+
+
+@login_required
+@require_POST
+def crear_resena(request, pk):
+    """Crea una reseña para una reservación USED del usuario; responde JSON."""
+    reservation = get_object_or_404(Reservation, pk=pk)
+    try:
+        rating = int(request.POST.get("rating", 0))
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Calificación inválida."}, status=400)
+    comment = request.POST.get("comment", "")
+    try:
+        ReviewService.create_review(request.user, reservation, rating, comment)
+    except ValidationError as exc:
+        return JsonResponse({"error": " ".join(exc.messages)}, status=409)
+    return JsonResponse({"ok": True})
+
+
+@require_GET
+def park_reviews_api(request):
+    """Devuelve el promedio, total y lista de reseñas de un parque."""
+    park_id = request.GET.get("park_id")
+    if not park_id:
+        return JsonResponse({"error": "park_id requerido"}, status=400)
+    agg = Review.objects.filter(park_id=park_id).aggregate(
+        avg=Avg("rating"), count=Count("id")
+    )
+    reviews = (
+        Review.objects.filter(park_id=park_id)
+        .select_related("user")
+        .order_by("-created_at")
+    )
+    return JsonResponse({
+        "average": round(agg["avg"] or 0, 1),
+        "count": agg["count"] or 0,
+        "reviews": [
+            {
+                "user": r.user.get_full_name() or r.user.username,
+                "rating": r.rating,
+                "comment": r.comment,
+                "date": r.created_at.strftime("%d/%m/%Y"),
+            }
+            for r in reviews
+        ],
+    })
 
 
 @login_required
