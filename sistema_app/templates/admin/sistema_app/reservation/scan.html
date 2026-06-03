@@ -52,12 +52,14 @@
     .qr-actions .button--primary { background: #79aec8; color: #fff; }
     .qr-actions .button--primary:hover { background: #609ab6; }
     .qr-actions .button--secondary { background: #f8f8f8; color: #333; border: 1px solid #ccc; }
+    /* Cancelar sombra que aplica el tema global en .button:hover */
+    #confirm-btn, #resume-btn,
+    #confirm-btn:hover, #resume-btn:hover { box-shadow: none !important; }
   </style>
 {% endblock %}
 
 {% block content %}
   <div class="qr-scan-wrapper">
-    <h1>Escanear QR de check-in</h1>
     <p>Apunta la cámara hacia el QR del correo de confirmación. Al detectarlo se cargarán los datos abajo.</p>
 
     <form style="display:none">{% csrf_token %}</form>

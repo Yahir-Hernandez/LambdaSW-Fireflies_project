@@ -1,0 +1,296 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Estadísticas | Luciernagas Admin{% endblock %}
+
+{% block extrastyle %}{{ block.super }}{% endblock %}
+
+{% block content_title %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div class="stats-page">
+
+  <h1 class="stats-main-title">Estadísticas del Sistema</h1>
+
+  <!-- Tarjetas de métricas -->
+  <div class="stats-cards">
+    <div class="stat-card" style="--card-index: 0">
+      <div class="stat-card__value">
+        <span class="stat-num" data-count-to="{{ total_parks }}" data-decimals="0">0</span>
+      </div>
+      <div class="stat-card__label">Parques activos</div>
+    </div>
+    <div class="stat-card" style="--card-index: 1">
+      <div class="stat-card__value">
+        <span class="stat-num" data-count-to="{{ total_users }}" data-decimals="0">0</span>
+      </div>
+      <div class="stat-card__label">Usuarios registrados</div>
+    </div>
+    <div class="stat-card" style="--card-index: 2">
+      <div class="stat-card__value">
+        <span class="stat-num" data-count-to="{{ total_reservations }}" data-decimals="0">0</span>
+      </div>
+      <div class="stat-card__label">Reservaciones totales</div>
+    </div>
+    <div class="stat-card" style="--card-index: 3">
+      <div class="stat-card__value">
+        <span class="stat-num" data-count-to="{{ avg_rating }}" data-decimals="1">0.0</span><span class="stat-card__unit">/5</span>
+      </div>
+      <div class="stat-card__label">Calificación promedio</div>
+    </div>
+    <div class="stat-card" style="--card-index: 4">
+      <div class="stat-card__value">
+        <span class="stat-num" data-count-to="{{ total_reviews }}" data-decimals="0">0</span>
+      </div>
+      <div class="stat-card__label">Reseñas recibidas</div>
+    </div>
+    <div class="stat-card" style="--card-index: 5">
+      <div class="stat-card__value">
+        <span class="stat-num" data-count-to="{{ cancellation_rate }}" data-decimals="1">0.0</span><span class="stat-card__unit">%</span>
+      </div>
+      <div class="stat-card__label">Tasa de cancelación</div>
+    </div>
+  </div>
+
+  <!-- Grid de gráficas -->
+  <div class="stats-grid">
+
+    <div class="chart-card" style="--chart-index: 0">
+      <h2 class="chart-card__title">Parques mejor calificados</h2>
+      <div class="chart-container">
+        <canvas id="chartRating"></canvas>
+      </div>
+      <table class="chart-table" id="tableRating"></table>
+    </div>
+
+    <div class="chart-card" style="--chart-index: 1">
+      <h2 class="chart-card__title">Preferencia de hospedaje</h2>
+      <div class="chart-container chart-container--pie">
+        <canvas id="chartLodging"></canvas>
+      </div>
+      <div class="pie-legend" id="legendLodging"></div>
+    </div>
+
+    <div class="chart-card" style="--chart-index: 2">
+      <h2 class="chart-card__title">Parques con más reservaciones</h2>
+      <div class="chart-container">
+        <canvas id="chartReservations"></canvas>
+      </div>
+      <table class="chart-table" id="tableReservations"></table>
+    </div>
+
+    <div class="chart-card" style="--chart-index: 3">
+      <h2 class="chart-card__title">Distribución de estados</h2>
+      <div class="chart-container chart-container--pie">
+        <canvas id="chartStatus"></canvas>
+      </div>
+      <div class="pie-legend" id="legendStatus"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Contador animado ascendente para las tarjetas de métricas
+function animateCount(el) {
+  const target = parseFloat(el.dataset.countTo);
+  const decimals = parseInt(el.dataset.decimals || '0');
+  const duration = 1200;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = (target * eased).toFixed(decimals);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+setTimeout(() => document.querySelectorAll('.stat-num').forEach(animateCount), 120);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const GOLD   = 'rgba(255, 186, 10, 0.65)';
+  const GOLD2  = 'rgba(255, 186, 10, 0.40)';
+  const BLUE1  = 'rgba(30, 140, 190, 0.75)';
+  const BLUE2  = '#0f2028';
+  const TEAL   = 'rgba(122, 158, 148, 0.65)';
+  const RED    = 'rgba(201, 49, 3, 0.65)';
+  const ORANGE = 'rgba(232, 96, 58, 0.65)';
+  const TEXT   = '#d4e8e0';
+
+  Chart.defaults.color = TEXT;
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size = 12;
+
+  const ANIMATION = { duration: 1000, easing: 'easeInOutQuart' };
+  const NO_TOOLTIP = { tooltip: { enabled: false } };
+
+  // Genera la leyenda HTML para gráficas de pastel/doughnut
+  function renderPieLegend(chart, container) {
+    const data   = chart.data.datasets[0].data;
+    const colors = chart.data.datasets[0].backgroundColor;
+    const labels = chart.data.labels;
+    const total  = data.reduce((a, b) => a + b, 0);
+    container.innerHTML = labels.map((label, i) => {
+      const pct = total > 0 ? Math.round(data[i] / total * 100) : 0;
+      return `<span class="pie-legend-item">` +
+        `<span class="pie-legend-pct" style="color:${colors[i]}">${pct}%</span>` +
+        `<span class="pie-legend-name">${label}</span>` +
+        `</span>`;
+    }).join('');
+  }
+
+  // Genera la tabla de datos estáticos para gráficas de barras
+  function renderBarTable(table, rows) {
+    table.innerHTML = rows.map(r =>
+      `<tr><td>${r.label}</td><td>${r.value}</td></tr>`
+    ).join('');
+  }
+
+  // --- Parques mejor calificados (bar, top 3) ---
+  const ratingData = {{ top_parks_rating_json|safe }};
+  const tableRating = document.getElementById('tableRating');
+  new Chart(document.getElementById('chartRating'), {
+    type: 'bar',
+    data: {
+      labels: ratingData.map(d => d.name),
+      datasets: [{
+        label: 'Calificación promedio',
+        data: ratingData.map(d => parseFloat(d.avg_rating).toFixed(2)),
+        backgroundColor: GOLD,
+        borderColor: GOLD2,
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      animation: {
+        ...ANIMATION,
+        onComplete() {
+          renderBarTable(tableRating, ratingData.map(d => ({
+            label: d.name,
+            value: `${parseFloat(d.avg_rating).toFixed(1)} / 5  (${d.review_count} reseñas)`,
+          })));
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        ...NO_TOOLTIP,
+        legend: { display: false },
+      },
+      scales: {
+        x: { ticks: { color: TEXT }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: {
+          min: 0, max: 5,
+          ticks: { color: TEXT },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        }
+      }
+    }
+  });
+
+  // --- Preferencia de hospedaje (pie) ---
+  const lodgingData = {{ lodging_prefs_json|safe }};
+  const lodgingLabels = lodgingData.map(d => d.lodging__kind === 'CABIN' ? 'Cabaña' : 'Parcela camping');
+  const legendLodging = document.getElementById('legendLodging');
+  const chartLodging = new Chart(document.getElementById('chartLodging'), {
+    type: 'pie',
+    data: {
+      labels: lodgingLabels,
+      datasets: [{
+        data: lodgingData.map(d => d.total),
+        backgroundColor: [GOLD, BLUE1],
+        borderColor: BLUE2,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      animation: {
+        ...ANIMATION,
+        onComplete() { renderPieLegend(chartLodging, legendLodging); }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        ...NO_TOOLTIP,
+        legend: { display: false },
+      }
+    }
+  });
+
+  // --- Parques con más reservaciones (horizontal bar) ---
+  const reservData = {{ top_parks_reservations_json|safe }};
+  const tableReserv = document.getElementById('tableReservations');
+  new Chart(document.getElementById('chartReservations'), {
+    type: 'bar',
+    data: {
+      labels: reservData.map(d => d.name),
+      datasets: [{
+        label: 'Reservaciones',
+        data: reservData.map(d => d.total),
+        backgroundColor: BLUE1,
+        borderColor: TEAL,
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      animation: {
+        ...ANIMATION,
+        onComplete() {
+          renderBarTable(tableReserv, reservData.map(d => ({
+            label: d.name,
+            value: `${d.total} reservaciones`,
+          })));
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        ...NO_TOOLTIP,
+        legend: { display: false },
+      },
+      scales: {
+        x: { ticks: { color: TEXT }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: TEXT }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  // --- Distribución de estados (doughnut) ---
+  const statusData = {{ status_dist_json|safe }};
+  const legendStatus = document.getElementById('legendStatus');
+  const chartStatus = new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: {
+      labels: statusData.map(d => d.status),
+      datasets: [{
+        data: statusData.map(d => d.total),
+        backgroundColor: [GOLD, RED, TEAL, ORANGE],
+        borderColor: BLUE2,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      animation: {
+        ...ANIMATION,
+        onComplete() { renderPieLegend(chartStatus, legendStatus); }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        ...NO_TOOLTIP,
+        legend: { display: false },
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}

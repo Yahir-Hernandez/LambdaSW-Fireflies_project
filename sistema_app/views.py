@@ -16,7 +16,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Avg, Count, Exists, OuterRef, Q, Sum
+from django.db.models import Avg, Count, Exists, OuterRef, Q, Subquery, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, resolve_url
 from django.templatetags.static import static
@@ -38,6 +38,21 @@ from .services import (
 from .utils import generate_qr_png
 
 
+_GALLERY_FILES = [
+    "0f250210-aff4-44c3-b9dc-a99f3b1afdd1-1024x682-convertido-de-jpg.webp",
+    "festival-de-las-luciernagas-amecameca-edomex-1-1024x683-convertido-de-jpg.webp",
+    "fireflies.jpg",
+    "forest_10.webp",
+    "Luciernagas-convertido-de-jpg.webp",
+    "unnamed-2-3-1024x768-convertido-de-jpg.webp",
+]
+
+class _GalleryImage:
+    def __init__(self, filename):
+        self.url = static(f"img/gallery/{filename}")
+        self.name = filename.rsplit(".", 1)[0].replace("-", " ")
+
+
 def home(request):
     """Renderiza la portada con los parques destacados y su disponibilidad actual."""
     parques = list(Park.objects.active().prefetch_related("lodgings"))
@@ -55,9 +70,32 @@ def home(request):
         )
         parque.disponibilidad_actual = max(total - used, 0)
     featured_parks = parques[:3]
-    featured_park = featured_parks[0] if featured_parks else None
+    featured_park = (
+        Park.objects.active()
+        .annotate(avg_rating=Avg("reviews__rating"), review_count=Count("reviews"))
+        .filter(review_count__gt=0)
+        .order_by("-avg_rating")
+        .first()
+    )
+    if featured_park:
+        camping_lodgings = featured_park.lodgings.filter(kind=Lodging.Kind.CAMPING)
+        fp_total = camping_lodgings.aggregate(total=Sum("capacity"))["total"] or 0
+        fp_used = (
+            Reservation.objects.filter(
+                lodging__in=camping_lodgings,
+                status=Reservation.Status.ACTIVE,
+                end_date__gte=today,
+            ).aggregate(total=Sum("people"))["total"]
+            or 0
+        )
+        featured_park.disponibilidad_actual = max(fp_total - fp_used, 0)
+    elif parques:
+        featured_park = parques[0]
+        featured_park.avg_rating = None
+        featured_park.review_count = 0
     total_parks = len(parques)
     lodging_parks = sum(1 for parque in parques if parque.lodgings.all())
+    gallery_images = [_GalleryImage(f) for f in _GALLERY_FILES]
     return render(
         request,
         "home.html",
@@ -66,6 +104,7 @@ def home(request):
             "featured_park": featured_park,
             "total_parks": total_parks,
             "lodging_parks": lodging_parks,
+            "gallery_images": gallery_images,
         },
     )
 
@@ -292,27 +331,38 @@ def logout_view(request):
 
 def mapa(request):
     """Renderiza el mapa con los parques activos y su disponibilidad actual."""
+    today = date.today()
+
+    capacity_sq = (
+        Lodging.objects.filter(park=OuterRef("pk"), kind=Lodging.Kind.CAMPING)
+        .values("park")
+        .annotate(t=Sum("capacity"))
+        .values("t")
+    )
+    used_sq = (
+        Reservation.objects.filter(
+            lodging__park=OuterRef("pk"),
+            lodging__kind=Lodging.Kind.CAMPING,
+            status=Reservation.Status.ACTIVE,
+            end_date__gte=today,
+        )
+        .values("lodging__park")
+        .annotate(t=Sum("people"))
+        .values("t")
+    )
+
     parques = list(
         Park.objects.active()
         .prefetch_related("services", "lodgings")
         .annotate(
             avg_rating=Avg("reviews__rating"),
             review_count=Count("reviews", distinct=True),
+            _capacity=Subquery(capacity_sq),
+            _used=Subquery(used_sq),
         )
     )
-    today = date.today()
     for parque in parques:
-        camping_lodgings = parque.lodgings.filter(kind=Lodging.Kind.CAMPING)
-        total = camping_lodgings.aggregate(total=Sum("capacity"))["total"] or 0
-        used = (
-            Reservation.objects.filter(
-                lodging__in=camping_lodgings,
-                status=Reservation.Status.ACTIVE,
-                end_date__gte=today,
-            ).aggregate(total=Sum("people"))["total"]
-            or 0
-        )
-        parque.disponibilidad_actual = max(total - used, 0)
+        parque.disponibilidad_actual = max((parque._capacity or 0) - (parque._used or 0), 0)
     return render(request, "mapa/mapa.html", {"parques": parques})
 
 
@@ -435,8 +485,7 @@ def crear_reserva(request):
         messages.error(request, "; ".join(exc.messages))
         return redirect("sistema_app:mapa")
 
-    messages.success(request, f"Reservación #{reservation.pk} confirmada.")
-    return redirect("sistema_app:perfil")
+    return redirect(reverse("sistema_app:perfil") + "?reserva_ok=1")
 
 
 @login_required

@@ -118,6 +118,7 @@ class NotificationService:
             "end_date": reservation.end_date.isoformat(),
             "people": reservation.people,
             "reservation_id": reservation.pk,
+            "checkin_token": str(reservation.checkin_token),
         }
 
     @staticmethod

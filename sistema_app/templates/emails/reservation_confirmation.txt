@@ -7,6 +7,7 @@ Fecha de inicio: {{ start_date }}
 Fecha de término: {{ end_date }}
 Personas: {{ people }}
 Código de reserva: #{{ reservation_id }}
+Token de check-in: {{ checkin_token }}
 
 Si no puedes ver el código QR en tu correo, abre este enlace:
 {{ qr_url }}

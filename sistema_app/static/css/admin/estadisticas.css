@@ -1,0 +1,251 @@
+/* =========================================================
+   Dashboard de estadísticas y botones de navegación superior
+   ========================================================= */
+
+/* --- Botones de la barra superior --- */
+
+.btn-nav {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  text-decoration: none;
+  transition: background 0.2s;
+  letter-spacing: 0.03em;
+}
+
+.btn-toggle-stats {
+  background: transparent;
+  color: var(--accent, #ffba0a);
+  border: 1px solid transparent;
+}
+
+.btn-toggle-stats:hover {
+  background: rgba(255, 186, 10, 0.1);
+  color: var(--accent, #ffba0a);
+  box-shadow: none;
+}
+
+.btn-scan-qr {
+  background: transparent;
+  color: var(--text-dim, #7a9e94);
+  border: 1px solid rgba(122, 158, 148, 0.35);
+}
+
+.btn-scan-qr:hover {
+  background: rgba(122, 158, 148, 0.08);
+  color: var(--text-dim, #7a9e94);
+  box-shadow: none;
+}
+
+.btn-ver-sitio {
+  background: transparent;
+  color: var(--text-dim, #7a9e94);
+  border: 1px solid rgba(122, 158, 148, 0.35);
+  font-weight: 400;
+}
+
+.btn-ver-sitio:hover {
+  background: rgba(122, 158, 148, 0.08);
+  color: var(--text-dim, #7a9e94);
+  box-shadow: none;
+}
+
+.userlinks-nav {
+  margin-left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- Página de estadísticas --- */
+
+.stats-page {
+  padding: 24px 32px 48px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.stats-main-title {
+  font-family: var(--font-title, 'Bebas Neue', sans-serif);
+  font-size: 2rem;
+  color: var(--accent, #ffba0a);
+  letter-spacing: 0.06em;
+  margin-bottom: 28px;
+}
+
+/* --- Tarjetas de métricas --- */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.stat-card {
+  background: var(--bg-card, #0f2028);
+  border: 1px solid var(--border, rgba(13, 27, 42, 1));
+  border-radius: 14px;
+  padding: 20px 16px 18px;
+  text-align: center;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease forwards;
+  animation-delay: calc(var(--card-index, 0) * 0.08s);
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+.stat-card__value {
+  font-family: var(--font-title, 'Bebas Neue', sans-serif);
+  font-size: 2.4rem;
+  color: var(--accent, #ffba0a);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-card__unit {
+  font-size: 1.1rem;
+  opacity: 0.7;
+}
+
+.stat-card__label {
+  font-size: 0.75rem;
+  color: var(--text-dim, #7a9e94);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* --- Grid de gráficas --- */
+
+@keyframes fadeInChart {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  background: var(--bg-card, #0f2028);
+  border: 1px solid var(--border, rgba(13, 27, 42, 1));
+  border-radius: 14px;
+  padding: 20px 20px 24px;
+  opacity: 0;
+  animation: fadeInChart 0.6s ease forwards;
+  animation-delay: calc(0.4s + var(--chart-index, 0) * 0.12s);
+}
+
+.chart-card__title {
+  font-family: var(--font-title, 'Bebas Neue', sans-serif);
+  font-size: 1.15rem;
+  color: var(--text, #d4e8e0);
+  letter-spacing: 0.04em;
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border, rgba(13, 27, 42, 1));
+}
+
+.chart-container {
+  position: relative;
+  height: 260px;
+}
+
+.chart-container--pie {
+  height: 240px;
+}
+
+/* --- Leyenda personalizada de gráficas de pastel --- */
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 16px;
+  padding-left: 8px;
+}
+
+.pie-legend-item {
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.pie-legend-pct {
+  font-family: var(--font-title, 'Bebas Neue', sans-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 44px;
+}
+
+.pie-legend-name {
+  color: var(--text, #d4e8e0);
+}
+
+/* --- Tabla de datos estáticos bajo gráficas de barras --- */
+
+.chart-table {
+  width: 100%;
+  margin-top: 14px;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.chart-table td {
+  padding: 5px 8px;
+  color: var(--text-dim, #7a9e94);
+  border-top: 1px solid var(--border, rgba(13, 27, 42, 1));
+}
+
+.chart-table td:first-child {
+  color: var(--text, #d4e8e0);
+}
+
+.chart-table td:last-child {
+  text-align: right;
+  color: var(--accent, #ffba0a);
+  font-weight: 700;
+  font-family: var(--font-title, 'Bebas Neue', sans-serif);
+  font-size: 0.95rem;
+}
+
+/* --- Título de la página Explorar BD --- */
+
+#content-main .stats-main-title {
+  margin-bottom: 20px;
+}

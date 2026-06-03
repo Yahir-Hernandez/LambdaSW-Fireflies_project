@@ -134,7 +134,8 @@
                 <li><strong>Cliente:</strong> ${escapeHtml(data.user_name)} (${escapeHtml(data.user_email)})</li>
                 <li><strong>Parque:</strong> ${escapeHtml(data.park)}</li>
                 <li><strong>Hospedaje:</strong> ${escapeHtml(data.lodging)}</li>
-                <li><strong>Fechas:</strong> ${escapeHtml(data.start_date)} → ${escapeHtml(data.end_date)}</li>
+                <li><strong>Fecha de llegada:</strong> ${escapeHtml(data.start_date)}</li>
+                <li><strong>Fecha de salida:</strong> ${escapeHtml(data.end_date)}</li>
                 <li><strong>Personas:</strong> ${escapeHtml(data.people)}</li>
                 <li><strong>Estado:</strong> ${escapeHtml(data.status_display)}</li>
             </ul>

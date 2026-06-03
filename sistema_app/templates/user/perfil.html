@@ -237,6 +237,17 @@
   </div>
 </dialog>
 
+{# ── Modal de éxito al confirmar reservación ──────────────────────────── #}
+<dialog id="reserva-ok-dialog" class="auth-dialog auth-dialog--success" aria-labelledby="reserva-ok-title">
+  <div class="auth-dialog__body">
+    <div class="auth-dialog__icon" aria-hidden="true">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <h3 class="auth-dialog__title" id="reserva-ok-title">¡Reservación confirmada!</h3>
+    <p class="auth-dialog__desc">Tu lugar está reservado. Revisa tu correo para los detalles y el código QR de entrada.</p>
+  </div>
+</dialog>
+
 {# ── Modal de éxito tras cancelar ──────────────────────────────────────── #}
 <dialog id="cancel-success-dialog" class="auth-dialog auth-dialog--success" aria-labelledby="cancel-success-title">
   <div class="auth-dialog__body">
@@ -289,4 +300,19 @@
   <script src="{% static 'script/luciernagas.js' %}"></script>
   <script src="{% static 'script/reservation_cancel.js' %}"></script>
   <script src="{% static 'script/reviews.js' %}"></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('reserva_ok') === '1') {
+        const dlg = document.getElementById('reserva-ok-dialog');
+        if (dlg) {
+          dlg.showModal();
+          setTimeout(function () {
+            dlg.close();
+            history.replaceState(null, '', window.location.pathname);
+          }, 3000);
+        }
+      }
+    })();
+  </script>
 {% endblock %}
