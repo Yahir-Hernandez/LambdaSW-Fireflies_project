@@ -11,7 +11,7 @@ from datetime import date
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from ..models import Lodging, Reservation
+from ..models import CancellationLog, Lodging, Reservation
 from .availability import AvailabilityService
 from .notification import NotificationService
 from .validation import ReservationValidator
@@ -133,6 +133,10 @@ class ReservationService:
         )
 
         with transaction.atomic():
+            CancellationLog.objects.create(
+                park=reservation.park,
+                people=reservation.people,
+            )
             saved_pk = reservation.pk
             reservation.delete()
             # Django deja pk en None tras eliminar; lo restauramos para

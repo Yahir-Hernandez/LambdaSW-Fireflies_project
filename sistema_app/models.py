@@ -374,3 +374,16 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Reseña de {self.user} en {self.park} ({self.rating}★)"
+
+
+class CancellationLog(models.Model):
+    """Registro inmutable de cada reservación cancelada.
+    Se crea justo antes de borrar la reservación para conservar la estadística."""
+    park = models.ForeignKey(
+        Park, null=True, on_delete=models.SET_NULL, related_name="cancellation_logs"
+    )
+    people = models.PositiveIntegerField()
+    cancelled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-cancelled_at"]

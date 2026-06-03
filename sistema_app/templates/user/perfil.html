@@ -155,7 +155,7 @@
                       <i class="fa-solid fa-xmark"></i> Cancelar reserva
                     </button>
                   {% endif %}
-                  {% if reserva.status == 'USED' %}
+                  {% if reserva.status == 'USED' or reserva.status == 'PAST' %}
                     {% if not reserva.has_review %}
                       <button
                         type="button"

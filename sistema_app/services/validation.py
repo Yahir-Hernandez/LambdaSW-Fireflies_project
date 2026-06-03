@@ -41,7 +41,7 @@ class ReservationValidator:
         """
         if start_date is None or end_date is None:
             raise ValidationError("Fechas faltantes.")
-        if start_date < date.today():
+        if start_date <= date.today():
             raise ValidationError("No se puede reservar en el pasado.")
         if end_date <= start_date:
             raise ValidationError(
@@ -135,9 +135,9 @@ class ReviewValidator:
 
     @classmethod
     def validate_reviewable(cls, reservation) -> None:
-        if reservation.status != Reservation.Status.USED:
+        if reservation.status not in (Reservation.Status.USED, Reservation.Status.PAST):
             raise ValidationError(
-                "Solo puedes reseñar un parque después de usar tu reservación."
+                "Solo puedes reseñar un parque después de tu estancia."
             )
 
     @classmethod
