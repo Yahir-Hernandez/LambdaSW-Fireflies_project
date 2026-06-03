@@ -395,7 +395,10 @@ def perfil(request):
             status__in=[Reservation.Status.PAST, Reservation.Status.USED]
         )
     else:
-        reservas = reservas.filter(status=Reservation.Status.ACTIVE)
+        reservas = reservas.filter(
+            status=Reservation.Status.ACTIVE,
+            end_date__gt=today,
+        )
 
     q = (request.GET.get("q") or "").strip()
     date_from = (request.GET.get("from") or "").strip()

@@ -39,14 +39,22 @@
 			String(d.getDate()).padStart(2, '0');
 	};
 
+	const tomorrowStr = () => {
+		const d = new Date();
+		d.setDate(d.getDate() + 1);
+		return d.getFullYear() + '-' +
+			String(d.getMonth() + 1).padStart(2, '0') + '-' +
+			String(d.getDate()).padStart(2, '0');
+	};
+
 	if (fechaInicioInput) {
-		const todayStr = localDateStr();
-		fechaInicioInput.min = todayStr > seasonStart ? todayStr : seasonStart;
+		const minStr = tomorrowStr() > seasonStart ? tomorrowStr() : seasonStart;
+		fechaInicioInput.min = minStr;
 		fechaInicioInput.max = seasonEnd;
 	}
 	if (fechaTerminoInput) {
-		const todayStr = localDateStr();
-		fechaTerminoInput.min = todayStr > seasonStart ? todayStr : seasonStart;
+		const minStr = tomorrowStr() > seasonStart ? tomorrowStr() : seasonStart;
+		fechaTerminoInput.min = minStr;
 		fechaTerminoInput.max = seasonEndBoundary;
 	}
 
@@ -58,7 +66,7 @@
 	const validateDateRange = (start, end) => {
 		if (!start || !end) return null;
 		const today = localDateStr();
-		if (start < today) {
+		if (start <= today) {
 			return 'No se puede reservar en el pasado.';
 		}
 		if (start < seasonStart || start > seasonEnd) {

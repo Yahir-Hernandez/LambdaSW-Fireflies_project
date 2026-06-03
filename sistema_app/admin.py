@@ -26,7 +26,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from django.utils import timezone
 
-from .models import Lodging, Park, Reservation, Review, Service
+from .models import CancellationLog, Lodging, Park, Reservation, Review, Service
 from .services import ReservationCheckinService, ReservationService
 from .utils import generate_qr_png
 
@@ -82,11 +82,11 @@ class LuciernagsAdminSite(AdminSite):
             .values("name", "total")
         )
 
-        total = Reservation.objects.count()
-        cancelled = Reservation.objects.filter(status=Reservation.Status.CANCELLED).count()
+        cancelled = CancellationLog.objects.count()
         active = Reservation.objects.filter(status=Reservation.Status.ACTIVE).count()
         past = Reservation.objects.filter(status=Reservation.Status.PAST).count()
         used = Reservation.objects.filter(status=Reservation.Status.USED).count()
+        total = active + cancelled + past + used
         cancellation_rate = round(cancelled / total * 100, 1) if total else 0
 
         total_parks = Park.objects.filter(is_deleted=False).count()
