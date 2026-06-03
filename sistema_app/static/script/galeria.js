@@ -24,14 +24,12 @@
   }
 
   nextBtn.addEventListener('click', () => {
-    const next = offset + step();
-    offset = next > maxOffset() ? 0 : next;
+    offset = offset >= maxOffset() ? 0 : Math.min(offset + step(), maxOffset());
     applyOffset();
   });
 
   prevBtn.addEventListener('click', () => {
-    const prev = offset - step();
-    offset = prev < 0 ? maxOffset() : prev;
+    offset = offset <= 0 ? maxOffset() : Math.max(offset - step(), 0);
     applyOffset();
   });
 

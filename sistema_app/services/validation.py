@@ -41,6 +41,8 @@ class ReservationValidator:
         """
         if start_date is None or end_date is None:
             raise ValidationError("Fechas faltantes.")
+        if start_date < date.today():
+            raise ValidationError("No se puede reservar en el pasado.")
         if end_date <= start_date:
             raise ValidationError(
                 "La fecha de término debe ser posterior a la fecha de inicio."
