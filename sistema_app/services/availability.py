@@ -21,7 +21,7 @@ class AvailabilityService:
     def _overlap(qs, start_date: date, end_date: date):
         """Filtra del conjunto las reservas activas que se traslapan con el rango."""
         return qs.filter(
-            status=Reservation.Status.ACTIVE,
+            status__in=[Reservation.Status.ACTIVE, Reservation.Status.USED],
             start_date__lt=end_date,
             end_date__gt=start_date,
         )

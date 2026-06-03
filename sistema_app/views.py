@@ -63,7 +63,7 @@ def home(request):
         used = (
             Reservation.objects.filter(
                 lodging__in=camping_lodgings,
-                status=Reservation.Status.ACTIVE,
+                status__in=[Reservation.Status.ACTIVE, Reservation.Status.USED],
                 end_date__gte=today,
             ).aggregate(total=Sum("people"))["total"]
             or 0
@@ -83,7 +83,7 @@ def home(request):
         fp_used = (
             Reservation.objects.filter(
                 lodging__in=camping_lodgings,
-                status=Reservation.Status.ACTIVE,
+                status__in=[Reservation.Status.ACTIVE, Reservation.Status.USED],
                 end_date__gte=today,
             ).aggregate(total=Sum("people"))["total"]
             or 0
@@ -343,7 +343,7 @@ def mapa(request):
         Reservation.objects.filter(
             lodging__park=OuterRef("pk"),
             lodging__kind=Lodging.Kind.CAMPING,
-            status=Reservation.Status.ACTIVE,
+            status__in=[Reservation.Status.ACTIVE, Reservation.Status.USED],
             end_date__gte=today,
         )
         .values("lodging__park")

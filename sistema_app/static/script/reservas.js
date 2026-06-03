@@ -30,12 +30,23 @@
 	// El backend acepta fecha de término hasta SEASON_END + 1 día (services.py).
 	const seasonEndBoundary = '2026-09-01';
 
+	// Devuelve la fecha local del navegador en formato YYYY-MM-DD, sin depender
+	// de UTC (toISOString() devuelve UTC y puede diferir un día en México UTC-6).
+	const localDateStr = () => {
+		const d = new Date();
+		return d.getFullYear() + '-' +
+			String(d.getMonth() + 1).padStart(2, '0') + '-' +
+			String(d.getDate()).padStart(2, '0');
+	};
+
 	if (fechaInicioInput) {
-		fechaInicioInput.min = seasonStart;
+		const todayStr = localDateStr();
+		fechaInicioInput.min = todayStr > seasonStart ? todayStr : seasonStart;
 		fechaInicioInput.max = seasonEnd;
 	}
 	if (fechaTerminoInput) {
-		fechaTerminoInput.min = seasonStart;
+		const todayStr = localDateStr();
+		fechaTerminoInput.min = todayStr > seasonStart ? todayStr : seasonStart;
 		fechaTerminoInput.max = seasonEndBoundary;
 	}
 
@@ -46,6 +57,10 @@
 	// Si alguna fecha está vacía devuelve null (estado neutro: aún sin datos).
 	const validateDateRange = (start, end) => {
 		if (!start || !end) return null;
+		const today = localDateStr();
+		if (start < today) {
+			return 'No se puede reservar en el pasado.';
+		}
 		if (start < seasonStart || start > seasonEnd) {
 			return 'La fecha de inicio debe estar entre Junio y Agosto de 2026.';
 		}
@@ -285,6 +300,11 @@
 		if (numPersonas <= 0) {
 			event.preventDefault();
 			setMessage('El número de personas debe ser mayor a 0.', 'is-error');
+			return;
+		}
+		if (numPersonas > 20) {
+			event.preventDefault();
+			setMessage('El número de personas no puede exceder 20.', 'is-error');
 			return;
 		}
 		if (!selectedLodgingId) {
