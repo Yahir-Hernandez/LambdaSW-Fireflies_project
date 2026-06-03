@@ -1,11 +1,15 @@
 """Configuración del panel de administración de Django para el festival."""
 
+import json
 import openpyxl
+from decimal import Decimal
 from openpyxl.styles import Font, PatternFill, Alignment
 
 from django.conf import settings as dj_settings
-from django.http import HttpResponse, JsonResponse
+from django.db.models import Avg, Count
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib import admin, messages
+from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -25,6 +29,114 @@ from django.utils import timezone
 from .models import Lodging, Park, Reservation, Review, Service
 from .services import ReservationCheckinService, ReservationService
 from .utils import generate_qr_png
+
+
+class LuciernagsAdminSite(AdminSite):
+    """AdminSite personalizado: redirige al dashboard de estadísticas como página inicial
+    y deshabilita el cambio de contraseña desde el panel."""
+
+    def get_urls(self):
+        custom = [
+            path(
+                "estadisticas/",
+                self.admin_view(self.stats_view),
+                name="estadisticas",
+            ),
+            path(
+                "explorar/",
+                self.admin_view(self.db_view),
+                name="explorar",
+            ),
+        ]
+        return custom + super().get_urls()
+
+    def index(self, request, extra_context=None):
+        return HttpResponseRedirect(url_reverse("admin:estadisticas"))
+
+    def password_change(self, request, extra_context=None):
+        return HttpResponseRedirect(url_reverse("admin:estadisticas"))
+
+    def password_change_done(self, request, extra_context=None):
+        return HttpResponseRedirect(url_reverse("admin:estadisticas"))
+
+    def stats_view(self, request):
+        top_parks_rating = list(
+            Park.objects.filter(is_deleted=False)
+            .annotate(avg_rating=Avg("reviews__rating"), review_count=Count("reviews"))
+            .filter(review_count__gt=0)
+            .order_by("-avg_rating")[:3]
+            .values("name", "avg_rating", "review_count")
+        )
+
+        lodging_prefs = list(
+            Reservation.objects
+            .values("lodging__kind")
+            .annotate(total=Count("id"))
+            .order_by("lodging__kind")
+        )
+
+        top_parks_reservations = list(
+            Park.objects.filter(is_deleted=False)
+            .annotate(total=Count("reservations"))
+            .order_by("-total")[:5]
+            .values("name", "total")
+        )
+
+        total = Reservation.objects.count()
+        cancelled = Reservation.objects.filter(status=Reservation.Status.CANCELLED).count()
+        active = Reservation.objects.filter(status=Reservation.Status.ACTIVE).count()
+        past = Reservation.objects.filter(status=Reservation.Status.PAST).count()
+        used = Reservation.objects.filter(status=Reservation.Status.USED).count()
+        cancellation_rate = round(cancelled / total * 100, 1) if total else 0
+
+        total_parks = Park.objects.filter(is_deleted=False).count()
+        total_users = User.objects.filter(is_active=True).count()
+        total_reviews = Review.objects.count()
+        avg_rating_raw = Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0
+        avg_rating = round(float(avg_rating_raw), 1)
+
+        # Serialización segura de Decimals para Chart.js
+        def _safe(val):
+            return float(val) if isinstance(val, Decimal) else val
+
+        top_parks_rating_safe = [
+            {**r, "avg_rating": _safe(r["avg_rating"])} for r in top_parks_rating
+        ]
+
+        context = {
+            **self.each_context(request),
+            "title": "Estadísticas del Sistema",
+            "total_parks": total_parks,
+            "total_users": total_users,
+            "total_reservations": total,
+            "total_reviews": total_reviews,
+            "avg_rating": avg_rating,
+            "cancellation_rate": cancellation_rate,
+            "top_parks_rating_json": json.dumps(top_parks_rating_safe),
+            "lodging_prefs_json": json.dumps(lodging_prefs),
+            "top_parks_reservations_json": json.dumps(top_parks_reservations),
+            "status_dist_json": json.dumps([
+                {"status": "Activa", "total": active},
+                {"status": "Cancelada", "total": cancelled},
+                {"status": "Pasada", "total": past},
+                {"status": "Usada", "total": used},
+            ]),
+        }
+        return render(request, "admin/estadisticas.html", context)
+
+    def db_view(self, request):
+        app_list = self.get_app_list(request)
+        context = {
+            **self.each_context(request),
+            "title": "Explorar Base de Datos",
+            "app_list": app_list,
+        }
+        return render(request, "admin/explorar.html", context)
+
+
+# Reemplazar la clase del singleton admin.site en-lugar para preservar el _registry
+# (modelos ya registrados por otras apps, como User de django.contrib.auth).
+admin.site.__class__ = LuciernagsAdminSite
 
 
 admin.site.unregister(User)

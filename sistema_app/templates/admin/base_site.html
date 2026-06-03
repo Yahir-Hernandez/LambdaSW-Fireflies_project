@@ -6,12 +6,36 @@
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'css/admin/luciernagas_admin_global.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin/estadisticas.css' %}">
 {% endblock %}
 
 {% block branding %}
   <div id="branding">
     <img src="{% static 'img/luciernaga.png' %}" alt="Luciernagas" class="admin-logo" />
   </div>
+{% endblock %}
+
+{% block userlinks %}
+  {% url 'admin:estadisticas' as stats_url %}
+  {% url 'admin:explorar' as explorar_url %}
+  {% url 'admin:sistema_app_reservation_scan' as scan_url %}
+  {% url 'admin:logout' as logout_url %}
+
+  <span class="userlinks-nav">
+    {% if request.path == stats_url %}
+      <a href="{{ explorar_url }}" class="btn-nav btn-toggle-stats">Explorar BD</a>
+    {% else %}
+      <a href="{{ stats_url }}" class="btn-nav btn-toggle-stats">Estadísticas</a>
+    {% endif %}
+    <a href="{{ scan_url }}" class="btn-nav btn-scan-qr">Escanear QR</a>
+    <a href="/" class="btn-nav btn-ver-sitio">Ver sitio</a>
+  </span>
+  &nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="{{ logout_url }}">Cerrar sesión</a>
+{% endblock %}
+
+{% block content_title %}
+  {% if title %}<h1 class="stats-main-title">{{ title }}</h1>{% endif %}
 {% endblock %}
 
 {% block nav-global %}{% endblock %}

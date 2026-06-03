@@ -46,6 +46,6 @@
   }, { threshold: 0.12 });
 
   document
-    .querySelectorAll('.why__card, .parque-card, .trust-item, .parques-highlight, .festival-card')
+    .querySelectorAll('.why__card, .parque-card, .trust-item, .parques-highlight, .festival-card, .galeria')
     .forEach(el => obs.observe(el));
 })();

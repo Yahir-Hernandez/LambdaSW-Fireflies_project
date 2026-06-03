@@ -63,18 +63,24 @@
       <div class="parques-highlight">
         <div class="parques-highlight__media" aria-hidden="true" style="background: url('{% static 'img/forests/forest_4.webp' %}') center/cover no-repeat;">
           <div class="parques-highlight__media-inner">
-            <span class="parques-highlight__badge">Parques oficiales</span> 
+            <span class="parques-highlight__badge">Parques oficiales</span>
           </div>
         </div>
         <div class="parques-highlight__content">
-          <p class="parques-highlight__eyebrow">Hospedaje en parques oficiales</p>
+          <div class="parques-highlight__top-row">
+            <p class="parques-highlight__eyebrow">Hospedaje en parques oficiales</p>
+            {% if featured_park and featured_park.avg_rating %}
+              <span class="parques-highlight__rating-badge">
+                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                {{ featured_park.avg_rating|floatformat:1 }}
+              </span>
+            {% endif %}
+          </div>
           {% if featured_park %}
             <h3 class="parques-highlight__title">{{ featured_park.name }}</h3>
-            <p class="parques-highlight__desc">  {{ featured_park.address }}</p>
+            <p class="parques-highlight__desc">{{ featured_park.address }}</p>
             <p class="parques-highlight__desc">
-              Rodeado de bosque templado y rutas montañosas, este<br>
-              parque hará de tu visita una para recordarse.<br><br>
-
+              {{ featured_park.description }}<br><br>
               Quedan
               <strong>{{ featured_park.disponibilidad_actual }} lugares </strong>para esta temporada.
             </p>
@@ -115,8 +121,44 @@
       </div>
     </div>
   </section>
+
+  <section class="galeria" id="galeria">
+    <div class="container">
+      <div class="galeria__header">
+        <div>
+          <h2 class="section-title section-title--left section-title--system">Galería</h2>
+          <p class="section-sub section-sub--left">Un vistazo a la magia que vive entre los bosques.</p>
+        </div>
+        <div class="galeria__controls">
+          <button class="galeria__btn" id="galeria-prev" aria-label="Anterior">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button class="galeria__btn" id="galeria-next" aria-label="Siguiente">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      <div class="galeria__track-wrap">
+        <div class="galeria__track" id="galeria-track">
+          {% for img in gallery_images %}
+            <button class="galeria__item" data-src="{{ img.url }}" data-alt="{{ img.name }}" aria-label="Ver imagen">
+              <img class="galeria__img" src="{{ img.url }}" alt="{{ img.name }}" loading="lazy">
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="galeria-lightbox" class="galeria-lightbox" aria-label="Imagen ampliada">
+    <button class="galeria-lightbox__close" id="galeria-lightbox-close" aria-label="Cerrar">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <img class="galeria-lightbox__img" id="galeria-lightbox-img" src="" alt="">
+  </dialog>
 {% endblock %}
 
 {% block extra_js %}
   <script src="{% static 'script/luciernagas.js' %}"></script>
+  <script src="{% static 'script/galeria.js' %}"></script>
 {% endblock %}

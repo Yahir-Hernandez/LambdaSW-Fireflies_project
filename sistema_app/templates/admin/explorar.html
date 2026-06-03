@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Explorar Base de Datos | Luciernagas Admin{% endblock %}
+
+{% block content_title %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1 class="stats-main-title">Explorar Base de Datos</h1>
+  {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endblock %}
